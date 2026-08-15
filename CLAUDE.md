@@ -113,3 +113,34 @@ KROMA uses generous, organic curves paired with razor-sharp borders to create an
   * Default CTA: Background `accent-primary` (`#C85A2A`), text `#FFFFFF`.
   * Active/Click: Immediate slight compression (`scale-98`).
   * Disabled: Background `surface-muted`, text `text-tertiary`, border `border-subtle`.
+
+## 7. Animation & Micro-Interactions (Framer Motion)
+
+All UI animations must utilize Framer Motion. Avoid CSS transitions for structural changes (modals, layout shifts). The animation philosophy is "Apple-like": subtle, physical, and momentum-driven. Never use bouncy or exaggerated spring settings.
+
+### Global Spring Configuration
+Use this specific spring configuration for all structural transitions (modals, drawers, shared element morphs) to simulate mass and friction:
+* `transition={{ type: "spring", stiffness: 300, damping: 30, mass: 1 }}`
+
+### Required Interaction Patterns
+
+* **Press States (Buttons & Cards):**
+  * Target: `whileTap={{ scale: 0.98 }}`
+  * Transition: `type: "spring", stiffness: 400, damping: 25`
+* **Cart & Customizer Drawers (Bottom Sheet):**
+  * Use `AnimatePresence`.
+  * Initial/Exit: `y: "100%", opacity: 0`
+  * Animate: `y: 0, opacity: 1`
+  * Must include a dark, semi-transparent backdrop (`opacity: 0` to `opacity: 1`) using standard tweening `transition={{ duration: 0.2 }}`.
+* **Shared Element Layouts (Category Pills):**
+  * When a user selects a category pill (e.g., "Espresso" -> "Filter"), the active background indicator must slide smoothly between elements using Framer Motion's `layoutId="activeCategory"`.
+* **Number Transitions (Price & Stock Updates):**
+  * Wrap dynamic numbers (like total price or batch stock) in `AnimatePresence`.
+  * Use a subtle vertical slide and fade when the value changes: `initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 10, opacity: 0 }}`.
+
+### Hardware Acceleration Constraints
+To maintain 60/120fps fluidity, the AI must strictly adhere to the following rendering rules:
+1. **Animate Compositor Properties Only:** Only animate `opacity` and `transform` (`x`, `y`, `scale`, `rotate`). 
+2. **Never Animate Layout Properties:** Never animate `width`, `height`, `margin`, `padding`, `top`, `left`, or `box-shadow`. 
+3. **Interruptibility:** Do not mix `duration` with `spring` transitions. Framer Motion handles spring interruptibility natively, allowing users to reverse an action mid-animation without jank.
+4. **Layout Morphing:** When using the `layout` or `layoutId` prop, Framer Motion automatically uses performant transforms to fake dimensions changes. Do not override this with CSS transitions.

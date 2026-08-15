@@ -1,0 +1,247 @@
+[
+  {
+    "category": "Espresso Bar",
+    "name": "Espresso",
+    "description": "Double shot of our seasonal house blend.",
+    "basePrice": 2.50,
+    "dailyStock": null,
+    "dietaryTags": ["Vegan", "Gluten-Free"],
+    "allergens": [],
+    "modifiers": [
+      {
+        "name": "Bean Choice",
+        "options": [
+          { "name": "House Blend (Brazil/Colombia)", "priceOffset": 0 },
+          { "name": "Single Origin (Ethiopia)", "priceOffset": 0.50 }
+        ]
+      }
+    ],
+    "unsplashQuery": "espresso shot crema glass"
+  },
+  {
+    "category": "Espresso Bar",
+    "name": "Flat White",
+    "description": "Double ristretto shot with textured microfoam.",
+    "basePrice": 4.20,
+    "dailyStock": null,
+    "dietaryTags": ["Vegetarian", "Gluten-Free"],
+    "allergens": ["Dairy"],
+    "modifiers": [
+      {
+        "name": "Milk Choice",
+        "options": [
+          { "name": "Whole Milk (Default)", "priceOffset": 0 },
+          { "name": "Oat Milk (Vegan)", "priceOffset": 0.60 },
+          { "name": "Almond Milk (Contains Nuts)", "priceOffset": 0.60 }
+        ]
+      }
+    ],
+    "unsplashQuery": "flat white latte art ceramic cup"
+  },
+  {
+    "category": "Espresso Bar",
+    "name": "Iced Oat Cortado",
+    "description": "Equal parts espresso and oat milk over ice.",
+    "basePrice": 4.50,
+    "dailyStock": null,
+    "dietaryTags": ["Vegan", "Gluten-Free"],
+    "allergens": [],
+    "modifiers": [
+      {
+        "name": "Ice Level",
+        "options": [
+          { "name": "Regular Ice", "priceOffset": 0 },
+          { "name": "Light Ice", "priceOffset": 0 }
+        ]
+      },
+      {
+        "name": "Syrup",
+        "options": [
+          { "name": "None", "priceOffset": 0 },
+          { "name": "Cardamom Vanilla", "priceOffset": 0.50 }
+        ]
+      }
+    ],
+    "unsplashQuery": "iced cortado layered glass espresso"
+  },
+  {
+    "category": "Filter & Cold",
+    "name": "Batch Brew Filter",
+    "description": "Rotating single-origin filter coffee (Kenya AA Nyeri).",
+    "basePrice": 3.80,
+    "dailyStock": null,
+    "dietaryTags": ["Vegan", "Gluten-Free"],
+    "allergens": [],
+    "modifiers": [
+      {
+        "name": "Size",
+        "options": [
+          { "name": "250ml", "priceOffset": 0 },
+          { "name": "350ml", "priceOffset": 0.80 }
+        ]
+      }
+    ],
+    "unsplashQuery": "batch brew filter coffee glass server"
+  },
+  {
+    "category": "Filter & Cold",
+    "name": "Cold Drip Reserve",
+    "description": "Slow-dripped for 14 hours. Served chilled.",
+    "basePrice": 5.20,
+    "dailyStock": 15,
+    "dietaryTags": ["Vegan", "Gluten-Free"],
+    "allergens": [],
+    "modifiers": [
+      {
+        "name": "Serving Style",
+        "options": [
+          { "name": "Over Rock Ice", "priceOffset": 0 },
+          { "name": "Neat", "priceOffset": 0 }
+        ]
+      }
+    ],
+    "unsplashQuery": "cold brew bottle glass ice cube"
+  },
+  {
+    "category": "Tea & Alternatives",
+    "name": "Ceremonial Matcha Latte",
+    "description": "First-harvest Uji matcha whisked with steamed milk.",
+    "basePrice": 5.00,
+    "dailyStock": null,
+    "dietaryTags": ["Vegetarian", "Gluten-Free"],
+    "allergens": ["Dairy"],
+    "modifiers": [
+      {
+        "name": "Milk Choice",
+        "options": [
+          { "name": "Whole Milk", "priceOffset": 0 },
+          { "name": "Oat Milk (Vegan)", "priceOffset": 0.60 },
+          { "name": "Coconut Milk (Vegan)", "priceOffset": 0.60 }
+        ]
+      },
+      {
+        "name": "Sweetness",
+        "options": [
+          { "name": "Unsweetened", "priceOffset": 0 },
+          { "name": "Agave Syrup", "priceOffset": 0.40 }
+        ]
+      }
+    ],
+    "unsplashQuery": "matcha latte green foam ceramic cup"
+  },
+  {
+    "category": "Bakehouse",
+    "name": "Cardamom Sugar Bun",
+    "description": "Traditional Swedish knot pastry with freshly ground cardamom.",
+    "basePrice": 3.90,
+    "dailyStock": 12,
+    "dietaryTags": ["Vegetarian"],
+    "allergens": ["Gluten", "Dairy", "Eggs"],
+    "modifiers": [
+      {
+        "name": "Serving",
+        "options": [
+          { "name": "Room Temperature", "priceOffset": 0 },
+          { "name": "Warmed", "priceOffset": 0 }
+        ]
+      }
+    ],
+    "unsplashQuery": "cardamom bun swedish pastry bakery"
+  },
+  {
+    "category": "Bakehouse",
+    "name": "Twice-Baked Almond Croissant",
+    "description": "Sourdough croissant filled with frangipane and topped with toasted almonds.",
+    "basePrice": 4.50,
+    "dailyStock": 8,
+    "dietaryTags": ["Vegetarian"],
+    "allergens": ["Gluten", "Dairy", "Eggs", "Tree Nuts"],
+    "modifiers": [
+      {
+        "name": "Serving",
+        "options": [
+          { "name": "Room Temperature", "priceOffset": 0 },
+          { "name": "Warmed", "priceOffset": 0 }
+        ]
+      }
+    ],
+    "unsplashQuery": "twice baked almond croissant powdered sugar"
+  },
+  {
+    "category": "Bakehouse",
+    "name": "Spiced Banana Bread",
+    "description": "Thick slice of banana bread with walnuts and cinnamon.",
+    "basePrice": 4.00,
+    "dailyStock": 10,
+    "dietaryTags": ["Vegan"],
+    "allergens": ["Gluten", "Tree Nuts"],
+    "modifiers": [
+      {
+        "name": "Add-ons",
+        "options": [
+          { "name": "None", "priceOffset": 0 },
+          { "name": "Vegan Butter", "priceOffset": 0.50 }
+        ]
+      }
+    ],
+    "unsplashQuery": "banana bread slice walnuts"
+  },
+  {
+    "category": "Kitchen",
+    "name": "Whipped Ricotta & Fig Toast",
+    "description": "Fresh ricotta, black figs, hot honey, and sea salt on thick sourdough.",
+    "basePrice": 7.80,
+    "dailyStock": 15,
+    "dietaryTags": ["Vegetarian"],
+    "allergens": ["Gluten", "Dairy"],
+    "modifiers": [
+      {
+        "name": "Bread Choice",
+        "options": [
+          { "name": "Country Sourdough", "priceOffset": 0 },
+          { "name": "Gluten-Free Seeded Bread", "priceOffset": 1.00 }
+        ]
+      }
+    ],
+    "unsplashQuery": "ricotta toast figs honey sourdough"
+  },
+  {
+    "category": "Kitchen",
+    "name": "Mortadella & Pistachio Focaccia",
+    "description": "House-baked focaccia loaded with mortadella, stracciatella, and crushed pistachios.",
+    "basePrice": 8.50,
+    "dailyStock": 10,
+    "dietaryTags": [],
+    "allergens": ["Gluten", "Dairy", "Tree Nuts"],
+    "modifiers": [
+      {
+        "name": "Preparation",
+        "options": [
+          { "name": "Toasted", "priceOffset": 0 },
+          { "name": "Fresh", "priceOffset": 0 }
+        ]
+      }
+    ],
+    "unsplashQuery": "mortadella focaccia sandwich stracciatella"
+  },
+  {
+    "category": "Kitchen",
+    "name": "Smoked Salmon & Dill Bagel",
+    "description": "Cold-smoked salmon, chive cream cheese, capers, and dill on a toasted sesame bagel.",
+    "basePrice": 9.20,
+    "dailyStock": 12,
+    "dietaryTags": ["Pescatarian"],
+    "allergens": ["Gluten", "Dairy", "Fish", "Sesame"],
+    "modifiers": [
+      {
+        "name": "Bagel Choice",
+        "options": [
+          { "name": "Sesame", "priceOffset": 0 },
+          { "name": "Everything", "priceOffset": 0 },
+          { "name": "Gluten-Free", "priceOffset": 1.50 }
+        ]
+      }
+    ],
+    "unsplashQuery": "smoked salmon bagel cream cheese dill"
+  }
+]

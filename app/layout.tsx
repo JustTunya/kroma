@@ -30,7 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${instrumentSerif.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-surface-canvas text-text-primary">
+      <body className="min-h-full flex flex-col bg-surface-canvas text-text-primary" suppressHydrationWarning>
         {children}
       </body>
     </html>

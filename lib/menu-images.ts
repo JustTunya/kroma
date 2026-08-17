@@ -1,0 +1,56 @@
+/**
+ * Menu photography.
+ *
+ * `menu_items.image_url` wins whenever it is set. Until the roastery shoots its
+ * own catalogue, cards fall back to a small pool of curated Unsplash frames that
+ * match the KROMA look (natural light, warm wood, matte ceramics).
+ *
+ * ponytail: fixed pool keyed by category, rotated by list position so two
+ * neighbouring cards never share a frame. Populate `image_url` on the rows and
+ * the pool stops being used — no component changes needed.
+ */
+
+const UNSPLASH = "https://images.unsplash.com/photo-";
+
+const POOL: Record<string, string[]> = {
+  "Espresso Bar": [
+    "1497935586351-b67a49e012bf",
+    "1509042239860-f550ce710b93",
+    "1541167760496-1628856ab772",
+    "1572442388796-11668a67e53d",
+  ],
+  "Filter & Cold": [
+    "1442512595331-e89e73853f31",
+    "1592663527359-cf6642f54cff",
+    "1559496417-e7f25cb247f3",
+  ],
+  "Tea & Alternatives": ["1564890369478-c89ca6d9cde9", "1622480916113-9000ac49b79d"],
+  Bakehouse: [
+    "1555507036-ab1f4038808a",
+    "1534432182912-63863115e106",
+    "1509440159596-0249088772ff",
+    "1517433670267-08bbd4be890f",
+  ],
+  Kitchen: [
+    "1521305916504-4a1121188589",
+    "1525351484163-7529414344d8",
+    "1484723091739-30a097e8f929",
+  ],
+};
+
+const DEFAULT_POOL = ["1495474472287-4d71bcdd2085"];
+
+/** Hero frame: three flat whites on warm wood, shot from above. */
+export const HERO_IMAGE = `${UNSPLASH}1495474472287-4d71bcdd2085?w=1600&q=80&auto=format&fit=crop`;
+
+/** Photo for a card. `index` is the item's position in the rendered list. */
+export function menuImage(
+  item: { category: string; image_url: string | null },
+  index: number,
+): string {
+  if (item.image_url) return item.image_url;
+
+  const pool = POOL[item.category] ?? DEFAULT_POOL;
+
+  return `${UNSPLASH}${pool[index % pool.length]}?w=800&q=80&auto=format&fit=crop`;
+}

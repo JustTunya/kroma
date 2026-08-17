@@ -1,16 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
+import { HeroParallax } from "@/components/storefront/HeroParallax";
 import { glide, lineReveal } from "@/lib/reveal";
-
-const IMAGEKIT_ID = process.env.NEXT_PUBLIC_IMAGEKIT_ID;
-const HERO_VIDEO_BASE = `https://ik.imagekit.io/${IMAGEKIT_ID}/kroma_bg`;
 
 function Line({ children, delay }: { children: React.ReactNode; delay: number }) {
   return (
-    <span className="block overflow-hidden pb-[0.06em]">
+    <span className="block overflow-hidden pb-[0.18em]">
       <motion.span
         className="block"
         variants={lineReveal}
@@ -24,46 +21,10 @@ function Line({ children, delay }: { children: React.ReactNode; delay: number })
 
 export function StorefrontHero() {
   const reduced = useReducedMotion();
-  const [videoLoaded, setVideoLoaded] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setVideoLoaded(true), 4000);
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
-    <section className="relative flex h-[88svh] min-h-135 w-full items-end overflow-hidden bg-text-primary">
-      <motion.div
-        className="absolute inset-0"
-        initial={reduced ? false : { scale: 1.08 }}
-        animate={{ scale: 1 }}
-        transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          onLoadedData={() => setVideoLoaded(true)}
-          className="h-full w-full object-cover"
-        >
-          <source src={`${HERO_VIDEO_BASE}.webm`} type="video/webm" />
-          <source src={`${HERO_VIDEO_BASE}.mp4`} type="video/mp4" />
-        </video>
-
-        <AnimatePresence>
-          {!videoLoaded && (
-            <motion.div
-              aria-hidden
-              className="absolute inset-0 bg-[#2A2826]"
-              initial={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.5 }}
-            />
-          )}
-        </AnimatePresence>
-      </motion.div>
+    <section className="relative flex h-dvh w-full items-end overflow-hidden bg-text-primary">
+      <HeroParallax />
 
       <div
         aria-hidden

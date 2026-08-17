@@ -24,7 +24,6 @@ export function StorefrontHeader({ cartCount, onCartOpen }: StorefrontHeaderProp
   const { scrollY } = useScroll();
   const [onCanvas, setOnCanvas] = useState(false);
 
-  // The header rides over the hero photograph until the canvas comes up to meet it.
   useMotionValueEvent(scrollY, "change", (value) => {
     setOnCanvas(value > window.innerHeight * 0.7);
   });
@@ -38,7 +37,7 @@ export function StorefrontHeader({ cartCount, onCartOpen }: StorefrontHeaderProp
           : "border-b border-transparent bg-transparent",
       )}
     >
-      <div className="flex h-16 w-full items-center justify-between gap-4 px-5 sm:px-10 lg:px-14">
+      <div className="relative flex h-16 w-full items-center justify-between gap-4 px-5 sm:px-10 lg:px-14">
         <div className="flex items-baseline gap-2.5">
           <span
             className={cn(
@@ -59,19 +58,38 @@ export function StorefrontHeader({ cartCount, onCartOpen }: StorefrontHeaderProp
         </div>
 
         <p
+          role="status"
           className={cn(
-            "flex items-center gap-2.5 font-mono text-[10px] font-medium tracking-[0.18em] uppercase transition-colors duration-300",
-            onCanvas ? "text-text-secondary" : "text-surface-canvas/75",
+            "absolute left-1/2 hidden -translate-x-1/2 items-center gap-2.5 rounded-full border px-3.5 py-1.5 font-mono text-[10px] font-semibold tracking-[0.18em] text-accent-primary uppercase shadow-float backdrop-blur-md transition-colors duration-300 sm:flex",
+            onCanvas
+              ? "border-accent-primary/75 bg-accent-subtle"
+              : "border-accent-primary/75 bg-accent-subtle/15",
           )}
         >
           <motion.span
             aria-hidden
-            className="size-1.5 shrink-0 rounded-full bg-badge-live"
+            className="size-1.5 shrink-0 rounded-full bg-accent-primary"
             animate={reduced ? undefined : { opacity: [1, 0.25, 1] }}
             transition={{ duration: 2.4, ease: "easeInOut", repeat: Infinity }}
           />
-          <span className="hidden sm:inline">Brewing now — 8–12 min</span>
-          <span className="sm:hidden">8–12 min</span>
+          <span>Brewing now — 8-12 min</span>
+        </p>
+        <p
+          role="status"
+          className={cn(
+            "flex items-center gap-2 rounded-full border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.18em] text-accent-primary uppercase shadow-float backdrop-blur-sm transition-colors duration-300 sm:hidden",
+            onCanvas
+              ? "border-accent-primary/75 bg-accent-subtle"
+              : "border-accent-primary/75 bg-accent-subtle/15",
+          )}
+        >
+          <motion.span
+            aria-hidden
+            className="size-1.5 shrink-0 rounded-full bg-accent-primary"
+            animate={reduced ? undefined : { opacity: [1, 0.25, 1] }}
+            transition={{ duration: 2.4, ease: "easeInOut", repeat: Infinity }}
+          />
+          8-12 min
         </p>
 
         <motion.button
@@ -89,7 +107,7 @@ export function StorefrontHeader({ cartCount, onCartOpen }: StorefrontHeaderProp
                 : "bg-surface-canvas/15 text-surface-canvas backdrop-blur-sm",
           )}
         >
-          <ShoppingBag className="size-[18px]" strokeWidth={1.5} aria-hidden />
+          <ShoppingBag className="size-4.5" strokeWidth={1.5} aria-hidden />
           <AnimatePresence mode="popLayout" initial={false}>
             {hasItems && (
               <motion.span

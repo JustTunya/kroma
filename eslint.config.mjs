@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Supabase CLI scratch space: vendored, minified, not ours.
+    "supabase/.temp/**",
   ]),
 ]);
 

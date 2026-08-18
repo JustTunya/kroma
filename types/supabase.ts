@@ -7,33 +7,34 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.15"
   }
   public: {
     Tables: {
+      carts: {
+        Row: {
+          id: string
+          items: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          items?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          items?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       menu_categories: {
         Row: {
           created_at: string
@@ -58,27 +59,6 @@ export type Database = {
           name?: string
           slug?: string
           sort_order?: number
-        }
-        Relationships: []
-      }
-      carts: {
-        Row: {
-          id: string
-          items: Json
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          id?: string
-          items?: Json
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          id?: string
-          items?: Json
-          updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }
@@ -200,40 +180,61 @@ export type Database = {
       }
       orders: {
         Row: {
+          access_token: string
           customer_name: string | null
+          expires_at: string | null
           id: string
           notes: string | null
           order_number: number
+          payment_method: string
+          pickup_at: string | null
           placed_at: string
           ready_at: string | null
           status: Database["public"]["Enums"]["order_status"]
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
           subtotal: number
           total: number
           updated_at: string
+          user_id: string | null
         }
         Insert: {
+          access_token?: string
           customer_name?: string | null
+          expires_at?: string | null
           id?: string
           notes?: string | null
           order_number?: number
+          payment_method: string
+          pickup_at?: string | null
           placed_at?: string
           ready_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
           subtotal?: number
           total?: number
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
+          access_token?: string
           customer_name?: string | null
+          expires_at?: string | null
           id?: string
           notes?: string | null
           order_number?: number
+          payment_method?: string
+          pickup_at?: string | null
           placed_at?: string
           ready_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
           subtotal?: number
           total?: number
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -242,7 +243,42 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_order: {
+        Args: {
+          p_customer_name: string
+          p_items: Json
+          p_notes: string
+          p_payment_method: string
+        }
+        Returns: {
+          access_token: string
+          customer_name: string | null
+          expires_at: string | null
+          id: string
+          notes: string | null
+          order_number: number
+          payment_method: string
+          pickup_at: string | null
+          placed_at: string
+          ready_at: string | null
+          status: Database["public"]["Enums"]["order_status"]
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          subtotal: number
+          total: number
+          updated_at: string
+          user_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      order_by_token: { Args: { p_token: string }; Returns: Json }
+      release_expired_orders: { Args: never; Returns: number }
+      release_order: { Args: { p_order_id: string }; Returns: boolean }
     }
     Enums: {
       order_status:
@@ -377,9 +413,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       order_status: [
@@ -393,4 +426,3 @@ export const Constants = {
     },
   },
 } as const
-

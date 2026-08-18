@@ -61,6 +61,27 @@ export type Database = {
         }
         Relationships: []
       }
+      carts: {
+        Row: {
+          id: string
+          items: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          items?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          items?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       menu_items: {
         Row: {
           allergens: string[]

@@ -8,17 +8,23 @@ import {
   useReducedMotion,
   useScroll,
 } from "framer-motion";
-import { ShoppingBag } from "lucide-react";
+import Link from "next/link";
+import { ShoppingBag, UserRound } from "lucide-react";
 
 import { numberTransition, pressSpring, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 type StorefrontHeaderProps = {
   cartCount: number;
+  signedIn: boolean;
   onCartOpen?: () => void;
 };
 
-export function StorefrontHeader({ cartCount, onCartOpen }: StorefrontHeaderProps) {
+export function StorefrontHeader({
+  cartCount,
+  signedIn,
+  onCartOpen,
+}: StorefrontHeaderProps) {
   const hasItems = cartCount > 0;
   const reduced = useReducedMotion();
   const { scrollY } = useScroll();
@@ -92,35 +98,57 @@ export function StorefrontHeader({ cartCount, onCartOpen }: StorefrontHeaderProp
           <span className="text-shadow-text-primary/10 text-shadow-2xs">8-12 min</span>
         </p>
 
-        <motion.button
-          type="button"
-          onClick={onCartOpen}
-          whileTap={{ scale: 0.98 }}
-          transition={pressSpring}
-          aria-label={`Open order${hasItems ? ` — ${cartCount} items` : ""}`}
-          className={cn(
-            "flex h-10 min-w-10 items-center justify-center gap-2 rounded-full px-3.5 transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus",
-            hasItems
-              ? "bg-accent-primary text-surface-card hover:bg-accent-hover"
-              : onCanvas
-                ? "bg-surface-muted text-text-primary"
-                : "bg-surface-canvas/15 text-surface-canvas backdrop-blur-sm",
-          )}
-        >
-          <ShoppingBag className="size-4.5" strokeWidth={1.5} aria-hidden />
-          <AnimatePresence mode="popLayout" initial={false}>
-            {hasItems && (
-              <motion.span
-                key={cartCount}
-                {...numberTransition}
-                transition={spring}
-                className="font-mono text-[12px] font-medium tracking-[0.02em] tabular-nums"
-              >
-                {cartCount}
-              </motion.span>
+        <div className="flex items-center gap-2">
+          <motion.div whileTap={{ scale: 0.98 }} transition={pressSpring}>
+            <Link
+              href={signedIn ? "/account" : "/auth/login"}
+              aria-label={signedIn ? "Your account" : "Sign in to your account"}
+              className={cn(
+                "flex h-10 min-w-10 items-center justify-center gap-2 rounded-full px-3.5 transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus",
+                onCanvas
+                  ? "bg-surface-muted text-text-primary"
+                  : "bg-surface-canvas/15 text-surface-canvas backdrop-blur-sm",
+              )}
+            >
+              <UserRound className="size-4.5" strokeWidth={1.5} aria-hidden />
+              {!signedIn && (
+                <span className="hidden font-mono text-[10px] font-medium tracking-[0.18em] uppercase sm:inline">
+                  Sign in
+                </span>
+              )}
+            </Link>
+          </motion.div>
+
+          <motion.button
+            type="button"
+            onClick={onCartOpen}
+            whileTap={{ scale: 0.98 }}
+            transition={pressSpring}
+            aria-label={`Open order${hasItems ? ` — ${cartCount} items` : ""}`}
+            className={cn(
+              "flex h-10 min-w-10 items-center justify-center gap-2 rounded-full px-3.5 transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus",
+              hasItems
+                ? "bg-accent-primary text-surface-card hover:bg-accent-hover"
+                : onCanvas
+                  ? "bg-surface-muted text-text-primary"
+                  : "bg-surface-canvas/15 text-surface-canvas backdrop-blur-sm",
             )}
-          </AnimatePresence>
-        </motion.button>
+          >
+            <ShoppingBag className="size-4.5" strokeWidth={1.5} aria-hidden />
+            <AnimatePresence mode="popLayout" initial={false}>
+              {hasItems && (
+                <motion.span
+                  key={cartCount}
+                  {...numberTransition}
+                  transition={spring}
+                  className="font-mono text-[12px] font-medium tracking-[0.02em] tabular-nums"
+                >
+                  {cartCount}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.button>
+        </div>
       </div>
     </header>
   );

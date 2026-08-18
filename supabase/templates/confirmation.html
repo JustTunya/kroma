@@ -1,0 +1,39 @@
+<!--
+  Points at /auth/confirm with the token hash rather than the default
+  {{ .ConfirmationURL }}: the session cookie has to be written server-side.
+-->
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F8F6F0;padding:48px 20px;">
+  <tr>
+    <td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+        <tr>
+          <td style="font-family:Georgia,'Times New Roman',serif;font-size:26px;color:#1A1816;padding-bottom:32px;">
+            KROMA
+          </td>
+        </tr>
+        <tr>
+          <td style="border-top:1px solid #DCD6CA;padding-top:32px;">
+            <p style="margin:0;font-family:'Courier New',monospace;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#C85A2A;">
+              Verify
+            </p>
+            <h1 style="margin:20px 0 0;font-family:Georgia,'Times New Roman',serif;font-weight:400;font-size:36px;line-height:1.05;color:#1A1816;">
+              Confirm your email.
+            </h1>
+            <p style="margin:24px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#635E59;">
+              One click and the account is live. Order ahead, collect at the bar.
+            </p>
+            <p style="margin:36px 0 0;">
+              <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/account"
+                 style="display:inline-block;background:#C85A2A;color:#FFFFFF;text-decoration:none;padding:14px 28px;border-radius:9999px;font-family:'Courier New',monospace;font-size:11px;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;">
+                Confirm email
+              </a>
+            </p>
+            <p style="margin:36px 0 0;border-top:1px solid #DCD6CA;padding-top:24px;font-family:'Courier New',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#9B948C;">
+              Link valid 60 min &nbsp;/&nbsp; Single use &nbsp;/&nbsp; Ignore if this was not you
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>

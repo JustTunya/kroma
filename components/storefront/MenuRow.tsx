@@ -2,6 +2,10 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { Fish, Leaf, Sprout, WheatOff } from "lucide-react";
+
+import type { Transition } from "framer-motion";
+import type { LucideIcon } from "lucide-react";
 
 import { pressSpring, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
@@ -14,12 +18,23 @@ type MenuRowProps = {
   onPreview: (item: MenuItem) => void;
 };
 
-/** Origin, process, roast and diet, in the order a spec sheet would list them. */
+/** Exit: fades out on the spot instead of gating the reflow behind its own spring. */
+const rowExit: Transition = { duration: 0.12, ease: "easeOut" };
+
+/** Origin, process and roast, in the order a spec sheet would list them. */
 function spec(item: MenuItem): string[] {
-  return [item.origin, item.process, item.roast, ...item.dietary_tags].filter(
+  return [item.origin, item.process, item.roast].filter(
     (part): part is string => Boolean(part),
   );
 }
+
+/** Icon shown before each dietary tag. Falls back to no icon for unlisted tags. */
+const dietaryIcons: Record<string, LucideIcon> = {
+  Vegan: Leaf,
+  Vegetarian: Sprout,
+  Pescatarian: Fish,
+  "Gluten-Free": WheatOff,
+};
 
 export function MenuRow({ item, onAdd, onPreview }: MenuRowProps) {
   const soldOut = item.daily_stock === 0;
@@ -28,11 +43,11 @@ export function MenuRow({ item, onAdd, onPreview }: MenuRowProps) {
 
   return (
     <motion.li
-      layout
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={spring}
+      layout="position"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0, transition: spring }}
+      exit={{ opacity: 0, transition: rowExit }}
+      transition={{ layout: spring }}
     >
       <motion.button
         type="button"
@@ -114,6 +129,23 @@ export function MenuRow({ item, onAdd, onPreview }: MenuRowProps) {
                 {part}
               </span>
             ))}
+
+            {item.dietary_tags.map((tag, index) => {
+              const Icon = dietaryIcons[tag];
+              return (
+                <span key={tag} className="flex items-center gap-3">
+                  {(index > 0 || spec(item).length > 0) && (
+                    <span aria-hidden className="text-hairline">
+                      /
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1.5">
+                    {Icon && <Icon aria-hidden size={12} strokeWidth={2} />}
+                    {tag}
+                  </span>
+                </span>
+              );
+            })}
 
             {soldOut && <span className="text-badge-alert">Gone for today</span>}
             {lowStock && (

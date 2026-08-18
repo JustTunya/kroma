@@ -13,11 +13,6 @@ type MenuListProps = {
   onAdd: (item: MenuItem) => void;
 };
 
-/**
- * The pass: names and prices on hairline rules, with the item under the pointer
- * plated in the slot alongside. The slot is desktop-only — on narrow screens
- * each row carries its own thumbnail instead.
- */
 export function MenuList({ items, onAdd }: MenuListProps) {
   const [previewId, setPreviewId] = useState<string | null>(null);
 
@@ -29,8 +24,6 @@ export function MenuList({ items, onAdd }: MenuListProps) {
     );
   }
 
-  // Falls back to the first item so the slot is never empty, and so switching
-  // category cannot leave it pointing at an item that is no longer listed.
   const preview = items.find((item) => item.id === previewId) ?? items[0];
 
   return (
@@ -50,7 +43,7 @@ export function MenuList({ items, onAdd }: MenuListProps) {
 
       <div aria-hidden className="hidden lg:block">
         <div className="sticky top-32">
-          <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-muted">
+          <div className="relative aspect-4/5 w-full overflow-hidden rounded-lg border border-border-subtle bg-surface-muted shadow-card">
             <AnimatePresence initial={false}>
               <motion.div
                 key={preview.id}

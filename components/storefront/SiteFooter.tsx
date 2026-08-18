@@ -1,6 +1,6 @@
 const DETAILS = [
   { label: "Where", lines: ["Str. Universității 12", "Cluj-Napoca, Romania"] },
-  { label: "Hours", lines: ["Mon–Fri 07:30–18:00", "Sat–Sun 08:30–17:00"] },
+  { label: "Hours", lines: ["Mon-Fri 07:30-18:00", "Sat-Sun 08:30-17:00"] },
   { label: "Collect", lines: ["Order ahead, pick up", "at the bar"] },
 ];
 
@@ -22,19 +22,15 @@ export function SiteFooter() {
         ))}
       </div>
 
-      {/* Drawn as SVG so the wordmark spans the full measure at any width —
-          `textLength` does the fitting that a font-size clamp can only guess at. */}
       <div aria-hidden className="px-5 sm:px-10 lg:px-14">
-        {/* The box is cropped to the cap height and set a little wider than the
-            word's natural measure, so the letters open up without drifting apart. */}
         <svg viewBox="0 0 560 112" className="w-full" role="presentation">
           <text
             x="0"
-            y="106"
+            y="100"
             textLength="560"
             lengthAdjust="spacing"
             fill="currentColor"
-            className="font-serif text-[152px]"
+            className="font-serif text-[136px]"
           >
             KROMA
           </text>

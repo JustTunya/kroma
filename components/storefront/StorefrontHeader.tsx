@@ -63,7 +63,7 @@ export function StorefrontHeader({ cartCount, onCartOpen }: StorefrontHeaderProp
             "absolute left-1/2 hidden -translate-x-1/2 items-center gap-2.5 rounded-full border px-3.5 py-1.5 font-mono text-[10px] font-semibold tracking-[0.18em] text-accent-primary uppercase shadow-float backdrop-blur-md transition-colors duration-300 sm:flex",
             onCanvas
               ? "border-accent-primary/75 bg-accent-subtle"
-              : "border-accent-primary/75 bg-accent-subtle/15",
+              : "border-accent-primary bg-accent-subtle/20",
           )}
         >
           <motion.span
@@ -72,7 +72,7 @@ export function StorefrontHeader({ cartCount, onCartOpen }: StorefrontHeaderProp
             animate={reduced ? undefined : { opacity: [1, 0.25, 1] }}
             transition={{ duration: 2.4, ease: "easeInOut", repeat: Infinity }}
           />
-          <span>Brewing now — 8-12 min</span>
+          <span className="text-shadow-text-primary/10 text-shadow-2xs">Brewing now — 8-12 min</span>
         </p>
         <p
           role="status"
@@ -89,7 +89,7 @@ export function StorefrontHeader({ cartCount, onCartOpen }: StorefrontHeaderProp
             animate={reduced ? undefined : { opacity: [1, 0.25, 1] }}
             transition={{ duration: 2.4, ease: "easeInOut", repeat: Infinity }}
           />
-          8-12 min
+          <span className="text-shadow-text-primary/10 text-shadow-2xs">8-12 min</span>
         </p>
 
         <motion.button

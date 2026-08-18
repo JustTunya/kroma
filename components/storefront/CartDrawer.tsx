@@ -22,7 +22,7 @@ export function CartDrawer({ open, lines, onClose, onQuantityChange, onRemove }:
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-stretch sm:justify-end">
+        <div className="fixed inset-0 z-50 flex items-stretch justify-end">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -30,18 +30,18 @@ export function CartDrawer({ open, lines, onClose, onQuantityChange, onRemove }:
             transition={{ duration: 0.2 }}
             onClick={onClose}
             aria-hidden
-            className="absolute inset-0 bg-text-primary/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-text-primary/25 backdrop-blur-sm"
           />
 
           <motion.div
             role="dialog"
             aria-modal="true"
             aria-label="Your order"
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
             transition={spring}
-            className="relative flex max-h-[85vh] w-full flex-col overflow-hidden rounded-t-xl bg-surface-card sm:h-full sm:max-h-none sm:w-[420px] sm:rounded-none sm:rounded-l-xl"
+            className="relative flex h-full w-full max-w-full flex-col overflow-hidden bg-surface-card sm:w-105"
           >
             <div className="flex items-center justify-between gap-4 border-b border-hairline p-6">
               <h2 className="font-serif text-[28px] leading-[1.05] tracking-[-0.02em] text-text-primary">

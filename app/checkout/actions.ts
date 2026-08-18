@@ -1,6 +1,10 @@
 "use server";
 
+import { headers } from "next/headers";
+
+import type { OrderDoc } from "@/components/checkout/OrderStatus";
 import { createClient } from "@/lib/server";
+import { stripe } from "@/lib/stripe";
 import type { OrderPayloadLine } from "@/lib/checkout";
 
 export type PlaceOrderResult =
@@ -68,5 +72,67 @@ export async function placeOrder(input: {
     };
   }
 
-  return { ok: true, url: `/order/${data.access_token}` };
+  const token = data.access_token;
+
+  if (input.paymentMethod === "counter") {
+    return { ok: true, url: `/order/${token}` };
+  }
+
+  // Line items are built from what the DATABASE stored, never from the cart.
+  const { data: doc } = await supabase.rpc("order_by_token", { p_token: token });
+  const order = doc as unknown as OrderDoc | null;
+
+  if (!order) {
+    console.error("order_by_token missed straight after create_order");
+    return { ok: false, message: "The order could not be placed." };
+  }
+
+  const origin = (await headers()).get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL;
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      payment_method_types: ["card"],
+      // The same deadline the stock hold uses. One expiry governs both systems,
+      // so nobody can pay for stock that was already handed back.
+      expires_at: Math.floor(new Date(data.expires_at!).getTime() / 1000),
+      client_reference_id: data.id,
+      metadata: { order_id: data.id },
+      success_url: `${origin}/order/${token}`,
+      cancel_url: `${origin}/order/${token}`,
+      line_items: order.items.map((item) => {
+        const unit =
+          Number(item.base_price) +
+          item.selected_modifiers.reduce(
+            (sum, modifier) => sum + Number(modifier.priceOffset),
+            0,
+          );
+        return {
+          quantity: item.quantity,
+          price_data: {
+            currency: "eur",
+            // Rounded to cents exactly once, here at the Stripe boundary.
+            unit_amount: Math.round(unit * 100),
+            product_data: {
+              name: item.item_name,
+              ...(item.selected_modifiers.length > 0 && {
+                description: item.selected_modifiers
+                  .map((modifier) => modifier.option)
+                  .join(" / "),
+              }),
+            },
+          },
+        };
+      }),
+    });
+
+    // Best effort: the customer's session has no update policy on orders, so a
+    // failure here must not block the redirect. The webhook is the record of truth.
+    await supabase.from("orders").update({ stripe_session_id: session.id }).eq("id", data.id);
+
+    return { ok: true, url: session.url! };
+  } catch (stripeError) {
+    console.error("stripe session failed:", stripeError);
+    return { ok: false, message: "Card payment is unavailable. Pay at the bar instead." };
+  }
 }

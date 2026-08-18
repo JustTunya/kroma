@@ -51,15 +51,13 @@ export function StorefrontHero() {
 
         <h1 className="mt-5 max-w-[16ch] font-serif text-[clamp(56px,10vw,148px)] leading-[0.92] tracking-[-0.03em] text-surface-canvas">
           <Line delay={0.2}>Light roasts,</Line>
-          <Line delay={0.32}>
-            long <em className="italic">ferments.</em>
-          </Line>
+          <Line delay={0.32}>long ferments.</Line>
         </h1>
 
         <motion.p
           variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}
           transition={{ ...glide, delay: 0.5 }}
-          className="mt-7 max-w-md font-mono text-[13px] leading-[1.7] tracking-[0.02em] text-surface-canvas/75"
+          className="mt-7 max-w-120 font-mono text-[13px] leading-[1.7] tracking-[0.02em] text-surface-canvas/75"
         >
           Roasted Tuesday. Baked this morning. Collected at the bar.
         </motion.p>

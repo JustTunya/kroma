@@ -70,12 +70,6 @@ export default async function AccountOverviewPage() {
         <div className="mt-6">
           <PunchCard punches={punches} />
         </div>
-        <Link
-          href="/account/card"
-          className="mt-6 inline-block font-mono text-[11px] font-medium tracking-[0.14em] uppercase text-text-tertiary transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
-        >
-          How the card works
-        </Link>
       </section>
 
       {/* Your usual */}

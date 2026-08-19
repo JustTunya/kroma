@@ -19,19 +19,16 @@ export default async function AccountLayout({
   // The proxy already redirects, this is the belt to its braces.
   if (!user) redirect("/auth/login");
 
-  const [{ data: profile }, { data: card }] = await Promise.all([
-    supabase.from("profiles").select("display_name").eq("id", user.id).maybeSingle(),
-    supabase.rpc("my_card"),
-  ]);
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name")
+    .eq("id", user.id)
+    .maybeSingle();
 
-  const punches = (card as { punches?: number } | null)?.punches ?? 0;
-
-  const items: AccountNavItem[] = [
-    { href: "/account", label: "Overview" },
-    { href: "/account/orders", label: "Orders" },
-    { href: "/account/card", label: "Card", badge: `${punches}/12` },
-    { href: "/account/settings", label: "Settings" },
-  ];
+  // Orders, Card and Settings are Tasks 7-10 of
+  // docs/superpowers/plans/2026-08-19-account-dashboard.md and don't exist yet.
+  // Restore them there by adding array entries — AccountNav itself needs no changes.
+  const items: AccountNavItem[] = [{ href: "/account", label: "Overview" }];
 
   const name = profile?.display_name?.trim() || user.email?.split("@")[0] || "You";
 

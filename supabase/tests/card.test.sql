@@ -22,9 +22,15 @@ values
 
 do $$
 declare
-  v_user  uuid := 'cccccccc-0000-0000-0000-000000000003';
-  v_order orders;
-  v_n     integer;
+  v_user   uuid := 'cccccccc-0000-0000-0000-000000000003';
+  v_order  orders;
+  v_n      integer;
+  -- Declared here, not inside the nested begin/exception blocks below: a
+  -- variable declared in a nested block's own `declare` only lives until
+  -- that block's `end`, and every assert that reads it runs after that.
+  v_failed  boolean;
+  v_failed2 boolean;
+  v_failed3 boolean;
 begin
   -- create_order's 'counter' path reads the owner from auth.uid(), not from
   -- p_user_id (see pay_before_order.sql) -- p_user_id is honoured only for
@@ -51,8 +57,7 @@ begin
     '[{"menu_item_id":"66666666-6666-6666-6666-666666666666","quantity":4,"modifiers":[]}]'::jsonb,
     'C', null, 'counter', v_user);
   v_n := card_punches(v_user);
-  -- Task 3
-  -- assert v_n = 6, format('4 drinks on top of the grant is 6, got %s', v_n);
+  assert v_n = 6, format('4 drinks on top of the grant is 6, got %s', v_n);
 
   --------------------------------------------- 4. the grant applies once only
   assert (select count(*) from orders where user_id = v_user) = 2,
@@ -61,20 +66,93 @@ begin
   ------------------------------------------- 5. a cancelled order stops counting
   update orders set status = 'cancelled' where id = v_order.id;
   v_n := card_punches(v_user);
-  -- Task 3
-  -- assert v_n = 2, format('cancelling the drinks order returns to 2, got %s', v_n);
+  assert v_n = 2, format('cancelling the drinks order returns to 2, got %s', v_n);
   update orders set status = 'pending' where id = v_order.id;
 
   ------------------------------------------------------------- 6. my_usual
   set local role authenticated;
   set local request.jwt.claims =
     '{"sub":"cccccccc-0000-0000-0000-000000000003","role":"authenticated"}';
-  -- Task 3
-  -- assert (my_usual() ->> 'menu_item_id') = '66666666-6666-6666-6666-666666666666',
-  --   'the usual is the most-ordered item by quantity';
-  -- assert (my_card() ->> 'punches')::integer = 6, 'my_card must agree with card_punches';
-  -- assert (my_card() ->> 'ready')::boolean = false, 'a card of 6 is not ready';
+  assert (my_usual() ->> 'menu_item_id') = '66666666-6666-6666-6666-666666666666',
+    'the usual is the most-ordered item by quantity';
+  assert (my_card() ->> 'punches')::integer = 6, 'my_card must agree with card_punches';
+  assert (my_card() ->> 'ready')::boolean = false, 'a card of 6 is not ready';
   reset role;
+
+  ---------------------------------------------- 7. a card that is not full
+  v_failed := false;
+  begin
+    perform create_order(
+      '[{"menu_item_id":"66666666-6666-6666-6666-666666666666","quantity":1,"modifiers":[]}]'::jsonb,
+      'C', null, 'counter', v_user, null, null,
+      '66666666-6666-6666-6666-666666666666');
+  exception when sqlstate 'P0001' then
+    v_failed := true;
+  end;
+  -- Not an error: the spec's accepted loss. The order is placed, undiscounted,
+  -- with no redemption row. Assert that, not a raise.
+  assert not v_failed, 'a short card must not fail the order';
+  assert (select count(*) from card_redemptions where user_id = v_user) = 0,
+    'a short card must not write a redemption';
+
+  ------------------------------------------------- 8. fill the card and redeem
+  perform create_order(
+    '[{"menu_item_id":"66666666-6666-6666-6666-666666666666","quantity":10,"modifiers":[]}]'::jsonb,
+    'C', null, 'counter', v_user);
+  assert card_punches(v_user) >= 12,
+    format('card should be full, got %s', card_punches(v_user));
+
+  -- Quantity 3, one of them free: 4.20 * 3 - 4.20 = 8.40.
+  v_order := create_order(
+    '[{"menu_item_id":"66666666-6666-6666-6666-666666666666","quantity":3,"modifiers":[]}]'::jsonb,
+    'C', null, 'counter', v_user, null, null,
+    '66666666-6666-6666-6666-666666666666');
+  assert v_order.total = 8.40,
+    format('one free unit off a line of 3 leaves 8.40, got %s', v_order.total);
+  assert (select count(*) from card_redemptions where order_id = v_order.id) = 1,
+    'a redemption row must be written';
+  assert (select punches_spent from card_redemptions where order_id = v_order.id) = 12,
+    'a redemption burns exactly 12';
+
+  ------------------------------------------ 9. redeeming something not in the cart
+  -- Block 8's redemption spent the card back down below 12 (it earns back only
+  -- 3 of the 12 it spends, per the "one paid cup short of the next free one"
+  -- economics in card.sql -- card is 8 here). create_order silently drops an
+  -- out-of-range redeem attempt instead of raising (assertion 7's asymmetry),
+  -- so without topping the card back up here this block would exercise that
+  -- silent-drop path instead of the "item not in cart" validation it's meant
+  -- to test. Top up first so the redeem attempt actually reaches order_lines.
+  perform create_order(
+    '[{"menu_item_id":"66666666-6666-6666-6666-666666666666","quantity":4,"modifiers":[]}]'::jsonb,
+    'C', null, 'counter', v_user);
+  assert card_punches(v_user) >= 12,
+    format('card should be full again after topping up, got %s', card_punches(v_user));
+
+  v_failed2 := false;
+  begin
+    perform create_order(
+      '[{"menu_item_id":"66666666-6666-6666-6666-666666666666","quantity":1,"modifiers":[]}]'::jsonb,
+      'C', null, 'counter', v_user, null, null,
+      '77777777-7777-7777-7777-777777777777');
+  exception when sqlstate 'P0001' then
+    v_failed2 := true;
+  end;
+  assert v_failed2, 'redeeming an item that is not in the cart must raise';
+
+  ----------------------------------------------- 10. redeeming a non-drink
+  perform create_order(
+    '[{"menu_item_id":"66666666-6666-6666-6666-666666666666","quantity":20,"modifiers":[]}]'::jsonb,
+    'C', null, 'counter', v_user);
+  v_failed3 := false;
+  begin
+    perform create_order(
+      '[{"menu_item_id":"77777777-7777-7777-7777-777777777777","quantity":1,"modifiers":[]}]'::jsonb,
+      'C', null, 'counter', v_user, null, null,
+      '77777777-7777-7777-7777-777777777777');
+  exception when sqlstate 'P0001' then
+    v_failed3 := true;
+  end;
+  assert v_failed3, 'a pastry cannot be the free drink';
 
   raise notice 'card.test.sql punch counting passed';
 end;

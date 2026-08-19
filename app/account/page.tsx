@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { PunchCard } from "@/components/account/PunchCard";
 import { ReorderButton } from "@/components/account/ReorderButton";
 import { ORDER_STATUS_LABELS, type OrderStatus } from "@/lib/order-status";
@@ -112,10 +110,10 @@ export default async function AccountOverviewPage() {
             No orders under your name yet.
           </p>
         ) : (
-          <Link
-            href={`/account/orders/${last.id}`}
-            className="mt-6 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-border-focus"
-          >
+          /* Plain row, not a link: /account/orders/[id] arrives with Task 8 of
+             docs/superpowers/plans/2026-08-19-account-dashboard.md. Wrap this in
+             a Link to that route when it exists. */
+          <div className="mt-6 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
             <span className="font-mono text-[13px] tracking-[0.02em] tabular-nums text-text-primary">
               #{String(last.order_number).padStart(3, "0")}
             </span>
@@ -129,7 +127,7 @@ export default async function AccountOverviewPage() {
             <span className="font-mono text-[13px] tracking-[0.02em] tabular-nums text-text-primary">
               €{Number(last.total).toFixed(2)}
             </span>
-          </Link>
+          </div>
         )}
       </section>
     </>

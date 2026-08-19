@@ -1,9 +1,23 @@
 import Link from "next/link";
 
-import { ORDER_STATUS_LABELS, type OrderStatus } from "@/lib/order-status";
+import { OrderRow } from "@/components/account/OrderRow";
+import { menuImage } from "@/lib/menu-images";
+import { groupByMonth, summarize } from "@/lib/order-history";
+import { type OrderStatus } from "@/lib/order-status";
 import { createClient } from "@/lib/server";
+import type { CartLine } from "@/lib/cart";
 
 const PER_PAGE = 20;
+const ZONE = "Europe/Bucharest";
+
+type OrderItem = {
+  item_name: string;
+  base_price: number;
+  quantity: number;
+  selected_modifiers: { group: string; option: string; priceOffset: number }[];
+  menu_item_id: string | null;
+  menu_items: { daily_stock: number | null } | null;
+};
 
 /** The bakehouse is in Cluj; the server is in UTC. Without the zone a 00:30
  *  order reads as the previous day on the customer's own history. */
@@ -12,7 +26,16 @@ function day(value: string) {
     day: "2-digit",
     month: "short",
     year: "numeric",
-    timeZone: "Europe/Bucharest",
+    timeZone: ZONE,
+  });
+}
+
+/** "August 2026" — the heading a month's worth of orders sits under. */
+function month(value: string) {
+  return new Date(value).toLocaleDateString("en-GB", {
+    month: "long",
+    year: "numeric",
+    timeZone: ZONE,
   });
 }
 
@@ -28,71 +51,98 @@ export default async function OrdersPage({
   const supabase = await createClient();
 
   // No .eq("user_id", …) on purpose: the "orders read own" policy scopes this,
-  // and leaning on the policy is what proves the policy works.
+  // and leaning on the policy is what proves the policy works. The menu_items
+  // join is only there to tell a reorderable line from one that is gone today.
   const { data: orders, count } = await supabase
     .from("orders")
-    .select("id, order_number, status, total, placed_at, order_items(quantity)", {
-      count: "exact",
-    })
+    .select(
+      "id, order_number, status, total, placed_at, order_items(item_name, base_price, quantity, selected_modifiers, menu_item_id, menu_items(daily_stock))",
+      { count: "exact" },
+    )
     .order("placed_at", { ascending: false })
     .range(from, from + PER_PAGE - 1);
 
   const total = count ?? 0;
   const lastPage = Math.max(1, Math.ceil(total / PER_PAGE));
 
+  const rows = (orders ?? []).map((order) => {
+    const items = (order.order_items as unknown as OrderItem[] | null) ?? [];
+
+    const available = items.filter(
+      (item) => item.menu_item_id && item.menu_items?.daily_stock !== 0,
+    );
+
+    return {
+      id: order.id,
+      month: month(order.placed_at),
+      orderNumber: order.order_number,
+      date: day(order.placed_at),
+      summary: summarize(items),
+      status: order.status as OrderStatus,
+      total: Number(order.total),
+      unavailable: items
+        .filter((item) => !item.menu_item_id || item.menu_items?.daily_stock === 0)
+        .map((item) => item.item_name),
+      lines: available.map<CartLine>((item, index) => ({
+        id: `${order.id}-${index}`,
+        menuItemId: item.menu_item_id as string,
+        name: item.item_name,
+        basePrice: Number(item.base_price),
+        quantity: item.quantity,
+        selectedModifiers: item.selected_modifiers,
+        imageUrl: menuImage({ category: "", image_url: null }, index),
+      })),
+    };
+  });
+
+  const months = groupByMonth(rows);
+
   return (
     <>
-      <h1 className="font-serif text-[clamp(32px,4vw,52px)] leading-[1.05] tracking-[-0.02em] text-text-primary">
-        Orders.
-      </h1>
+      <section className="px-5 pt-16 pb-10 sm:px-10 lg:px-14 lg:pt-24">
+        <p className="font-mono text-[10px] font-medium tracking-[0.18em] text-accent-primary uppercase">
+          Every collection
+        </p>
+        <h1 className="mt-6 font-serif text-[clamp(32px,4vw,52px)] leading-[1.05] tracking-[-0.02em] text-text-primary">
+          Orders.
+        </h1>
+      </section>
 
-      {!orders || orders.length === 0 ? (
-        <p className="mt-12 border-y border-hairline py-10 font-mono text-[13px] tracking-[0.02em] text-text-secondary">
+      {rows.length === 0 ? (
+        <p className="mx-5 border-y border-hairline py-10 font-mono text-[13px] tracking-[0.02em] text-text-secondary sm:mx-10 lg:mx-14">
           No orders under your name yet.
         </p>
       ) : (
-        <ul className="mt-12 divide-y divide-hairline border-y border-hairline">
-          {orders.map((order) => {
-            const items = (order.order_items as { quantity: number }[] | null) ?? [];
-            const cups = items.reduce((sum, item) => sum + item.quantity, 0);
-            const label = ORDER_STATUS_LABELS[order.status as OrderStatus];
-
-            return (
-              /* ponytail: plain row, not a link — /account/orders/[id] is Task 8 of
-                 docs/superpowers/plans/2026-08-19-account-dashboard.md and would 404
-                 today. Wrap the row in a Link to that route when it lands. */
-              <li
-                key={order.id}
-                className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 py-7 sm:py-9"
-              >
-                <span className="font-mono text-[13px] tracking-[0.02em] tabular-nums text-text-primary">
-                  #{String(order.order_number).padStart(3, "0")}
-                </span>
-                <span className="font-mono text-[11px] font-medium tracking-[0.14em] uppercase text-text-tertiary">
-                  {day(order.placed_at)}
-                  <span aria-hidden className="mx-3 text-hairline">
-                    /
-                  </span>
-                  {cups} {cups === 1 ? "item" : "items"}
-                </span>
-                <span
-                  className={`font-mono text-[11px] font-medium tracking-[0.14em] uppercase ${label.tone}`}
-                >
-                  {label.text}
-                </span>
-                <span className="font-mono text-[13px] tracking-[0.02em] tabular-nums text-text-primary">
-                  €{Number(order.total).toFixed(2)}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
+        <div className="px-5 sm:px-10 lg:px-14">
+          {months.map((group) => (
+            <section key={group.month} aria-label={group.month}>
+              {/* 120px clears the fixed header and the sticky account rail. */}
+              <h2 className="sticky top-[120px] z-30 border-y border-hairline bg-surface-canvas/85 py-4 font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase backdrop-blur-xl">
+                {group.month}
+              </h2>
+              <ul className="divide-y divide-hairline">
+                {group.rows.map((row) => (
+                  <OrderRow
+                    key={row.id}
+                    orderNumber={row.orderNumber}
+                    date={row.date}
+                    summary={row.summary}
+                    status={row.status}
+                    total={row.total}
+                    lines={row.lines}
+                    unavailable={row.unavailable}
+                  />
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
       )}
 
       {lastPage > 1 && (
         <nav
           aria-label="Order history pages"
-          className="mt-10 flex items-center justify-between font-mono text-[11px] font-medium tracking-[0.14em] uppercase"
+          className="mt-10 flex items-center justify-between px-5 font-mono text-[11px] font-medium tracking-[0.14em] uppercase sm:px-10 lg:px-14"
         >
           {page > 1 ? (
             <Link

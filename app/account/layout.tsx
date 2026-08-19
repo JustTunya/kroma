@@ -20,12 +20,6 @@ export default async function AccountLayout({
   // The proxy already redirects, this is the belt to its braces.
   if (!user) redirect("/auth/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name")
-    .eq("id", user.id)
-    .maybeSingle();
-
   // Card and Settings are Tasks 9-10 of
   // docs/superpowers/plans/2026-08-19-account-dashboard.md and don't exist yet.
   // Restore them there by adding array entries — AccountNav itself needs no changes.
@@ -34,10 +28,10 @@ export default async function AccountLayout({
     { href: "/account/orders", label: "Orders" },
   ];
 
-  const name = profile?.display_name?.trim() || user.email?.split("@")[0] || "You";
-
   return (
     <>
+      {/* ponytail: the bar stays on canvas even where the band behind it is dark.
+          Invert it on scroll the way StorefrontHeader does if the seam reads wrong. */}
       <header className="fixed top-0 z-50 flex h-16 w-full items-center justify-between border-b border-hairline bg-surface-canvas/85 px-5 backdrop-blur-xl sm:px-10 lg:px-14">
         <Link
           href="/"
@@ -50,26 +44,21 @@ export default async function AccountLayout({
         </span>
       </header>
 
-      <main className="flex-1 px-5 pt-24 pb-24 sm:px-10 lg:px-14 lg:pt-32 lg:pb-32">
-        <div className="grid gap-10 md:grid-cols-[200px_minmax(0,1fr)] md:gap-0">
-          <div className="md:sticky md:top-24 md:self-start md:pr-10">
-            <p className="font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase">
-              {name}
-            </p>
-            <div className="mt-6 border-y border-hairline py-2 md:border-b-0">
+      <main className="flex-1 pt-16">
+        {/* Parks exactly under the header, the slot CategoryNav uses on the storefront. */}
+        <div className="sticky top-16 z-40 border-b border-hairline bg-surface-canvas/85 backdrop-blur-xl">
+          <div className="flex h-14 items-center justify-between gap-4 px-5 sm:px-10 lg:px-14">
+            <div className="min-w-0 flex-1">
               <AccountNav items={items} />
             </div>
-            <div className="mt-6 hidden md:block">
+            <div className="shrink-0">
               <SignOutButton />
             </div>
           </div>
-
-          <div className="md:border-l md:border-hairline md:pl-10 lg:pl-14">{children}</div>
         </div>
 
-        <div className="mt-16 md:hidden">
-          <SignOutButton />
-        </div>
+        {/* Sections are full-bleed and carry their own gutters — no wrapper here. */}
+        {children}
       </main>
 
       <SiteFooter />

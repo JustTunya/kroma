@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { OrderStatus, type OrderDoc } from "@/components/checkout/OrderStatus";
 import { SiteFooter } from "@/components/storefront/SiteFooter";
+import { Wordmark } from "@/components/Logo";
 import { createClient } from "@/lib/server";
 
 export const dynamic = "force-dynamic";
@@ -38,9 +39,9 @@ export default async function OrderPage({
       <header className="fixed top-0 z-50 flex h-16 w-full items-center justify-between border-b border-hairline bg-surface-canvas/85 px-5 backdrop-blur-xl sm:px-10 lg:px-14">
         <Link
           href="/"
-          className="font-serif text-[26px] leading-none tracking-[-0.02em] text-text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-border-focus"
+          className="focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-border-focus"
         >
-          KROMA
+          <Wordmark className="font-serif text-[26px] leading-none tracking-[-0.02em] text-text-primary" />
         </Link>
         <span className="font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase">
           Order

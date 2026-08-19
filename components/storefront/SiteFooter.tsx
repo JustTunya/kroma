@@ -1,3 +1,5 @@
+import { LogoOSvg } from "@/components/Logo";
+
 const DETAILS = [
   { label: "Where", lines: ["Str. Universității 12", "Cluj-Napoca, Romania"] },
   { label: "Hours", lines: ["Mon-Fri 07:30-18:00", "Sat-Sun 08:30-17:00"] },
@@ -32,8 +34,12 @@ export function SiteFooter() {
             fill="currentColor"
             className="font-serif text-[136px]"
           >
-            KROMA
+            KR<tspan fill="none">O</tspan>MA
           </text>
+          {/* Custom "O" laid over its hidden text slot — measured (getBBox, in
+              browser) at this exact font-size/textLength so it lines up without
+              shifting K R M A. */}
+          <LogoOSvg x={238.96} y={0.72} width={61.83} height={99.28} />
         </svg>
       </div>
 

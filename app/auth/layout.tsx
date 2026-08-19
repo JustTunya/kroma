@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { AuthPanel } from "@/components/auth/AuthForm";
 import { AuthHeroCopy } from "@/components/auth/AuthHeroCopy";
+import { Wordmark } from "@/components/Logo";
 
 export const metadata: Metadata = {
   title: "Account — KROMA Coffee & Bakehouse",
@@ -33,9 +34,9 @@ export default function AuthLayout({ children }: LayoutProps<"/auth">) {
         <div className="relative flex h-16 items-center px-14">
           <Link
             href="/"
-            className="font-serif text-[26px] leading-none tracking-[-0.02em] text-surface-canvas focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-surface-canvas"
+            className="focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-surface-canvas"
           >
-            KROMA
+            <Wordmark className="font-serif text-[26px] leading-none tracking-[-0.02em] text-surface-canvas" />
           </Link>
         </div>
 
@@ -45,9 +46,9 @@ export default function AuthLayout({ children }: LayoutProps<"/auth">) {
       <main className="flex flex-col px-5 py-[clamp(1.5rem,4vh,3.5rem)] sm:px-10 lg:border-l lg:border-hairline lg:px-14">
         <Link
           href="/"
-          className="mb-[clamp(1rem,2.6vh,3rem)] font-serif text-[26px] leading-none tracking-[-0.02em] text-text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-border-focus lg:hidden"
+          className="mb-[clamp(1rem,2.6vh,3rem)] lg:hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-border-focus"
         >
-          KROMA
+          <Wordmark className="font-serif text-[26px] leading-none tracking-[-0.02em] text-text-primary" />
         </Link>
 
         <AuthPanel>{children}</AuthPanel>

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { clearGuestCart } from "@/lib/cart";
+import { readServerCart, writeServerCart } from "@/lib/cart-sync";
 import { createClient } from "@/lib/client";
 
 export type OrderDocItem = {
@@ -52,6 +54,17 @@ export function OrderStatus({ token, initial }: { token: string; initial: OrderD
       // Private mode or a full quota — the order still works, it is just not remembered.
     }
   }, [token]);
+
+  // The order owns these lines now. Deliberately here and not at submit time:
+  // an online order is only real once this page has confirmed the payment, and
+  // until then the cart has to survive for a retry. Both calls are no-ops for
+  // the side that does not apply — writeServerCart ignores guests.
+  useEffect(() => {
+    clearGuestCart();
+    readServerCart()
+      .then((lines) => (lines.length ? writeServerCart([]) : undefined))
+      .catch((error) => console.error("cart clear failed:", error));
+  }, []);
 
   // ponytail: polls every 15s. Realtime would need an RLS policy guests do not
   // have; swap to a channel if the poll load ever shows up.

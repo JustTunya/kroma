@@ -6,7 +6,15 @@ import { createClient } from "@/lib/server";
 
 export const metadata = { title: "Checkout — KROMA" };
 
-export default async function CheckoutPage() {
+export default async function CheckoutPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ payment?: string }>;
+}) {
+  // Set when a card payment did not end in an order — the cart and the typed-in
+  // details are still here, so the customer just presses Pay again.
+  const { payment } = await searchParams;
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -49,7 +57,11 @@ export default async function CheckoutPage() {
         </p>
 
         <div className="mt-16">
-          <CheckoutForm signedIn={Boolean(user)} defaultName={defaultName} />
+          <CheckoutForm
+            signedIn={Boolean(user)}
+            defaultName={defaultName}
+            paymentNotice={payment === "unfinished" || payment === "refunded" ? payment : undefined}
+          />
         </div>
       </main>
 

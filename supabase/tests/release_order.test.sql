@@ -23,7 +23,7 @@ begin
   v_order := create_order(
     '[{"menu_item_id":"33333333-3333-3333-3333-333333333333","quantity":2,"modifiers":[]},
       {"menu_item_id":"33333333-3333-3333-3333-333333333333","quantity":3,"modifiers":[]}]'::jsonb,
-    'Ana', 'no bag', 'online');
+    'Ana', 'no bag', 'counter');
 
   select daily_stock into v_stock from menu_items
    where id = '33333333-3333-3333-3333-333333333333';
@@ -61,10 +61,15 @@ begin
   assert v_stock = 10, format('a second release must not add stock, got %s', v_stock);
 
   -------------------------------------------------- release_expired_orders
+  -- Card orders no longer hold stock, so this shape only exists as a leftover
+  -- from the old pay-later flow. The row is faked here for exactly that reason:
+  -- the cron has to drain the ones still in the table.
   v_order := create_order(
     '[{"menu_item_id":"33333333-3333-3333-3333-333333333333","quantity":4,"modifiers":[]}]'::jsonb,
-    'Bogdan', null, 'online');
-  update orders set expires_at = now() - interval '1 minute' where id = v_order.id;
+    'Bogdan', null, 'counter');
+  update orders
+     set payment_method = 'online', expires_at = now() - interval '1 minute'
+   where id = v_order.id;
 
   v_count := release_expired_orders();
   assert v_count >= 1, format('expected at least 1 expired release, got %s', v_count);

@@ -249,6 +249,9 @@ export type Database = {
           p_items: Json
           p_notes: string
           p_payment_method: string
+          p_stripe_payment_intent_id?: string
+          p_stripe_session_id?: string
+          p_user_id?: string
         }
         Returns: {
           access_token: string
@@ -277,6 +280,8 @@ export type Database = {
         }
       }
       order_by_token: { Args: { p_token: string }; Returns: Json }
+      order_lines: { Args: { p_items: Json; p_lock: boolean }; Returns: Json }
+      quote_order: { Args: { p_items: Json }; Returns: Json }
       release_expired_orders: { Args: never; Returns: number }
       release_order: { Args: { p_order_id: string }; Returns: boolean }
     }

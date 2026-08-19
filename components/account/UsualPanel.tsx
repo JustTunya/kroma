@@ -9,8 +9,9 @@ import type { CartLine } from "@/lib/cart";
 
 /**
  * The item you order twice, given the storefront's editorial row treatment —
- * photograph, serif name, spec line — because a name in mono is a receipt and
- * a photograph is an invitation.
+ * thumbnail, serif name, spec line — because a name in mono is a receipt.
+ * A single row, not the multi-item menu's hero-preview split: one item never
+ * earns a 360px dedicated image column.
  */
 export function UsualPanel({
   name,
@@ -44,73 +45,53 @@ export function UsualPanel({
         Your usual
       </motion.p>
 
-      <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-20">
-        <div className="flex items-start gap-4 sm:gap-6">
-          <motion.div
-            variants={rise}
-            transition={glide}
-            className={`relative size-20 shrink-0 overflow-hidden rounded-sm bg-surface-muted lg:hidden ${
-              soldOut ? "grayscale" : ""
-            }`}
-          >
-            <Image src={imageUrl} alt="" fill sizes="80px" className="object-cover" />
-          </motion.div>
-
-          <div className="min-w-0 flex-1">
-            <motion.div
-              variants={rise}
-              transition={glide}
-              className="flex items-baseline justify-between gap-5"
-            >
-              <h2
-                className={`font-serif text-[clamp(28px,3.2vw,44px)] leading-[1.05] tracking-[-0.02em] ${
-                  soldOut ? "text-text-tertiary" : "text-text-primary"
-                }`}
-              >
-                {name}
-              </h2>
-              <span
-                className={`shrink-0 font-mono text-[15px] font-medium tracking-[0.02em] tabular-nums ${
-                  soldOut ? "text-text-tertiary" : "text-text-primary"
-                }`}
-              >
-                €{price.toFixed(2)}
-              </span>
-            </motion.div>
-
-            <motion.p
-              variants={rise}
-              transition={glide}
-              className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[11px] font-medium tracking-[0.14em] text-text-tertiary uppercase"
-            >
-              {spec.map((part, index) => (
-                <span key={part} className="flex items-center gap-3">
-                  {index > 0 && (
-                    <span aria-hidden className="text-hairline">
-                      /
-                    </span>
-                  )}
-                  {part}
-                </span>
-              ))}
-            </motion.p>
-
-            <motion.div variants={rise} transition={glide} className="mt-8">
-              <ReorderButton lines={lines} label="Order again" />
-            </motion.div>
-          </div>
-        </div>
-
-        <motion.div
-          variants={rise}
-          transition={glide}
-          className={`relative hidden aspect-4/5 overflow-hidden rounded-lg border border-border-subtle bg-surface-muted shadow-card lg:block ${
+      <motion.div
+        variants={rise}
+        transition={glide}
+        className="mt-8 flex flex-wrap items-center gap-5 border-y border-hairline py-7 sm:flex-nowrap sm:gap-6 sm:py-9"
+      >
+        <div
+          className={`relative size-20 shrink-0 overflow-hidden rounded-sm border border-border-subtle bg-surface-muted ${
             soldOut ? "grayscale" : ""
           }`}
         >
-          <Image src={imageUrl} alt="" fill sizes="360px" className="object-cover" />
-        </motion.div>
-      </div>
+          <Image src={imageUrl} alt="" fill sizes="80px" className="object-cover" />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <h2
+            className={`font-serif text-[clamp(24px,2.6vw,34px)] leading-[1.05] tracking-[-0.02em] ${
+              soldOut ? "text-text-tertiary" : "text-text-primary"
+            }`}
+          >
+            {name}
+          </h2>
+
+          <p className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[11px] font-medium tracking-[0.14em] text-text-tertiary uppercase">
+            {spec.map((part, index) => (
+              <span key={part} className="flex items-center gap-3">
+                {index > 0 && (
+                  <span aria-hidden className="text-hairline">
+                    /
+                  </span>
+                )}
+                {part}
+              </span>
+            ))}
+          </p>
+        </div>
+
+        <div className="flex w-full shrink-0 items-center justify-between gap-4 sm:w-auto sm:justify-end">
+          <span
+            className={`font-mono text-[15px] font-medium tracking-[0.02em] tabular-nums ${
+              soldOut ? "text-text-tertiary" : "text-text-primary"
+            }`}
+          >
+            €{price.toFixed(2)}
+          </span>
+          <ReorderButton lines={lines} label="Order again" />
+        </div>
+      </motion.div>
     </motion.section>
   );
 }

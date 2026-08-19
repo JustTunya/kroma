@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      card_redemptions: {
+        Row: {
+          created_at: string
+          id: string
+          item_name: string
+          order_id: string
+          punches_spent: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_name: string
+          order_id: string
+          punches_spent?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_name?: string
+          order_id?: string
+          punches_spent?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_redemptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       carts: {
         Row: {
           id: string
@@ -64,6 +99,7 @@ export type Database = {
       menu_categories: {
         Row: {
           created_at: string
+          earns_punch: boolean
           id: string
           is_active: boolean
           name: string
@@ -72,6 +108,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          earns_punch?: boolean
           id?: string
           is_active?: boolean
           name: string
@@ -80,6 +117,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          earns_punch?: boolean
           id?: string
           is_active?: boolean
           name?: string
@@ -157,6 +195,7 @@ export type Database = {
         Row: {
           base_price: number
           created_at: string
+          earns_punch: boolean
           id: string
           item_name: string
           line_total: number
@@ -168,6 +207,7 @@ export type Database = {
         Insert: {
           base_price: number
           created_at?: string
+          earns_punch?: boolean
           id?: string
           item_name: string
           line_total: number
@@ -179,6 +219,7 @@ export type Database = {
         Update: {
           base_price?: number
           created_at?: string
+          earns_punch?: boolean
           id?: string
           item_name?: string
           line_total?: number
@@ -299,6 +340,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      card_punches: { Args: { p_user: string }; Returns: number }
       create_order: {
         Args: {
           p_customer_name: string
@@ -335,6 +377,8 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      my_card: { Args: never; Returns: Json }
+      my_usual: { Args: never; Returns: Json }
       order_by_token: { Args: { p_token: string }; Returns: Json }
       order_lines: { Args: { p_items: Json; p_lock: boolean }; Returns: Json }
       quote_order: { Args: { p_items: Json }; Returns: Json }

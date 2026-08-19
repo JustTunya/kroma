@@ -13,6 +13,7 @@ import { ShoppingBag, UserRound } from "lucide-react";
 
 import { numberTransition, pressSpring, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+import { Wordmark } from "@/components/Logo";
 
 type StorefrontHeaderProps = {
   cartCount: number;
@@ -45,14 +46,12 @@ export function StorefrontHeader({
     >
       <div className="relative flex h-16 w-full items-center justify-between gap-4 px-5 sm:px-10 lg:px-14">
         <div className="flex items-baseline gap-2.5">
-          <span
+          <Wordmark
             className={cn(
               "font-serif text-[26px] leading-none tracking-[-0.02em] transition-colors duration-300",
               onCanvas ? "text-text-primary" : "text-surface-canvas",
             )}
-          >
-            KROMA
-          </span>
+          />
           <span
             className={cn(
               "hidden font-mono text-[10px] font-medium tracking-[0.18em] uppercase transition-colors duration-300 sm:inline",

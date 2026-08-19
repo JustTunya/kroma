@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { SignOutButton } from "@/components/auth/AuthForm";
 import { AccountNav, type AccountNavItem } from "@/components/account/AccountNav";
 import { SiteFooter } from "@/components/storefront/SiteFooter";
+import { Wordmark } from "@/components/Logo";
 import { createClient } from "@/lib/server";
 
 export default async function AccountLayout({
@@ -25,10 +26,13 @@ export default async function AccountLayout({
     .eq("id", user.id)
     .maybeSingle();
 
-  // Orders, Card and Settings are Tasks 7-10 of
+  // Card and Settings are Tasks 9-10 of
   // docs/superpowers/plans/2026-08-19-account-dashboard.md and don't exist yet.
   // Restore them there by adding array entries — AccountNav itself needs no changes.
-  const items: AccountNavItem[] = [{ href: "/account", label: "Overview" }];
+  const items: AccountNavItem[] = [
+    { href: "/account", label: "Overview" },
+    { href: "/account/orders", label: "Orders" },
+  ];
 
   const name = profile?.display_name?.trim() || user.email?.split("@")[0] || "You";
 
@@ -37,9 +41,9 @@ export default async function AccountLayout({
       <header className="fixed top-0 z-50 flex h-16 w-full items-center justify-between border-b border-hairline bg-surface-canvas/85 px-5 backdrop-blur-xl sm:px-10 lg:px-14">
         <Link
           href="/"
-          className="font-serif text-[26px] leading-none tracking-[-0.02em] text-text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-border-focus"
+          className="focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-border-focus"
         >
-          KROMA
+          <Wordmark className="font-serif text-[26px] leading-none tracking-[-0.02em] text-text-primary" />
         </Link>
         <span className="font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase">
           Account

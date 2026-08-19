@@ -2,16 +2,25 @@
 
 import { headers } from "next/headers";
 
-import type { OrderDoc } from "@/components/checkout/OrderStatus";
 import { createClient } from "@/lib/server";
 import { stripe } from "@/lib/stripe";
-import type { OrderPayloadLine } from "@/lib/checkout";
+import { packItems, type OrderPayloadLine } from "@/lib/checkout";
 
 export type PlaceOrderResult =
   | { ok: true; url: string }
   | { ok: false; message: string; menuItemId?: string };
 
+type QuoteLine = {
+  item_name: string;
+  base_price: number;
+  quantity: number;
+  selected_modifiers: { group: string; option: string; priceOffset: number }[];
+};
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** Stripe allows 50 metadata keys; the cart chunks must leave room for the rest. */
+const MAX_ITEM_CHUNKS = 45;
 
 /** create_order raises with detail '{"menu_item_id":"…"}' so the UI can mark the row. */
 function offendingItem(details: string | null | undefined): string | undefined {
@@ -30,8 +39,8 @@ export async function placeOrder(input: {
   notes: string;
   paymentMethod: "online" | "counter";
 }): Promise<PlaceOrderResult> {
-  // Trust boundary. create_order validates all of this again in SQL; this pass
-  // exists so obvious junk never reaches the database.
+  // Trust boundary. The SQL validates all of this again; this pass exists so
+  // obvious junk never reaches the database.
   if (!Array.isArray(input.items) || input.items.length === 0) {
     return { ok: false, message: "Nothing on the pass in this order." };
   }
@@ -55,37 +64,55 @@ export async function placeOrder(input: {
     return { ok: false, message: "A name for the order, so the bar can call it." };
   }
 
+  const notes = input.notes.trim().slice(0, 280);
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("create_order", {
+
+  if (input.paymentMethod === "counter") {
+    // Nothing to settle first — placing it IS the order.
+    const { data, error } = await supabase.rpc("create_order", {
+      p_items: input.items,
+      p_customer_name: name,
+      p_notes: notes,
+      p_payment_method: "counter",
+    });
+
+    if (error || !data) {
+      console.error("create_order failed:", error?.message);
+      return {
+        ok: false,
+        message: error?.message ?? "The order could not be placed.",
+        menuItemId: offendingItem(error?.details),
+      };
+    }
+
+    return { ok: true, url: `/order/${data.access_token}` };
+  }
+
+  // Card. No order is written here, and no stock is taken: an unpaid card is
+  // not an order. The cart is priced, parked on the Stripe session, and only
+  // becomes an order once the payment clears (lib/payment.ts).
+  const { data: quote, error: quoteError } = await supabase.rpc("quote_order", {
     p_items: input.items,
-    p_customer_name: name,
-    p_notes: input.notes.trim().slice(0, 280),
-    p_payment_method: input.paymentMethod,
   });
 
-  if (error || !data) {
-    console.error("create_order failed:", error?.message);
+  if (quoteError || !quote) {
+    console.error("quote_order failed:", quoteError?.message);
     return {
       ok: false,
-      message: error?.message ?? "The order could not be placed.",
-      menuItemId: offendingItem(error?.details),
+      message: quoteError?.message ?? "The order could not be priced.",
+      menuItemId: offendingItem(quoteError?.details),
     };
   }
 
-  const token = data.access_token;
-
-  if (input.paymentMethod === "counter") {
-    return { ok: true, url: `/order/${token}` };
+  const lines = (quote as { lines: QuoteLine[] }).lines;
+  const packed = packItems(input.items);
+  if (Object.keys(packed).length > MAX_ITEM_CHUNKS) {
+    return { ok: false, message: "Too many lines on one order." };
   }
 
-  // Line items are built from what the DATABASE stored, never from the cart.
-  const { data: doc } = await supabase.rpc("order_by_token", { p_token: token });
-  const order = doc as unknown as OrderDoc | null;
-
-  if (!order) {
-    console.error("order_by_token missed straight after create_order");
-    return { ok: false, message: "The order could not be placed." };
-  }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const origin = (await headers()).get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL;
 
@@ -93,30 +120,37 @@ export async function placeOrder(input: {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
-      // The same deadline the stock hold uses. One expiry governs both systems,
-      // so nobody can pay for stock that was already handed back.
-      expires_at: Math.floor(new Date(data.expires_at!).getTime() / 1000),
-      client_reference_id: data.id,
-      metadata: { order_id: data.id },
-      success_url: `${origin}/order/${token}`,
-      cancel_url: `${origin}/order/${token}`,
-      line_items: order.items.map((item) => {
+      // Stripe's floor is 30 minutes. Nothing is held meanwhile, so this is the
+      // life of the quote, not of a reservation.
+      expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
+      metadata: {
+        ...packed,
+        customer_name: name,
+        notes,
+        ...(user && { user_id: user.id }),
+      },
+      // Both ends come back to us: /checkout/confirm writes the order, and a
+      // cancelled payment lands on a checkout page whose cart is untouched.
+      success_url: `${origin}/checkout/confirm?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/checkout?payment=unfinished`,
+      // Prices come from quote_order, which is the same SQL create_order uses.
+      line_items: lines.map((line) => {
         const unit =
-          Number(item.base_price) +
-          item.selected_modifiers.reduce(
+          Number(line.base_price) +
+          line.selected_modifiers.reduce(
             (sum, modifier) => sum + Number(modifier.priceOffset),
             0,
           );
         return {
-          quantity: item.quantity,
+          quantity: line.quantity,
           price_data: {
             currency: "eur",
             // Rounded to cents exactly once, here at the Stripe boundary.
             unit_amount: Math.round(unit * 100),
             product_data: {
-              name: item.item_name,
-              ...(item.selected_modifiers.length > 0 && {
-                description: item.selected_modifiers
+              name: line.item_name,
+              ...(line.selected_modifiers.length > 0 && {
+                description: line.selected_modifiers
                   .map((modifier) => modifier.option)
                   .join(" / "),
               }),
@@ -125,10 +159,6 @@ export async function placeOrder(input: {
         };
       }),
     });
-
-    // Best effort: the customer's session has no update policy on orders, so a
-    // failure here must not block the redirect. The webhook is the record of truth.
-    await supabase.from("orders").update({ stripe_session_id: session.id }).eq("id", data.id);
 
     return { ok: true, url: session.url! };
   } catch (stripeError) {

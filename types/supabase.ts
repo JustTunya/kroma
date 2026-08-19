@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      card_redemptions: {
+        Row: {
+          created_at: string
+          id: string
+          item_name: string
+          order_id: string
+          punches_spent: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_name: string
+          order_id: string
+          punches_spent?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_name?: string
+          order_id?: string
+          punches_spent?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_redemptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       carts: {
         Row: {
           id: string
@@ -35,9 +70,36 @@ export type Database = {
         }
         Relationships: []
       }
+      favourites: {
+        Row: {
+          created_at: string
+          menu_item_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          menu_item_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          menu_item_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favourites_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_categories: {
         Row: {
           created_at: string
+          earns_punch: boolean
           id: string
           is_active: boolean
           name: string
@@ -46,6 +108,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          earns_punch?: boolean
           id?: string
           is_active?: boolean
           name: string
@@ -54,6 +117,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          earns_punch?: boolean
           id?: string
           is_active?: boolean
           name?: string
@@ -131,6 +195,7 @@ export type Database = {
         Row: {
           base_price: number
           created_at: string
+          earns_punch: boolean
           id: string
           item_name: string
           line_total: number
@@ -142,6 +207,7 @@ export type Database = {
         Insert: {
           base_price: number
           created_at?: string
+          earns_punch?: boolean
           id?: string
           item_name: string
           line_total: number
@@ -153,6 +219,7 @@ export type Database = {
         Update: {
           base_price?: number
           created_at?: string
+          earns_punch?: boolean
           id?: string
           item_name?: string
           line_total?: number
@@ -238,17 +305,52 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          dietary_tags: string[]
+          display_name: string | null
+          id: string
+          marketing_opt_in: boolean
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dietary_tags?: string[]
+          display_name?: string | null
+          id: string
+          marketing_opt_in?: boolean
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dietary_tags?: string[]
+          display_name?: string | null
+          id?: string
+          marketing_opt_in?: boolean
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      card_punches: { Args: { p_user: string }; Returns: number }
       create_order: {
         Args: {
           p_customer_name: string
           p_items: Json
           p_notes: string
           p_payment_method: string
+          p_redeem_item_id?: string
+          p_stripe_payment_intent_id?: string
+          p_stripe_session_id?: string
+          p_user_id?: string
         }
         Returns: {
           access_token: string
@@ -276,7 +378,17 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      my_card: { Args: never; Returns: Json }
+      my_usual: { Args: never; Returns: Json }
       order_by_token: { Args: { p_token: string }; Returns: Json }
+      order_lines: {
+        Args: { p_items: Json; p_lock: boolean; p_redeem_item_id?: string }
+        Returns: Json
+      }
+      quote_order: {
+        Args: { p_items: Json; p_redeem_item_id?: string }
+        Returns: Json
+      }
       release_expired_orders: { Args: never; Returns: number }
       release_order: { Args: { p_order_id: string }; Returns: boolean }
     }

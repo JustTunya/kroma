@@ -1,8 +1,10 @@
 import { admin } from "@/lib/admin";
 
 /**
- * Backstop for a checkout.session.expired webhook that never arrived. Without
- * it, one dropped event holds that stock until closing.
+ * ponytail: card orders no longer hold stock — they are only written once the
+ * payment clears — so this drains pending online rows left by the old flow and
+ * then finds nothing. Delete the route, its cron entry and release_order() once
+ * no such rows remain.
  */
 export async function GET(request: Request) {
   if (request.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) {

@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 
+import { clearGuestCart } from "@/lib/cart";
+import { readServerCart, writeServerCart } from "@/lib/cart-sync";
 import { createClient } from "@/lib/client";
+import { ORDER_STATUS_LABELS, isSettled, type OrderStatus } from "@/lib/order-status";
 
 export type OrderDocItem = {
   item_name: string;
@@ -15,7 +18,7 @@ export type OrderDocItem = {
 export type OrderDoc = {
   id: string;
   order_number: number;
-  status: "pending" | "paid" | "preparing" | "ready" | "collected" | "cancelled";
+  status: OrderStatus;
   customer_name: string | null;
   notes: string | null;
   subtotal: number;
@@ -24,17 +27,6 @@ export type OrderDoc = {
   placed_at: string;
   pickup_at: string | null;
   items: OrderDocItem[];
-};
-
-const SETTLED: OrderDoc["status"][] = ["collected", "cancelled"];
-
-const LABELS: Record<OrderDoc["status"], { text: string; tone: string }> = {
-  pending: { text: "On the pass", tone: "text-accent-primary" },
-  paid: { text: "Paid — on the pass", tone: "text-badge-live" },
-  preparing: { text: "Brewing now", tone: "text-badge-live" },
-  ready: { text: "Ready at the bar", tone: "text-badge-live" },
-  collected: { text: "Collected", tone: "text-text-tertiary" },
-  cancelled: { text: "Cancelled", tone: "text-badge-alert" },
 };
 
 export function OrderStatus({ token, initial }: { token: string; initial: OrderDoc }) {
@@ -53,10 +45,21 @@ export function OrderStatus({ token, initial }: { token: string; initial: OrderD
     }
   }, [token]);
 
+  // The order owns these lines now. Deliberately here and not at submit time:
+  // an online order is only real once this page has confirmed the payment, and
+  // until then the cart has to survive for a retry. Both calls are no-ops for
+  // the side that does not apply — writeServerCart ignores guests.
+  useEffect(() => {
+    clearGuestCart();
+    readServerCart()
+      .then((lines) => (lines.length ? writeServerCart([]) : undefined))
+      .catch((error) => console.error("cart clear failed:", error));
+  }, []);
+
   // ponytail: polls every 15s. Realtime would need an RLS policy guests do not
   // have; swap to a channel if the poll load ever shows up.
   useEffect(() => {
-    if (SETTLED.includes(order.status)) return;
+    if (isSettled(order.status)) return;
 
     const supabase = createClient();
     const timer = setInterval(async () => {
@@ -67,7 +70,7 @@ export function OrderStatus({ token, initial }: { token: string; initial: OrderD
     return () => clearInterval(timer);
   }, [token, order.status]);
 
-  const label = LABELS[order.status];
+  const label = ORDER_STATUS_LABELS[order.status];
 
   return (
     <p

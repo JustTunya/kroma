@@ -1,152 +1,135 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
-
-import { SignOutButton } from "@/components/auth/AuthForm";
-import { SiteFooter } from "@/components/storefront/SiteFooter";
+import { PunchCard } from "@/components/account/PunchCard";
+import { ReorderButton } from "@/components/account/ReorderButton";
+import { ORDER_STATUS_LABELS, type OrderStatus } from "@/lib/order-status";
 import { createClient } from "@/lib/server";
+import type { CartLine } from "@/lib/cart";
 
-const PROVIDER_LABELS: Record<string, string> = {
-  email: "Email and password",
-  google: "Google",
-  facebook: "Facebook",
+type Usual = {
+  menu_item_id: string;
+  name: string;
+  base_price: number;
+  daily_stock: number | null;
+  image_url: string | null;
+  times_ordered: number;
+  selected_modifiers: { group: string; option: string; priceOffset: number }[];
 };
 
-function day(value: string | undefined) {
-  if (!value) return "—";
-  return new Date(value).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+/** Opening hours are 07:30; anything before noon is still morning at the bar. */
+function greeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning.";
+  if (hour < 17) return "Good afternoon.";
+  return "Good evening.";
 }
 
-export default async function AccountPage() {
+export default async function AccountOverviewPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
-  // The proxy already redirects, this is the belt to its braces.
-  if (!user) redirect("/auth/login");
+  const [{ data: card }, { data: usualRaw }, { data: orders }] = await Promise.all([
+    supabase.rpc("my_card"),
+    supabase.rpc("my_usual"),
+    supabase
+      .from("orders")
+      .select("id, order_number, status, total, placed_at")
+      .order("placed_at", { ascending: false })
+      .limit(1),
+  ]);
 
-  // No .eq("user_id", …) on purpose: the "orders read own" policy scopes this,
-  // and leaning on the policy is what proves the policy works.
-  const { data: orders } = await supabase
-    .from("orders")
-    .select("id, order_number, status, total, placed_at, payment_method")
-    .order("placed_at", { ascending: false })
-    .limit(10);
+  const punches = (card as { punches?: number } | null)?.punches ?? 0;
+  const usual = usualRaw as unknown as Usual | null;
+  const last = orders?.[0];
 
-  const provider = user.app_metadata.provider ?? "email";
-  const verified = Boolean(user.email_confirmed_at);
-
-  const rows = [
-    { label: "Email", value: user.email ?? "—" },
-    { label: "Signed in with", value: PROVIDER_LABELS[provider] ?? provider },
-    { label: "Member since", value: day(user.created_at) },
-    { label: "Last seen", value: day(user.last_sign_in_at ?? undefined) },
-  ];
+  const usualLine: CartLine[] =
+    usual && usual.daily_stock !== 0
+      ? [
+          {
+            id: `usual-${usual.menu_item_id}`,
+            menuItemId: usual.menu_item_id,
+            name: usual.name,
+            basePrice: Number(usual.base_price),
+            quantity: 1,
+            selectedModifiers: usual.selected_modifiers,
+            imageUrl: usual.image_url ?? "",
+          },
+        ]
+      : [];
 
   return (
     <>
-      <header className="fixed top-0 z-50 flex h-16 w-full items-center justify-between border-b border-hairline bg-surface-canvas/85 px-5 backdrop-blur-xl sm:px-10 lg:px-14">
-        <Link
-          href="/"
-          className="font-serif text-[26px] leading-none tracking-[-0.02em] text-text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-border-focus"
-        >
-          KROMA
-        </Link>
-        <span className="font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase">
-          Account
-        </span>
-      </header>
+      <h1 className="max-w-[14ch] font-serif text-[clamp(32px,4vw,52px)] leading-[1.05] tracking-[-0.02em] text-text-primary">
+        {greeting()}
+      </h1>
 
-      <main className="flex-1 px-5 pt-32 pb-24 sm:px-10 lg:px-14 lg:pt-40 lg:pb-32">
+      {/* The card */}
+      <section aria-label="Your card" className="mt-12 border-y border-hairline py-8">
         <p className="font-mono text-[10px] font-medium tracking-[0.18em] text-accent-primary uppercase">
-          Account
+          Your card
         </p>
-        <h1 className="mt-5 max-w-[14ch] font-serif text-[clamp(32px,4vw,52px)] leading-[1.05] tracking-[-0.02em] text-text-primary">
-          Signed in.
-        </h1>
-        <p className="mt-6 max-w-md text-[16px] leading-[1.6] text-text-secondary">
-          Orders placed from here are held under your name and collected at the
-          bar.
+        <div className="mt-6">
+          <PunchCard punches={punches} />
+        </div>
+      </section>
+
+      {/* Your usual */}
+      <section aria-label="Your usual" className="border-b border-hairline py-8">
+        <p className="font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase">
+          Your usual
         </p>
 
-        <dl className="mt-12 max-w-2xl divide-y divide-hairline border-y border-hairline">
-          {rows.map((row) => (
-            <div
-              key={row.label}
-              className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-5"
-            >
-              <dt className="font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase">
-                {row.label}
-              </dt>
-              <dd className="font-mono text-[13px] tracking-[0.02em] text-text-primary">
-                {row.value}
-              </dd>
+        {!usual ? (
+          <p className="mt-6 font-mono text-[13px] tracking-[0.02em] text-text-secondary">
+            Nothing ordered twice yet.
+          </p>
+        ) : (
+          <>
+            <p className="mt-4 font-serif text-[clamp(24px,2.6vw,34px)] leading-[1.05] tracking-[-0.02em] text-text-primary">
+              {usual.name}
+            </p>
+            <p className="mt-3 font-mono text-[11px] font-medium tracking-[0.14em] uppercase text-text-tertiary">
+              {usual.selected_modifiers.map((m) => m.option).join(" / ") || "As it comes"}
+              <span aria-hidden className="mx-3 text-hairline">
+                /
+              </span>
+              Ordered {usual.times_ordered}×
+            </p>
+            <div className="mt-6">
+              <ReorderButton lines={usualLine} label="Order again" />
             </div>
-          ))}
+          </>
+        )}
+      </section>
 
-          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-5">
-            <dt className="font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase">
-              Email status
-            </dt>
-            <dd
-              className={`font-mono text-[11px] font-medium tracking-[0.14em] uppercase ${
-                verified ? "text-badge-live" : "text-badge-alert"
-              }`}
-            >
-              {verified ? "Verified" : "Not verified yet"}
-            </dd>
-          </div>
-        </dl>
+      {/* Last order */}
+      <section aria-label="Last order" className="border-b border-hairline py-8">
+        <p className="font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase">
+          Last order
+        </p>
 
-        <h2 className="mt-16 font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase">
-          Recent orders
-        </h2>
-
-        {!orders || orders.length === 0 ? (
-          <p className="mt-6 max-w-2xl border-y border-hairline py-10 font-mono text-[13px] tracking-[0.02em] text-text-secondary">
+        {!last ? (
+          <p className="mt-6 font-mono text-[13px] tracking-[0.02em] text-text-secondary">
             No orders under your name yet.
           </p>
         ) : (
-          <ul className="mt-6 max-w-2xl divide-y divide-hairline border-y border-hairline">
-            {orders.map((order) => (
-              <li
-                key={order.id}
-                className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-5"
-              >
-                <span className="font-mono text-[13px] tracking-[0.02em] tabular-nums text-text-primary">
-                  #{String(order.order_number).padStart(3, "0")}
-                </span>
-                <span className="font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase">
-                  {day(order.placed_at)}
-                  <span aria-hidden className="mx-3 text-hairline">
-                    /
-                  </span>
-                  {order.status}
-                </span>
-                <span className="font-mono text-[13px] tracking-[0.02em] tabular-nums text-text-primary">
-                  €{Number(order.total).toFixed(2)}
-                </span>
-              </li>
-            ))}
-          </ul>
+          /* Plain row, not a link: /account/orders/[id] arrives with Task 8 of
+             docs/superpowers/plans/2026-08-19-account-dashboard.md. Wrap this in
+             a Link to that route when it exists. */
+          <div className="mt-6 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+            <span className="font-mono text-[13px] tracking-[0.02em] tabular-nums text-text-primary">
+              #{String(last.order_number).padStart(3, "0")}
+            </span>
+            <span
+              className={`font-mono text-[11px] font-medium tracking-[0.14em] uppercase ${
+                ORDER_STATUS_LABELS[last.status as OrderStatus].tone
+              }`}
+            >
+              {ORDER_STATUS_LABELS[last.status as OrderStatus].text}
+            </span>
+            <span className="font-mono text-[13px] tracking-[0.02em] tabular-nums text-text-primary">
+              €{Number(last.total).toFixed(2)}
+            </span>
+          </div>
         )}
-
-        <div className="mt-10 flex flex-wrap items-center gap-3">
-          <SignOutButton />
-          <Link
-            href="/auth/update-password"
-            className="flex h-10 items-center justify-center rounded-full px-5 font-mono text-[11px] font-medium tracking-[0.14em] text-text-tertiary uppercase transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
-          >
-            Change password
-          </Link>
-        </div>
-      </main>
-
-      <SiteFooter />
+      </section>
     </>
   );
 }

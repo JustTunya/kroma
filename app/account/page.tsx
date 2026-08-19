@@ -1,8 +1,5 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { SignOutButton } from "@/components/auth/AuthForm";
-import { SiteFooter } from "@/components/storefront/SiteFooter";
 import { createClient } from "@/lib/server";
 
 const PROVIDER_LABELS: Record<string, string> = {
@@ -49,20 +46,7 @@ export default async function AccountPage() {
 
   return (
     <>
-      <header className="fixed top-0 z-50 flex h-16 w-full items-center justify-between border-b border-hairline bg-surface-canvas/85 px-5 backdrop-blur-xl sm:px-10 lg:px-14">
-        <Link
-          href="/"
-          className="font-serif text-[26px] leading-none tracking-[-0.02em] text-text-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-border-focus"
-        >
-          KROMA
-        </Link>
-        <span className="font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase">
-          Account
-        </span>
-      </header>
-
-      <main className="flex-1 px-5 pt-32 pb-24 sm:px-10 lg:px-14 lg:pt-40 lg:pb-32">
-        <p className="font-mono text-[10px] font-medium tracking-[0.18em] text-accent-primary uppercase">
+      <p className="font-mono text-[10px] font-medium tracking-[0.18em] text-accent-primary uppercase">
           Account
         </p>
         <h1 className="mt-5 max-w-[14ch] font-serif text-[clamp(32px,4vw,52px)] leading-[1.05] tracking-[-0.02em] text-text-primary">
@@ -136,17 +120,13 @@ export default async function AccountPage() {
         )}
 
         <div className="mt-10 flex flex-wrap items-center gap-3">
-          <SignOutButton />
-          <Link
+          <a
             href="/auth/update-password"
             className="flex h-10 items-center justify-center rounded-full px-5 font-mono text-[11px] font-medium tracking-[0.14em] text-text-tertiary uppercase transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
           >
             Change password
-          </Link>
+          </a>
         </div>
-      </main>
-
-      <SiteFooter />
     </>
   );
 }

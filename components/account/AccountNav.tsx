@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 
-import { spring } from "@/lib/motion";
+import { pressSpring, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 export type AccountNavItem = { href: string; label: string; badge?: string };
@@ -56,30 +56,38 @@ export function AccountNav({ items }: { items: AccountNavItem[] }) {
         className="scrollbar-hide -mx-5 flex gap-2 overflow-x-auto px-5 md:hidden"
       >
         {items.map((item) => (
-          <Link
+          <motion.div
             key={item.href}
-            href={item.href}
-            aria-current={isActive(item.href) ? "page" : undefined}
-            className={cn(
-              "relative flex h-9 shrink-0 items-center rounded-full px-4 font-mono text-[10px]",
-              "font-medium tracking-[0.16em] uppercase transition-colors",
-              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus",
-              isActive(item.href) ? "text-surface-canvas" : "text-text-tertiary",
-            )}
+            className="shrink-0"
+            whileTap={{ scale: 0.98 }}
+            transition={pressSpring}
           >
-            {isActive(item.href) && (
-              <motion.span
-                layoutId="activeAccountNav"
-                transition={spring}
-                aria-hidden
-                className="absolute inset-0 rounded-full bg-text-primary"
-              />
-            )}
-            <span className="relative">
-              {item.label}
-              {item.badge && ` ${item.badge}`}
-            </span>
-          </Link>
+            <Link
+              href={item.href}
+              aria-current={isActive(item.href) ? "page" : undefined}
+              className={cn(
+                "relative flex h-9 items-center gap-2 rounded-full px-4 font-mono text-[10px]",
+                "font-medium tracking-[0.16em] uppercase transition-colors",
+                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus",
+                isActive(item.href) ? "text-surface-canvas" : "text-text-tertiary",
+              )}
+            >
+              {isActive(item.href) && (
+                <motion.span
+                  layoutId="activeAccountNav"
+                  transition={spring}
+                  aria-hidden
+                  className="absolute inset-0 rounded-full bg-text-primary"
+                />
+              )}
+              <span className="relative">{item.label}</span>
+              {item.badge && (
+                <span className="relative font-mono text-[10px] tracking-[0.02em] tabular-nums">
+                  {item.badge}
+                </span>
+              )}
+            </Link>
+          </motion.div>
         ))}
       </nav>
     </>

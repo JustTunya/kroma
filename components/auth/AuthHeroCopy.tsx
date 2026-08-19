@@ -14,7 +14,6 @@ function Line({ children, delay }: { children: React.ReactNode; delay: number })
   );
 }
 
-/** Same stagger as the storefront hero (§9): eyebrow → headline lines → body. */
 export function AuthHeroCopy() {
   const reduced = useReducedMotion();
 
@@ -43,7 +42,7 @@ export function AuthHeroCopy() {
       <motion.p
         variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}
         transition={{ ...glide, delay: 0.5 }}
-        className="mt-7 max-w-md font-mono text-[13px] leading-[1.7] tracking-[0.02em] text-surface-canvas/75"
+        className="mt-7 max-w-120 font-mono text-[13px] leading-[1.7] tracking-[0.02em] text-surface-canvas/75"
       >
         Roasted Tuesday. Baked this morning. Held under your name.
       </motion.p>

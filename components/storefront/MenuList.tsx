@@ -43,7 +43,7 @@ export function MenuList({ items, onAdd }: MenuListProps) {
 
       <div aria-hidden className="hidden lg:block">
         <div className="sticky top-32">
-          <div className="relative aspect-4/5 w-full overflow-hidden rounded-lg border border-border-subtle bg-surface-muted shadow-card">
+          <div className="relative aspect-4/5 w-full overflow-hidden border border-border-subtle bg-surface-muted shadow-card">
             <AnimatePresence initial={false}>
               <motion.div
                 key={preview.id}
@@ -55,7 +55,7 @@ export function MenuList({ items, onAdd }: MenuListProps) {
               >
                 <Image
                   src={preview.image_url}
-                  alt=""
+                  alt={preview.name}
                   fill
                   sizes="360px"
                   className="object-cover"

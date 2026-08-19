@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { CartDrawer } from "@/components/storefront/CartDrawer";
 import { CategoryNav } from "@/components/storefront/CategoryNav";
@@ -11,15 +11,7 @@ import { ModifierSheet } from "@/components/storefront/ModifierSheet";
 import { SiteFooter } from "@/components/storefront/SiteFooter";
 import { StorefrontHeader } from "@/components/storefront/StorefrontHeader";
 import { StorefrontHero } from "@/components/storefront/StorefrontHero";
-import {
-  cartCount as countLines,
-  clearGuestCart,
-  mergeCarts,
-  readGuestCart,
-  writeGuestCart,
-  type CartLine,
-} from "@/lib/cart";
-import { readServerCart, writeServerCart } from "@/lib/cart-sync";
+import { useCart } from "@/lib/use-cart";
 import type { MenuItem } from "@/types/menu";
 
 const ALL = "All";
@@ -32,78 +24,24 @@ export function Storefront({
   signedIn: boolean;
 }) {
   const [activeCategory, setActiveCategory] = useState(ALL);
-  const [cart, setCart] = useState<CartLine[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [customizing, setCustomizing] = useState<MenuItem | null>(null);
-
-  // ponytail: hydrate once on mount / sign-in change; no realtime cross-tab sync yet.
-  useEffect(() => {
-    let cancelled = false;
-
-    async function hydrate() {
-      if (!signedIn) {
-        if (!cancelled) setCart(readGuestCart());
-        return;
-      }
-
-      const guestCart = readGuestCart();
-      const serverCart = await readServerCart();
-      const merged = guestCart.length ? mergeCarts(serverCart, guestCart) : serverCart;
-
-      if (guestCart.length) {
-        try {
-          await writeServerCart(merged);
-          clearGuestCart();
-        } catch (error) {
-          // Server write failed — keep the guest copy so nothing is lost.
-          console.error("cart merge failed:", error);
-        }
-      }
-
-      if (!cancelled) setCart(merged);
-    }
-
-    hydrate();
-    return () => {
-      cancelled = true;
-    };
-  }, [signedIn]);
-
-  function persist(next: CartLine[]) {
-    setCart(next);
-    if (signedIn) {
-      writeServerCart(next);
-    } else {
-      writeGuestCart(next);
-    }
-  }
+  const cart = useCart(signedIn);
 
   function handleAdd(item: MenuItem) {
     if (item.modifiers.length > 0) {
       setCustomizing(item);
       return;
     }
-    persist(
-      mergeCarts(cart, [
-        {
-          id: crypto.randomUUID(),
-          menuItemId: item.id,
-          name: item.name,
-          basePrice: item.base_price,
-          quantity: 1,
-          selectedModifiers: [],
-          imageUrl: item.image_url,
-        },
-      ]),
-    );
-  }
-
-  function handleQuantityChange(lineId: string, quantity: number) {
-    persist(cart.map((line) => (line.id === lineId ? { ...line, quantity } : line)));
-  }
-
-  function handleRemove(lineId: string) {
-    persist(cart.filter((line) => line.id !== lineId));
+    cart.add({
+      id: crypto.randomUUID(),
+      menuItemId: item.id,
+      name: item.name,
+      basePrice: item.base_price,
+      quantity: 1,
+      selectedModifiers: [],
+      imageUrl: item.image_url,
+    });
   }
 
   const categories = useMemo(
@@ -122,7 +60,7 @@ export function Storefront({
   return (
     <>
       <StorefrontHeader
-        cartCount={countLines(cart)}
+        cartCount={cart.count}
         signedIn={signedIn}
         onCartOpen={() => setCartOpen(true)}
       />
@@ -151,14 +89,14 @@ export function Storefront({
       <ModifierSheet
         item={customizing}
         onClose={() => setCustomizing(null)}
-        onAdd={(line) => persist(mergeCarts(cart, [line]))}
+        onAdd={(line) => cart.add(line)}
       />
       <CartDrawer
         open={cartOpen}
-        lines={cart}
+        lines={cart.lines}
         onClose={() => setCartOpen(false)}
-        onQuantityChange={handleQuantityChange}
-        onRemove={handleRemove}
+        onQuantityChange={cart.setQuantity}
+        onRemove={cart.remove}
       />
     </>
   );

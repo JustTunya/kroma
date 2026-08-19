@@ -1,12 +1,14 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 
 import { QtyStepper } from "@/components/storefront/QtyStepper";
 import { cartTotal, lineTotal, type CartLine } from "@/lib/cart";
 import { pressSpring, spring } from "@/lib/motion";
+import { cn } from "@/lib/utils";
 
 type CartDrawerProps = {
   open: boolean;
@@ -22,7 +24,7 @@ export function CartDrawer({ open, lines, onClose, onQuantityChange, onRemove }:
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-stretch sm:justify-end">
+        <div className="fixed inset-0 z-50 flex items-stretch justify-end">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -30,18 +32,18 @@ export function CartDrawer({ open, lines, onClose, onQuantityChange, onRemove }:
             transition={{ duration: 0.2 }}
             onClick={onClose}
             aria-hidden
-            className="absolute inset-0 bg-text-primary/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-text-primary/25 backdrop-blur-sm"
           />
 
           <motion.div
             role="dialog"
             aria-modal="true"
             aria-label="Your order"
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
             transition={spring}
-            className="relative flex max-h-[85vh] w-full flex-col overflow-hidden rounded-t-xl bg-surface-card sm:h-full sm:max-h-none sm:w-[420px] sm:rounded-none sm:rounded-l-xl"
+            className="relative flex h-full w-full max-w-full flex-col overflow-hidden bg-surface-card sm:w-105"
           >
             <div className="flex items-center justify-between gap-4 border-b border-hairline p-6">
               <h2 className="font-serif text-[28px] leading-[1.05] tracking-[-0.02em] text-text-primary">
@@ -139,14 +141,24 @@ export function CartDrawer({ open, lines, onClose, onQuantityChange, onRemove }:
                 </span>
                 €{total.toFixed(2)}
               </div>
-              <button
-                type="button"
-                disabled
-                aria-label="Checkout — not yet available"
-                className="flex h-10 w-full items-center justify-center rounded-full bg-surface-muted font-mono text-[11px] font-medium tracking-[0.14em] text-text-tertiary uppercase disabled:cursor-default"
+              <Link
+                href="/checkout"
+                onClick={onClose}
+                aria-disabled={lines.length === 0}
+                aria-label={
+                  lines.length === 0
+                    ? "Checkout — nothing on the pass"
+                    : `Checkout, €${total.toFixed(2)}`
+                }
+                className={cn(
+                  "flex h-10 w-full items-center justify-center rounded-full font-mono text-[11px] font-medium tracking-[0.14em] uppercase transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus",
+                  lines.length === 0
+                    ? "pointer-events-none bg-surface-muted text-text-tertiary"
+                    : "bg-accent-primary text-surface-card hover:bg-accent-hover",
+                )}
               >
                 Checkout
-              </button>
+              </Link>
             </div>
           </motion.div>
         </div>

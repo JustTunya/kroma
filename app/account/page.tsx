@@ -29,6 +29,14 @@ export default async function AccountPage() {
   // The proxy already redirects, this is the belt to its braces.
   if (!user) redirect("/auth/login");
 
+  // No .eq("user_id", …) on purpose: the "orders read own" policy scopes this,
+  // and leaning on the policy is what proves the policy works.
+  const { data: orders } = await supabase
+    .from("orders")
+    .select("id, order_number, status, total, placed_at, payment_method")
+    .order("placed_at", { ascending: false })
+    .limit(10);
+
   const provider = user.app_metadata.provider ?? "email";
   const verified = Boolean(user.email_confirmed_at);
 
@@ -93,6 +101,39 @@ export default async function AccountPage() {
             </dd>
           </div>
         </dl>
+
+        <h2 className="mt-16 font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase">
+          Recent orders
+        </h2>
+
+        {!orders || orders.length === 0 ? (
+          <p className="mt-6 max-w-2xl border-y border-hairline py-10 font-mono text-[13px] tracking-[0.02em] text-text-secondary">
+            No orders under your name yet.
+          </p>
+        ) : (
+          <ul className="mt-6 max-w-2xl divide-y divide-hairline border-y border-hairline">
+            {orders.map((order) => (
+              <li
+                key={order.id}
+                className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-5"
+              >
+                <span className="font-mono text-[13px] tracking-[0.02em] tabular-nums text-text-primary">
+                  #{String(order.order_number).padStart(3, "0")}
+                </span>
+                <span className="font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase">
+                  {day(order.placed_at)}
+                  <span aria-hidden className="mx-3 text-hairline">
+                    /
+                  </span>
+                  {order.status}
+                </span>
+                <span className="font-mono text-[13px] tracking-[0.02em] tabular-nums text-text-primary">
+                  €{Number(order.total).toFixed(2)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
 
         <div className="mt-10 flex flex-wrap items-center gap-3">
           <SignOutButton />

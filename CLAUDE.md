@@ -336,7 +336,7 @@ pulse → steady dot, hero reveal → `initial={false}`.
 
 ## 10. Interaction & State
 
-* **Cart & customization drawers:** bottom-sheet on mobile, slide-over or centered modal on desktop. `AnimatePresence`, `y: "100%" → 0` on `spring`, over a backdrop tweened `opacity 0 → 1` at `duration: 0.2`.
+* **Cart & customization drawers:** slide-over at all breakpoints, full-height, anchored right, no radius. `AnimatePresence`, `x: "100%" → 0` on `spring`, over a backdrop tweened `opacity 0 → 1` at `duration: 0.2` (`bg-text-primary/25`).
 * **Price feedback:** any modifier change re-renders the total through `numberTransition` in mono.
 * **Empty state:** a single mono sentence between two hairlines (`border-y border-hairline py-10`) — never an illustration or an icon.
 * **Button states:** default CTA `bg-accent-primary text-surface-card`, hover `accent-hover`, press `scale-98`, disabled `bg-surface-muted text-text-tertiary border-border-subtle`.

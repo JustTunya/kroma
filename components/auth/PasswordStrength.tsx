@@ -49,7 +49,7 @@ export function PasswordStrength({ id, value }: { id: string; value: string }) {
   const full = state.every(Boolean);
 
   return (
-    <ul id={id} className="grid grid-cols-2 gap-x-2 gap-y-3 sm:grid-cols-5">
+    <ul id={id} className="grid grid-cols-5 gap-x-1.5 gap-y-3 sm:gap-x-2">
       {PASSWORD_RULES.map((rule, index) => (
         <li
           key={rule.id}
@@ -71,7 +71,7 @@ export function PasswordStrength({ id, value }: { id: string; value: string }) {
             />
           </span>
 
-          <span className="font-mono text-[10px] font-medium tracking-[0.14em] whitespace-nowrap uppercase">
+          <span className="font-mono text-[9px] font-medium tracking-[0.08em] uppercase sm:text-[10px] sm:tracking-[0.14em]">
             {rule.label}
             <span className="sr-only">{state[index] ? "— met" : "— missing"}</span>
           </span>

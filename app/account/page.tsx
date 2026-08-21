@@ -85,7 +85,7 @@ export default async function AccountOverviewPage() {
             basePrice: Number(usual.base_price),
             quantity: 1,
             selectedModifiers: usual.selected_modifiers,
-            imageUrl: menuImage({ category: "", image_url: usual.image_url }, 0),
+            imageUrl: menuImage({ name: usual.name, category: "", image_url: usual.image_url }, 0),
           },
         ]
       : [];
@@ -130,7 +130,7 @@ export default async function AccountOverviewPage() {
           /* ponytail: my_usual() returns no category, so a row without its own
              image_url falls to the default frame instead of its category pool.
              Add category to the RPC's jsonb and pass it through to fix. */
-          imageUrl={menuImage({ category: "", image_url: usual.image_url }, 0)}
+          imageUrl={menuImage({ name: usual.name, category: "", image_url: usual.image_url }, 0)}
           soldOut={Boolean(soldOut)}
           lines={usualLine}
         />
@@ -145,7 +145,7 @@ export default async function AccountOverviewPage() {
             (part): part is string => Boolean(part),
           )}
           imageUrl={menuImage(
-            { category: drop.menu_categories?.name ?? "", image_url: drop.image_url },
+            { name: drop.name, category: drop.menu_categories?.name ?? "", image_url: drop.image_url },
             0,
           )}
         />

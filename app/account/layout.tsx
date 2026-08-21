@@ -20,12 +20,13 @@ export default async function AccountLayout({
   // The proxy already redirects, this is the belt to its braces.
   if (!user) redirect("/auth/login");
 
-  // Card and Settings are Tasks 9-10 of
-  // docs/superpowers/plans/2026-08-19-account-dashboard.md and don't exist yet.
-  // Restore them there by adding array entries — AccountNav itself needs no changes.
+  // Card is Task 9 of docs/superpowers/plans/2026-08-19-account-dashboard.md and
+  // doesn't exist yet. Restore it by adding an array entry — AccountNav itself
+  // needs no changes.
   const items: AccountNavItem[] = [
     { href: "/account", label: "Overview" },
     { href: "/account/orders", label: "Orders" },
+    { href: "/account/settings", label: "Settings" },
   ];
 
   return (

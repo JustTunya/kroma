@@ -58,6 +58,7 @@ export function MenuList({ items, onAdd }: MenuListProps) {
                   alt={preview.name}
                   fill
                   sizes="360px"
+                  loading="eager"
                   className="object-cover"
                 />
               </motion.div>

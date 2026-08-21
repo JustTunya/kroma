@@ -77,7 +77,7 @@ export function CartDrawer({ open, lines, onClose, onQuantityChange, onRemove }:
                       exit={{ opacity: 0, transition: { duration: 0.12, ease: "easeOut" } }}
                       className="flex gap-4 py-6"
                     >
-                      <div className="relative size-16 shrink-0 overflow-hidden rounded-sm bg-surface-muted">
+                      <div className="relative size-16 shrink-0 overflow-hidden bg-surface-muted">
                         <Image
                           src={line.imageUrl}
                           alt=""

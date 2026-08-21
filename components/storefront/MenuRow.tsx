@@ -64,11 +64,11 @@ export function MenuRow({ item, onAdd, onPreview }: MenuRowProps) {
             ? `${item.name} — gone for today`
             : `Add ${item.name} to order, €${item.base_price.toFixed(2)}`
         }
-        className="group flex w-full items-start gap-4 py-7 text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-border-focus sm:gap-6 sm:py-9 disabled:cursor-default"
+        className="group flex w-full flex-col gap-5 py-7 text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-border-focus sm:py-9 lg:flex-row lg:items-start lg:gap-6 disabled:cursor-default"
       >
         <div
           className={cn(
-            "relative size-20 shrink-0 overflow-hidden rounded-sm bg-surface-muted lg:hidden",
+            "relative aspect-4/3 w-full shrink-0 overflow-hidden border border-border-subtle bg-surface-muted shadow-card lg:hidden",
             soldOut && "grayscale",
           )}
         >
@@ -76,7 +76,8 @@ export function MenuRow({ item, onAdd, onPreview }: MenuRowProps) {
             src={item.image_url}
             alt=""
             fill
-            sizes="80px"
+            sizes="(min-width: 1024px) 0px, 100vw"
+            loading="eager"
             className="object-cover"
           />
         </div>

@@ -78,11 +78,11 @@ export function ModifierSheet({ item, onClose, onAdd }: ModifierSheetProps) {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={spring}
-            className="relative flex max-h-[85vh] w-full flex-col overflow-hidden rounded-t-xl bg-surface-card sm:m-6 sm:max-w-md sm:rounded-xl"
+            className="relative flex max-h-[85vh] w-full flex-col overflow-hidden bg-surface-card sm:m-6 sm:max-w-md"
           >
             <div className="flex items-start justify-between gap-4 border-b border-hairline p-6">
               <div className="flex items-center gap-4">
-                <div className="relative size-16 shrink-0 overflow-hidden rounded-sm bg-surface-muted">
+                <div className="relative size-16 shrink-0 overflow-hidden bg-surface-muted">
                   <Image src={item.image_url} alt="" fill sizes="64px" className="object-cover" />
                 </div>
                 <div>

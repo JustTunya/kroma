@@ -43,6 +43,7 @@ const DEFAULT_POOL = ["1495474472287-4d71bcdd2085"];
 /** Custom shoot, keyed by item name. Wins over both `image_url` and the Unsplash pool. */
 const CUSTOM: Record<string, string> = {
   Espresso: "/menu/coffee@espresso.png",
+  Cappuccino: "/menu/coffee@cappuccino.png",
   "Flat White": "/menu/coffee@flat_white.png",
   "Iced Oat Cortado": "/menu/coffee@iced_oat_cortado.png",
   "Batch Brew Filter": "/menu/coffee@batch_brew_filter.png",
@@ -52,6 +53,12 @@ const CUSTOM: Record<string, string> = {
   "Bergamot Earl Grey": "/menu/tea@black.png",
   "Peppermint Tisane": "/menu/tea@herbal.png",
   "Whole-Spice Chai": "/menu/tea@spiced.png",
+  "Cardamom Sugar Bun": "/menu/bake@cardamom_sugar_bun.png",
+  "Twice-Baked Almond Croissant": "/menu/bake@twice_baked_almond_croissant.png",
+  "Spiced Banana Bread": "/menu/bake@spiced_banana_bread.png",
+  "Whipped Ricotta & Fig Toast": "/menu/food@whipped_ricotta_fig_toast.png",
+  "Mortadella & Pistachio Focaccia": "/menu/food@mortadella_pistachio_focaccia.png",
+  "Smoked Salmon & Dill Bagel": "/menu/food@smoked_salmon_dill_bagel.png",
 };
 
 /** Hero frame: three flat whites on warm wood, shot from above. */

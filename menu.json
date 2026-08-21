@@ -69,6 +69,43 @@
   },
   {
     "category": "Coffee Bar",
+    "name": "Cappuccino",
+    "description": "Double shot with steamed milk and a thick cap of foam.",
+    "basePrice": 4,
+    "dailyStock": null,
+    "dietaryTags": [
+      "Vegetarian",
+      "Gluten-Free"
+    ],
+    "allergens": [
+      "Dairy"
+    ],
+    "modifiers": [
+      {
+        "name": "Milk Choice",
+        "options": [
+          {
+            "name": "Whole Milk (Default)",
+            "priceOffset": 0
+          },
+          {
+            "name": "Oat Milk (Vegan)",
+            "priceOffset": 0.6
+          },
+          {
+            "name": "Almond Milk (Contains Nuts)",
+            "priceOffset": 0.6
+          }
+        ]
+      }
+    ],
+    "unsplashQuery": "cappuccino foam ceramic cup",
+    "origin": "Brazil / Colombia",
+    "process": "Double shot",
+    "roast": "Medium"
+  },
+  {
+    "category": "Coffee Bar",
     "name": "Iced Oat Cortado",
     "description": "Equal parts espresso and oat milk over ice.",
     "basePrice": 4.5,

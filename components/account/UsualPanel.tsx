@@ -51,7 +51,7 @@ export function UsualPanel({
         className="mt-8 flex flex-wrap items-center gap-5 border-y border-hairline py-7 sm:flex-nowrap sm:gap-6 sm:py-9"
       >
         <div
-          className={`relative size-20 shrink-0 overflow-hidden rounded-sm border border-border-subtle bg-surface-muted ${
+          className={`relative size-20 shrink-0 overflow-hidden border border-border-subtle bg-surface-muted ${
             soldOut ? "grayscale" : ""
           }`}
         >

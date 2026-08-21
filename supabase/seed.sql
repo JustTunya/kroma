@@ -31,6 +31,17 @@ values
    'flat white latte art ceramic cup', 2),
 
   ((select id from menu_categories where slug = 'espresso-bar'),
+   'cappuccino', 'Cappuccino',
+   'Double shot with steamed milk and a thick cap of foam.',
+   4.00, null,
+   '{Vegetarian,"Gluten-Free"}', '{Dairy}',
+   '[{"name":"Milk Choice","options":[
+       {"name":"Whole Milk (Default)","priceOffset":0},
+       {"name":"Oat Milk (Vegan)","priceOffset":0.60},
+       {"name":"Almond Milk (Contains Nuts)","priceOffset":0.60}]}]'::jsonb,
+   'cappuccino foam ceramic cup', 3),
+
+  ((select id from menu_categories where slug = 'espresso-bar'),
    'iced-oat-cortado', 'Iced Oat Cortado',
    'Equal parts espresso and oat milk over ice.',
    4.50, null,
@@ -41,7 +52,7 @@ values
      {"name":"Syrup","options":[
        {"name":"None","priceOffset":0},
        {"name":"Cardamom Vanilla","priceOffset":0.50}]}]'::jsonb,
-   'iced cortado layered glass espresso', 3),
+   'iced cortado layered glass espresso', 4),
 
   ((select id from menu_categories where slug = 'espresso-bar'),
    'batch-brew-filter', 'Batch Brew Filter',
@@ -51,7 +62,7 @@ values
    '[{"name":"Size","options":[
        {"name":"250ml","priceOffset":0},
        {"name":"350ml","priceOffset":0.80}]}]'::jsonb,
-   'batch brew filter coffee glass server', 4),
+   'batch brew filter coffee glass server', 5),
 
   ((select id from menu_categories where slug = 'espresso-bar'),
    'cold-drip-reserve', 'Cold Drip Reserve',
@@ -61,7 +72,7 @@ values
    '[{"name":"Serving Style","options":[
        {"name":"Over Rock Ice","priceOffset":0},
        {"name":"Neat","priceOffset":0}]}]'::jsonb,
-   'cold brew bottle glass ice cube', 5),
+   'cold brew bottle glass ice cube', 6),
 
   ((select id from menu_categories where slug = 'tea-alternatives'),
    'ceremonial-matcha-latte', 'Ceremonial Matcha Latte',

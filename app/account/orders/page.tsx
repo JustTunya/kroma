@@ -90,7 +90,7 @@ export default async function OrdersPage({
         basePrice: Number(item.base_price),
         quantity: item.quantity,
         selectedModifiers: item.selected_modifiers,
-        imageUrl: menuImage({ category: "", image_url: null }, index),
+        imageUrl: menuImage({ name: item.item_name, category: "", image_url: null }, index),
       })),
     };
   });

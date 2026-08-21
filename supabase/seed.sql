@@ -1,11 +1,10 @@
 -- KROMA seed data — mirrors menu.json
 
 insert into menu_categories (slug, name, sort_order) values
-  ('espresso-bar',       'Espresso Bar',       1),
-  ('filter-cold',        'Filter & Cold',      2),
-  ('tea-alternatives',   'Tea & Alternatives', 3),
-  ('bakehouse',          'Bakehouse',          4),
-  ('kitchen',            'Kitchen',            5);
+  ('espresso-bar',       'Coffee Bar',         1),
+  ('tea-alternatives',   'Tea & Alternatives', 2),
+  ('bakehouse',          'Bakehouse',          3),
+  ('kitchen',            'Kitchen',            4);
 
 insert into menu_items
   (category_id, slug, name, description, base_price, daily_stock, dietary_tags, allergens, modifiers, unsplash_query, sort_order)
@@ -44,7 +43,7 @@ values
        {"name":"Cardamom Vanilla","priceOffset":0.50}]}]'::jsonb,
    'iced cortado layered glass espresso', 3),
 
-  ((select id from menu_categories where slug = 'filter-cold'),
+  ((select id from menu_categories where slug = 'espresso-bar'),
    'batch-brew-filter', 'Batch Brew Filter',
    'Rotating single-origin filter coffee (Kenya AA Nyeri).',
    3.80, null,
@@ -52,9 +51,9 @@ values
    '[{"name":"Size","options":[
        {"name":"250ml","priceOffset":0},
        {"name":"350ml","priceOffset":0.80}]}]'::jsonb,
-   'batch brew filter coffee glass server', 1),
+   'batch brew filter coffee glass server', 4),
 
-  ((select id from menu_categories where slug = 'filter-cold'),
+  ((select id from menu_categories where slug = 'espresso-bar'),
    'cold-drip-reserve', 'Cold Drip Reserve',
    'Slow-dripped for 14 hours. Served chilled.',
    5.20, 15,
@@ -62,7 +61,7 @@ values
    '[{"name":"Serving Style","options":[
        {"name":"Over Rock Ice","priceOffset":0},
        {"name":"Neat","priceOffset":0}]}]'::jsonb,
-   'cold brew bottle glass ice cube', 2),
+   'cold brew bottle glass ice cube', 5),
 
   ((select id from menu_categories where slug = 'tea-alternatives'),
    'ceremonial-matcha-latte', 'Ceremonial Matcha Latte',
@@ -77,6 +76,41 @@ values
        {"name":"Unsweetened","priceOffset":0},
        {"name":"Agave Syrup","priceOffset":0.40}]}]'::jsonb,
    'matcha latte green foam ceramic cup', 1),
+
+  ((select id from menu_categories where slug = 'tea-alternatives'),
+   'green-tea', 'Sencha Steep',
+   'Loose-leaf sencha, steeped short and light.',
+   3.50, null,
+   '{Vegan,"Gluten-Free"}', '{}',
+   '[]'::jsonb,
+   'green tea leaves ceramic pot', 2),
+
+  ((select id from menu_categories where slug = 'tea-alternatives'),
+   'black-tea-earl-grey', 'Bergamot Earl Grey',
+   'Ceylon black leaf scented with Calabrian bergamot.',
+   3.50, null,
+   '{Vegan,"Gluten-Free"}', '{}',
+   '[]'::jsonb,
+   'black tea leaves bergamot', 3),
+
+  ((select id from menu_categories where slug = 'tea-alternatives'),
+   'herbal-tisane-peppermint', 'Peppermint Tisane',
+   'Whole dried peppermint leaf. Caffeine-free.',
+   3.30, null,
+   '{Vegan,"Gluten-Free"}', '{}',
+   '[]'::jsonb,
+   'peppermint tisane dried leaf', 4),
+
+  ((select id from menu_categories where slug = 'tea-alternatives'),
+   'spiced-tea-masala-chai', 'Whole-Spice Chai',
+   'Assam black tea steeped with cardamom, clove, cinnamon, and ginger.',
+   4.20, null,
+   '{Vegetarian,"Gluten-Free"}', '{Dairy}',
+   '[{"name":"Milk Choice","options":[
+       {"name":"Whole Milk","priceOffset":0},
+       {"name":"Oat Milk (Vegan)","priceOffset":0.60},
+       {"name":"Coconut Milk (Vegan)","priceOffset":0.60}]}]'::jsonb,
+   'masala chai spices steamed milk', 5),
 
   ((select id from menu_categories where slug = 'bakehouse'),
    'cardamom-sugar-bun', 'Cardamom Sugar Bun',

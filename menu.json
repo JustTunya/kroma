@@ -1,6 +1,6 @@
 [
   {
-    "category": "Espresso Bar",
+    "category": "Coffee Bar",
     "name": "Espresso",
     "description": "Double shot of our seasonal house blend.",
     "basePrice": 2.5,
@@ -31,7 +31,7 @@
     "roast": "Medium"
   },
   {
-    "category": "Espresso Bar",
+    "category": "Coffee Bar",
     "name": "Flat White",
     "description": "Double ristretto shot with textured microfoam.",
     "basePrice": 4.2,
@@ -68,7 +68,7 @@
     "roast": "Medium"
   },
   {
-    "category": "Espresso Bar",
+    "category": "Coffee Bar",
     "name": "Iced Oat Cortado",
     "description": "Equal parts espresso and oat milk over ice.",
     "basePrice": 4.5,
@@ -112,7 +112,7 @@
     "roast": "Medium"
   },
   {
-    "category": "Filter & Cold",
+    "category": "Coffee Bar",
     "name": "Batch Brew Filter",
     "description": "Rotating single-origin filter coffee (Kenya AA Nyeri).",
     "basePrice": 3.8,
@@ -143,7 +143,7 @@
     "roast": "Light"
   },
   {
-    "category": "Filter & Cold",
+    "category": "Coffee Bar",
     "name": "Cold Drip Reserve",
     "description": "Slow-dripped for 14 hours. Served chilled.",
     "basePrice": 5.2,
@@ -221,6 +221,71 @@
     "unsplashQuery": "matcha latte green foam ceramic cup",
     "origin": "Uji, Japan",
     "process": "First harvest",
+    "roast": null
+  },
+  {
+    "category": "Tea & Alternatives",
+    "name": "Sencha Steep",
+    "description": "Loose-leaf sencha, steeped short and light.",
+    "basePrice": 3.5,
+    "dailyStock": null,
+    "dietaryTags": ["Vegan", "Gluten-Free"],
+    "allergens": [],
+    "modifiers": [],
+    "unsplashQuery": "green tea leaves ceramic pot",
+    "origin": "Fuding, China",
+    "process": "Steeped 2 min, 80°C",
+    "roast": null
+  },
+  {
+    "category": "Tea & Alternatives",
+    "name": "Bergamot Earl Grey",
+    "description": "Ceylon black leaf scented with Calabrian bergamot.",
+    "basePrice": 3.5,
+    "dailyStock": null,
+    "dietaryTags": ["Vegan", "Gluten-Free"],
+    "allergens": [],
+    "modifiers": [],
+    "unsplashQuery": "black tea leaves bergamot",
+    "origin": "Nuwara Eliya, Sri Lanka",
+    "process": "Steeped 4 min, bergamot oil",
+    "roast": null
+  },
+  {
+    "category": "Tea & Alternatives",
+    "name": "Peppermint Tisane",
+    "description": "Whole dried peppermint leaf. Caffeine-free.",
+    "basePrice": 3.3,
+    "dailyStock": null,
+    "dietaryTags": ["Vegan", "Gluten-Free"],
+    "allergens": [],
+    "modifiers": [],
+    "unsplashQuery": "peppermint tisane dried leaf",
+    "origin": "Rift Valley, Kenya",
+    "process": "Steeped 5 min",
+    "roast": null
+  },
+  {
+    "category": "Tea & Alternatives",
+    "name": "Whole-Spice Chai",
+    "description": "Assam black tea steeped with cardamom, clove, cinnamon, and ginger.",
+    "basePrice": 4.2,
+    "dailyStock": null,
+    "dietaryTags": ["Vegetarian", "Gluten-Free"],
+    "allergens": ["Dairy"],
+    "modifiers": [
+      {
+        "name": "Milk Choice",
+        "options": [
+          { "name": "Whole Milk", "priceOffset": 0 },
+          { "name": "Oat Milk (Vegan)", "priceOffset": 0.6 },
+          { "name": "Coconut Milk (Vegan)", "priceOffset": 0.6 }
+        ]
+      }
+    ],
+    "unsplashQuery": "masala chai spices steamed milk",
+    "origin": "Assam, India",
+    "process": "Whole-spice steep, steamed milk",
     "roast": null
   },
   {

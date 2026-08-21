@@ -40,14 +40,29 @@ const POOL: Record<string, string[]> = {
 
 const DEFAULT_POOL = ["1495474472287-4d71bcdd2085"];
 
+/** Custom shoot, keyed by item name. Wins over both `image_url` and the Unsplash pool. */
+const CUSTOM: Record<string, string> = {
+  Espresso: "/menu/coffee@espresso.png",
+  "Flat White": "/menu/coffee@flat_white.png",
+  "Iced Oat Cortado": "/menu/coffee@iced_oat_cortado.png",
+  "Batch Brew Filter": "/menu/coffee@batch_brew_filter.png",
+  "Cold Drip Reserve": "/menu/coffee@cold_drip_reserve.png",
+  "Ceremonial Matcha Latte": "/menu/alter@ceremonial_matcha_latte.png",
+  "Sencha Steep": "/menu/tea@green.png",
+  "Bergamot Earl Grey": "/menu/tea@black.png",
+  "Peppermint Tisane": "/menu/tea@herbal.png",
+  "Whole-Spice Chai": "/menu/tea@spiced.png",
+};
+
 /** Hero frame: three flat whites on warm wood, shot from above. */
 export const HERO_IMAGE = `${UNSPLASH}1495474472287-4d71bcdd2085?w=1600&q=80&auto=format&fit=crop`;
 
 /** Photo for a card. `index` is the item's position in the rendered list. */
 export function menuImage(
-  item: { category: string; image_url: string | null },
+  item: { name?: string; category: string; image_url: string | null },
   index: number,
 ): string {
+  if (item.name && CUSTOM[item.name]) return CUSTOM[item.name];
   if (item.image_url) return item.image_url;
 
   const pool = POOL[item.category] ?? DEFAULT_POOL;

@@ -310,6 +310,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avoid_allergens: string[]
+          bar_name: string | null
           created_at: string
           dietary_tags: string[]
           display_name: string | null
@@ -319,6 +321,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          avoid_allergens?: string[]
+          bar_name?: string | null
           created_at?: string
           dietary_tags?: string[]
           display_name?: string | null
@@ -328,6 +332,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          avoid_allergens?: string[]
+          bar_name?: string | null
           created_at?: string
           dietary_tags?: string[]
           display_name?: string | null

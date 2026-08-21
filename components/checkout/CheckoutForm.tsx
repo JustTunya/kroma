@@ -5,8 +5,14 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
 import { OrderSummary } from "@/components/checkout/OrderSummary";
+import {
+  DietaryWarning,
+  flaggedLines,
+  type DietaryIndex,
+} from "@/components/checkout/DietaryWarning";
 import { placeOrder } from "@/app/checkout/actions";
 import { isOrderable, toOrderPayload } from "@/lib/checkout";
+import type { DietaryPrefs } from "@/lib/dietary";
 import { pressSpring, spring } from "@/lib/motion";
 import { useCart } from "@/lib/use-cart";
 import { cn } from "@/lib/utils";
@@ -52,14 +58,21 @@ function savedDetails(): { name?: string; notes?: string } | null {
   }
 }
 
+const NO_PREFS: DietaryPrefs = { diets: [], avoid: [] };
+
 export function CheckoutForm({
   signedIn,
   defaultName,
   paymentNotice,
+  dietaryPrefs = NO_PREFS,
+  dietaryIndex = {},
 }: {
   signedIn: boolean;
   defaultName: string;
   paymentNotice?: Notice;
+  /** From the signed-in customer's profile. Guests have none, so nothing is flagged. */
+  dietaryPrefs?: DietaryPrefs;
+  dietaryIndex?: DietaryIndex;
 }) {
   const router = useRouter();
   const cart = useCart(signedIn);
@@ -121,8 +134,16 @@ export function CheckoutForm({
     );
   }
 
+  const flagged = flaggedLines(cart.lines, dietaryPrefs, dietaryIndex);
+
   return (
-    <form onSubmit={submit} className="grid gap-12 md:grid-cols-2 md:gap-0">
+    <>
+      <DietaryWarning flagged={flagged} prefs={dietaryPrefs} />
+
+      <form
+        onSubmit={submit}
+        className={cn("grid gap-12 md:grid-cols-2 md:gap-0", flagged.length > 0 && "mt-12")}
+      >
       <div className="md:pr-14">
         <label className="block">
           <span className={LABEL}>Name for the order</span>
@@ -210,6 +231,7 @@ export function CheckoutForm({
           {pending ? "Sending to the pass" : method === "counter" ? "Place order" : "Pay now"}
         </motion.button>
       </div>
-    </form>
+      </form>
+    </>
   );
 }

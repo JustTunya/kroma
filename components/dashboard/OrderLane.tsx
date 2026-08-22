@@ -3,6 +3,7 @@
 import { AnimatePresence } from "framer-motion";
 
 import { OrderRow } from "@/components/dashboard/OrderRow";
+import { cn } from "@/lib/utils";
 
 import type { BoardOrder } from "@/types/board";
 
@@ -20,6 +21,7 @@ export function OrderLane({
   onAdvance,
   disabled,
   empty,
+  hiddenOnSmall,
 }: {
   title: string;
   orders: BoardOrder[];
@@ -27,13 +29,20 @@ export function OrderLane({
   onAdvance: (order: BoardOrder) => void;
   disabled: boolean;
   empty: string;
+  /** Below lg the rail picks one lane; the rest stay mounted but hidden. */
+  hiddenOnSmall: boolean;
 }) {
   return (
     <section
       aria-label={title}
-      className="flex min-w-0 flex-col border-kds-border max-lg:border-t lg:border-l lg:first:border-l-0"
+      className={cn(
+        "min-w-0 flex-col border-kds-border lg:flex lg:border-l lg:first:border-l-0",
+        hiddenOnSmall ? "hidden" : "flex",
+      )}
     >
-      <header className="flex items-baseline justify-between gap-3 border-b border-kds-border px-5 py-4">
+      {/* The rail already names the lane below lg, and repeating it there
+          costs a row of orders on the screen that has fewest. */}
+      <header className="hidden items-baseline justify-between gap-3 border-b border-kds-border px-5 py-4 lg:flex">
         <h2 className="font-mono text-[10px] font-medium tracking-[0.18em] text-kds-text-secondary uppercase">
           {title}
         </h2>

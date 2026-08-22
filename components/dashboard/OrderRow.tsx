@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 import { AgeSpine } from "@/components/dashboard/AgeSpine";
 import { pressSpring, spring } from "@/lib/motion";
@@ -40,6 +40,7 @@ export function OrderRow({
   /** Offline, or nobody has unlocked the terminal. */
   disabled: boolean;
 }) {
+  const reduced = useReducedMotion();
   const from = ageSince(order);
   const tone = AGE_TONES[ageTier(from, now)];
   const next = NEXT_STATUS[order.status];
@@ -67,12 +68,13 @@ export function OrderRow({
 
   return (
     <motion.li
-      layout="position"
+      layout={reduced ? false : "position"}
       // Shared across lanes: the row travels when it is advanced rather than
-      // vanishing here and appearing there.
-      layoutId={`order-${order.id}`}
+      // vanishing here and appearing there. Reduced motion keeps the reflow —
+      // the board must still be usable — and drops the travel.
+      layoutId={reduced ? undefined : `order-${order.id}`}
       transition={{ layout: spring }}
-      initial={{ opacity: 0, y: 12 }}
+      initial={reduced ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, transition: { duration: 0.12, ease: "easeOut" } }}
       className="flex gap-4"

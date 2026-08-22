@@ -1,15 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { LayoutGroup } from "framer-motion";
 
 import { advanceOrderAction } from "@/app/dashboard/actions";
 import { useBoardStatus } from "@/components/dashboard/BoardStatus";
+import { LaneRail } from "@/components/dashboard/LaneRail";
 import { OrderLane } from "@/components/dashboard/OrderLane";
 import { ageSince } from "@/components/dashboard/OrderRow";
 import { ScheduledDrawer } from "@/components/dashboard/ScheduledDrawer";
+import { ShiftStart } from "@/components/dashboard/ShiftStart";
 import { NEXT_STATUS } from "@/lib/order-transitions";
 import { useBoard, useBoardPoll } from "@/lib/use-board";
+import { useChime } from "@/lib/use-chime";
 
 import type { BoardOrder } from "@/types/board";
 import type { OrderStatus } from "@/lib/order-status";
@@ -48,8 +51,21 @@ export function OrderBoard({
   const { connection, freshAt } = useBoardStatus();
   const [now, setNow] = useState(() => new Date());
   const [error, setError] = useState<string | null>(null);
+  const [lane, setLane] = useState(LANES[0].title);
+  const [started, setStarted] = useState(false);
+  const { arm, play } = useChime();
 
   useBoardPoll(connection, refetch);
+
+  // Ping only when an order the board has never seen appears. Comparing ids
+  // rather than counts means an advance or a collection stays silent, and a
+  // reconnect re-fetch does not replay the morning.
+  const known = useRef(new Set(initial.map((order) => order.id)));
+  useEffect(() => {
+    const fresh = orders.filter((order) => !known.current.has(order.id));
+    known.current = new Set(orders.map((order) => order.id));
+    if (fresh.length > 0) play();
+  }, [orders, play]);
 
   // One clock for every timer and every spine, so nothing ticks out of step.
   useEffect(() => {
@@ -98,8 +114,26 @@ export function OrderBoard({
   // far worse than ten minutes on paper.
   const disabled = connection === "offline" || !unlocked;
 
+  const counts = LANES.map((entry) => ({
+    title: entry.title,
+    count: live.filter((order) => entry.statuses.includes(order.status)).length,
+  }));
+
   return (
     <>
+      {/* Not wrapped in AnimatePresence: the clock below re-renders this
+          component every second, and an unkeyed presence child restarts its
+          entrance on each tick — the overlay never finished fading in. There
+          is nothing to animate on the way out anyway; the shift starts once. */}
+      {!started && (
+        <ShiftStart
+          onStart={() => {
+            arm();
+            setStarted(true);
+          }}
+        />
+      )}
+
       <div className="px-5 sm:px-10 lg:px-14 print:hidden">
         {disabled && (
           <p
@@ -133,19 +167,25 @@ export function OrderBoard({
         )}
 
         <ScheduledDrawer orders={scheduled} />
+
+        <LaneRail lanes={counts} active={lane} onSelect={setLane} />
       </div>
 
       <LayoutGroup>
         <div className="mt-4 grid grid-cols-1 border-t border-kds-border lg:grid-cols-4">
-          {LANES.map((lane) => (
+          {LANES.map((entry) => (
             <OrderLane
-              key={lane.title}
-              title={lane.title}
-              empty={lane.empty}
-              orders={live.filter((order) => lane.statuses.includes(order.status))}
+              key={entry.title}
+              title={entry.title}
+              empty={entry.empty}
+              orders={live.filter((order) => entry.statuses.includes(order.status))}
               now={now}
               onAdvance={advance}
               disabled={disabled}
+              // Below lg only the chosen lane renders. Four columns need width
+              // the phone in an apron pocket does not have, and one stacked
+              // scroll buries "ready at the bar" under the whole pass.
+              hiddenOnSmall={entry.title !== lane}
             />
           ))}
         </div>

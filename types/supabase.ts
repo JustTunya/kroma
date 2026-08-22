@@ -460,7 +460,7 @@ export type Database = {
         Args: {
           p_actor: string
           p_order_id: string
-          p_station: string
+          p_station?: string
           p_to: Database["public"]["Enums"]["order_status"]
         }
         Returns: Json
@@ -532,6 +532,15 @@ export type Database = {
       }
       my_card: { Args: never; Returns: Json }
       my_usual: { Args: never; Returns: Json }
+      note_order: {
+        Args: {
+          p_actor: string
+          p_note: string
+          p_order_id: string
+          p_station?: string
+        }
+        Returns: string
+      }
       order_by_token: { Args: { p_token: string }; Returns: Json }
       order_lines: {
         Args: { p_items: Json; p_lock: boolean; p_redeem_item_id?: string }
@@ -554,8 +563,8 @@ export type Database = {
         Args: {
           p_actor: string
           p_item_id: string
-          p_station: string
-          p_stock: number
+          p_station?: string
+          p_stock?: number
         }
         Returns: number
       }

@@ -1,0 +1,56 @@
+"use client";
+
+import { motion, useReducedMotion } from "framer-motion";
+
+import { useBoardStatus } from "@/components/dashboard/BoardStatus";
+import { cn } from "@/lib/utils";
+
+/**
+ * Always on screen while a board is mounted. A board that silently stops
+ * updating loses orders and loses trust permanently, so this never hides when
+ * everything is fine — the steady green dot IS the reassurance.
+ */
+export function ConnectionPill() {
+  const reduced = useReducedMotion();
+  const { connection, freshAt } = useBoardStatus();
+
+  // No board on this screen. Nothing honest to say.
+  if (!connection) return null;
+
+  const label =
+    connection === "live"
+      ? "Live"
+      : connection === "reconnecting"
+        ? "Reconnecting"
+        : `Offline — ${freshAt.toLocaleTimeString("en-GB", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}`;
+
+  const tone =
+    connection === "live"
+      ? "text-badge-live"
+      : connection === "reconnecting"
+        ? "text-accent-primary"
+        : "text-badge-alert";
+
+  return (
+    <p
+      role="status"
+      className={cn(
+        "flex items-center gap-2 font-mono text-[10px] font-medium tracking-[0.18em] uppercase",
+        tone,
+      )}
+    >
+      <motion.span
+        aria-hidden
+        className="size-1.5 shrink-0 rounded-full bg-current"
+        animate={
+          reduced || connection !== "live" ? undefined : { opacity: [1, 0.25, 1] }
+        }
+        transition={{ duration: 2.4, ease: "easeInOut", repeat: Infinity }}
+      />
+      {label}
+    </p>
+  );
+}

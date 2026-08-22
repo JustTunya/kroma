@@ -46,6 +46,30 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // The dashboard is staff-only. This is user experience, not security: the
+  // real boundary is RLS plus a fresh role read inside every write RPC. A
+  // redirect rather than a 403, because a 403 confirms the route exists.
+  if (pathname.startsWith('/dashboard')) {
+    if (!user) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/auth/login'
+      return NextResponse.redirect(url)
+    }
+
+    const { data: staff } = await supabase
+      .from('staff')
+      .select('id')
+      .eq('user_id', user.sub)
+      .eq('is_active', true)
+      .maybeSingle()
+
+    if (!staff) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/'
+      return NextResponse.redirect(url)
+    }
+  }
+
   // A signed-in user has no business on the sign-in screens. Everything else
   // under /auth (confirm, oauth, update-password, error) needs a session to
   // work, so it stays reachable.

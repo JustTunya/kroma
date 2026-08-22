@@ -152,6 +152,46 @@ begin
   raise notice 'order_board.test.sql: stock control passed';
 end $$;
 
+-- notes append, carry the author, and are audited -----------------------------
+do $$
+declare
+  v_barista uuid;
+  v_order   uuid;
+  v_notes   text;
+begin
+  insert into staff (display_name, role) values ('Note Barista', 'staff')
+  returning id into v_barista;
+
+  insert into orders (status, subtotal, total, payment_method)
+  values ('paid', 3.50, 3.50, 'counter') returning id into v_order;
+
+  v_notes := note_order(v_order, 'Oat instead of whole', v_barista, null);
+  assert v_notes = 'Note Barista: Oat instead of whole',
+    format('the note carries its author, got %s', v_notes);
+
+  v_notes := note_order(v_order, 'Extra hot', v_barista, null);
+  assert v_notes = E'Note Barista: Oat instead of whole\nNote Barista: Extra hot',
+    format('notes append rather than replace, got %s', v_notes);
+
+  assert (select count(*) from staff_events
+           where subject_id = v_order and action = 'order.note') = 2,
+    'each note wrote an audit row';
+
+  begin
+    perform note_order(v_order, '   ', v_barista, null);
+    assert false, 'an empty note must be refused';
+  exception when sqlstate 'P0001' then null;
+  end;
+
+  begin
+    perform note_order(v_order, repeat('x', 281), v_barista, null);
+    assert false, 'an over-long note must be refused';
+  exception when sqlstate 'P0001' then null;
+  end;
+
+  raise notice 'order_board.test.sql: notes passed';
+end $$;
+
 -- a refunded order stops earning punches --------------------------------------
 do $$
 declare

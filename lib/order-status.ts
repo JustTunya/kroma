@@ -10,6 +10,7 @@ export const ORDER_STATUSES = [
   "ready",
   "collected",
   "cancelled",
+  "refunded",
 ] as const;
 
 export type OrderStatus = (typeof ORDER_STATUSES)[number];
@@ -21,9 +22,12 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, { text: string; tone: stri
   ready: { text: "Ready at the bar", tone: "text-badge-live" },
   collected: { text: "Collected", tone: "text-text-tertiary" },
   cancelled: { text: "Cancelled", tone: "text-badge-alert" },
+  refunded: { text: "Refunded", tone: "text-badge-alert" },
 };
 
 /** Settled orders stop polling — nothing more will happen to them. */
 export function isSettled(status: OrderStatus): boolean {
-  return status === "collected" || status === "cancelled";
+  return (
+    status === "collected" || status === "cancelled" || status === "refunded"
+  );
 }

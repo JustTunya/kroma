@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { rememberOrderToken } from "@/lib/active-order";
 import { clearGuestCart } from "@/lib/cart";
 import { readServerCart, writeServerCart } from "@/lib/cart-sync";
 import { createClient } from "@/lib/client";
@@ -32,17 +33,11 @@ export type OrderDoc = {
 export function OrderStatus({ token, initial }: { token: string; initial: OrderDoc }) {
   const [order, setOrder] = useState(initial);
 
-  // ponytail: last 10 order tokens in localStorage so a guest can find a recent
-  // order. Replace with an account lookup if guests start losing them.
+  // The guest's own record of the order: no account, so the token in
+  // localStorage is the only way back to it — and the header pill reads the
+  // same list to know there is something on the pass.
   useEffect(() => {
-    try {
-      const KEY = "kroma-orders";
-      const stored = JSON.parse(window.localStorage.getItem(KEY) ?? "[]") as string[];
-      if (stored.includes(token)) return;
-      window.localStorage.setItem(KEY, JSON.stringify([token, ...stored].slice(0, 10)));
-    } catch {
-      // Private mode or a full quota — the order still works, it is just not remembered.
-    }
+    rememberOrderToken(token);
   }, [token]);
 
   // The order owns these lines now. Deliberately here and not at submit time:

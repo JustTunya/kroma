@@ -67,7 +67,7 @@ export function StaffBar({
             }}
             className="flex h-9 shrink-0 items-center justify-center rounded-full border border-kds-border px-4 font-mono text-[10px] font-medium text-accent-primary uppercase transition-colors hover:border-accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary"
           >
-            <span className="-mr-[0.18em] tracking-[0.18em]">
+            <span className="mr-[-0.18em] tracking-[0.18em]">
               <span className="hidden sm:inline">End the shift</span>
               <span className="sm:hidden">End shift</span>
             </span>
@@ -87,7 +87,7 @@ export function StaffBar({
                 <span aria-hidden className="mx-2.5 text-kds-border">
                   /
                 </span>
-                <span className="-mr-[0.18em] tracking-[0.18em] text-kds-text-secondary">
+                <span className="mr-[-0.18em] tracking-[0.18em] text-kds-text-secondary">
                   Hand over
                 </span>
               </span>
@@ -99,7 +99,7 @@ export function StaffBar({
               href="/dashboard/unlock"
               className="flex h-9 shrink-0 items-center justify-center rounded-full bg-accent-primary px-4 font-mono text-[10px] font-medium text-surface-card uppercase transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary"
             >
-              <span className="-mr-[0.18em] tracking-[0.18em]">Unlock</span>
+              <span className="mr-[-0.18em] tracking-[0.18em]">Unlock</span>
             </Link>
           </motion.div>
         )}

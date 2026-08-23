@@ -4,7 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
+import { Check, ChevronDown, SlidersHorizontal, X } from "lucide-react";
 
 import {
   LEDGER_CATEGORY_NAMES,
@@ -79,6 +79,11 @@ export function FilterRail({
     : "Everyone";
   const activeCount = categories.length + (staffId ? 1 : 0);
 
+  // Desktop's own window control, same idea as the mobile sheet: a segmented
+  // row of buttons, dates only surface once "Custom" is picked so a plain
+  // preset window doesn't cost the row two date fields' worth of space.
+  const [customOpen, setCustomOpen] = useState(range.preset === null);
+
   return (
     <div
       aria-busy={pending}
@@ -125,60 +130,64 @@ export function FilterRail({
       {/* Desktop: the window, then the ledger's own lens, both on their own
           row — untouched by the mobile redesign above. */}
       <div className="hidden lg:block">
-        {/* The window. Two dates set in the page's own hand rather than in the
-            browser's, because `23/08/2026` in a bordered box is the one thing
-            on this screen that looks like it came from somewhere else. The
-            native picker is still underneath — it knows the locale and the
-            phone. */}
+        {/* The window: a segmented row picks the preset, and only when
+            "Custom" is lit do the two date fields show up — a plain preset
+            window no longer pays rent for date text nobody is reading. */}
         <div className="flex h-14 items-center gap-x-6">
-          <div className="flex shrink-0 items-baseline font-mono text-[13px] font-medium tracking-[0.14em] whitespace-nowrap uppercase tabular-nums">
-            <DateField
-              label="Window starts"
-              value={range.fromKey}
-              max={range.toKey}
-              today={today}
-              onChange={(value) => go({ from: value })}
-            />
-            <span aria-hidden className="mx-3 text-kds-border">
-              —
-            </span>
-            <DateField
-              label="Window ends"
-              value={range.toKey}
-              min={range.fromKey}
-              max={today}
-              today={today}
-              onChange={(value) => go({ to: value })}
-            />
-            {range.days > 1 && range.preset === null && (
-              <span className="text-[10px] tracking-[0.18em] text-kds-text-secondary">
-                <span aria-hidden className="mx-3 text-kds-border">
-                  /
-                </span>
-                {range.days} days
-              </span>
-            )}
-          </div>
-
-          <div className="ml-auto flex shrink-0 items-center gap-1">
+          <div className="-ml-4 flex shrink-0 items-center gap-1">
             {RANGE_PRESETS.map((preset) => (
               <Preset
                 key={preset.id}
-                active={range.preset === preset.id}
-                onClick={() =>
-                  go({ from: shiftDayKey(today, -preset.days), to: today })
-                }
+                active={!customOpen && range.preset === preset.id}
+                onClick={() => {
+                  setCustomOpen(false);
+                  go({ from: shiftDayKey(today, -preset.days), to: today });
+                }}
               >
                 {preset.label}
               </Preset>
             ))}
+            <Preset active={customOpen} onClick={() => setCustomOpen(true)}>
+              Custom
+            </Preset>
           </div>
+
+          {customOpen && (
+            <div className="flex shrink-0 items-baseline font-mono text-[10px] font-medium tracking-[0.16em] whitespace-nowrap uppercase tabular-nums">
+              <DateField
+                label="Window starts"
+                value={range.fromKey}
+                max={range.toKey}
+                today={today}
+                onChange={(value) => go({ from: value })}
+              />
+              <span aria-hidden className="mx-3 text-kds-border">
+                —
+              </span>
+              <DateField
+                label="Window ends"
+                value={range.toKey}
+                min={range.fromKey}
+                max={today}
+                today={today}
+                onChange={(value) => go({ to: value })}
+              />
+              {range.days > 1 && (
+                <span className="text-kds-text-secondary">
+                  <span aria-hidden className="mx-3 text-kds-border">
+                    /
+                  </span>
+                  {range.days} days
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* The ledger's own lens, set as a spec line rather than a second row of
             chips: it reads as one sentence about which events are showing, and
             it stays quieter than the window it sits under. */}
-        <div className="scrollbar-hide -mx-14 flex items-center overflow-x-auto px-14 pt-1 pb-3.5">
+        <div className="scrollbar-hide -mx-14 flex items-center overflow-x-auto px-14 pt-4 pb-3.5">
           <span className="shrink-0 pr-4 font-mono text-[10px] font-medium tracking-[0.18em] text-kds-text-secondary uppercase">
             Ledger
           </span>
@@ -199,7 +208,7 @@ export function FilterRail({
           ))}
 
           <label className="ml-auto flex shrink-0 items-center gap-2 pl-6 font-mono text-[10px] font-medium tracking-[0.18em] text-kds-text-secondary uppercase">
-            By
+            Staff
             <StaffSelect staffId={staffId} staff={staff} onChange={(id) => go({ staff: id })} />
           </label>
         </div>
@@ -263,6 +272,11 @@ function FilterSheet({
   go: (changes: Record<string, string | null>) => void;
   toggleCategory: (name: string) => void;
 }) {
+  // Which of the four window buttons reads as pressed. Starts on "custom"
+  // when the URL is already outside the three presets, so reopening the
+  // sheet mid-custom-range doesn't hide the dates that are actually active.
+  const [activeTab, setActiveTab] = useState<string>(range.preset ?? "custom");
+
   // Portalled to <body>: a sticky ancestor up the tree carries
   // backdrop-blur-xl, which — like `filter` and `transform` — makes that
   // ancestor the containing block for anything `fixed` inside it. Left in
@@ -312,61 +326,70 @@ function FilterSheet({
             <div className="flex-1 overflow-y-auto p-6">
               <section aria-label="Window">
                 <Eyebrow>Window</Eyebrow>
-                <div className="mt-4 flex items-baseline gap-3 font-mono text-[17px] font-medium tracking-[0.06em] text-kds-text-primary uppercase tabular-nums">
-                  <DateField
-                    label="Window starts"
-                    value={range.fromKey}
-                    max={range.toKey}
-                    today={today}
-                    onChange={(value) => go({ from: value })}
-                  />
-                  <span aria-hidden className="text-kds-border">
-                    —
-                  </span>
-                  <DateField
-                    label="Window ends"
-                    value={range.toKey}
-                    min={range.fromKey}
-                    max={today}
-                    today={today}
-                    onChange={(value) => go({ to: value })}
-                  />
-                </div>
-                <div className="mt-5 grid grid-cols-3 gap-2">
+                <div className="mt-4 grid grid-cols-4 gap-2">
                   {RANGE_PRESETS.map((preset) => (
                     <Chip
                       key={preset.id}
-                      active={range.preset === preset.id}
-                      onClick={() =>
-                        go({ from: shiftDayKey(today, -preset.days), to: today })
-                      }
+                      active={activeTab === preset.id}
+                      onClick={() => {
+                        setActiveTab(preset.id);
+                        go({ from: shiftDayKey(today, -preset.days), to: today });
+                      }}
                     >
                       {preset.label}
                     </Chip>
                   ))}
+                  <Chip active={activeTab === "custom"} onClick={() => setActiveTab("custom")}>
+                    Custom
+                  </Chip>
                 </div>
+                {activeTab === "custom" && (
+                  <div className="mt-6 flex items-baseline justify-around gap-3 py-2 font-mono text-[17px] font-medium tracking-[0.06em] text-kds-text-primary uppercase tabular-nums">
+                    <DateField
+                      label="Window starts"
+                      value={range.fromKey}
+                      max={range.toKey}
+                      today={today}
+                      onChange={(value) => go({ from: value })}
+                    />
+                    <span aria-hidden className="text-kds-border">
+                      —
+                    </span>
+                    <DateField
+                      label="Window ends"
+                      value={range.toKey}
+                      min={range.fromKey}
+                      max={today}
+                      today={today}
+                      onChange={(value) => go({ to: value })}
+                    />
+                  </div>
+                )}
               </section>
 
               <section aria-label="Ledger" className="mt-9">
                 <Eyebrow>Ledger</Eyebrow>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Chip active={categories.length === 0} onClick={() => go({ cat: null })}>
+                <div className="mt-4 divide-y divide-kds-border border-y border-kds-border">
+                  <LedgerRow
+                    active={categories.length === 0}
+                    onClick={() => go({ cat: null })}
+                  >
                     Everything
-                  </Chip>
+                  </LedgerRow>
                   {LEDGER_CATEGORY_NAMES.map((name) => (
-                    <Chip
+                    <LedgerRow
                       key={name}
                       active={categories.includes(name)}
                       onClick={() => toggleCategory(name)}
                     >
                       {name}
-                    </Chip>
+                    </LedgerRow>
                   ))}
                 </div>
               </section>
 
               <section aria-label="Ledger — whose actions" className="mt-9">
-                <Eyebrow>By</Eyebrow>
+                <Eyebrow>Staff</Eyebrow>
                 <div className="relative mt-4">
                   <select
                     value={staffId ?? ""}
@@ -449,7 +472,7 @@ function DateField({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="relative inline-flex cursor-pointer items-center border-b border-kds-text-secondary pb-0.5 transition-colors hover:border-accent-primary focus-within:outline-2 focus-within:outline-offset-4 focus-within:outline-kds-text-primary">
+    <label className="relative inline-flex cursor-pointer items-center border-b border-kds-text-secondary py-2 transition-colors hover:border-accent-primary focus-within:outline-2 focus-within:outline-offset-4 focus-within:outline-kds-text-primary">
       <span aria-hidden>{dayLabel(value, today)}</span>
       <input
         type="date"
@@ -591,7 +614,7 @@ function Chip({
       whileTap={{ scale: 0.98 }}
       transition={pressSpring}
       className={cn(
-        "flex h-10 items-center justify-center rounded-full border px-4 font-mono text-[11px] font-medium",
+        "flex h-12 items-center justify-center rounded-full border px-4 font-mono text-[11px] font-medium",
         "tracking-[0.12em] whitespace-nowrap uppercase transition-colors",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary",
         active
@@ -600,6 +623,38 @@ function Chip({
       )}
     >
       {children}
+    </motion.button>
+  );
+}
+
+/** One category in the mobile Ledger filter — a full-width row rather than a
+    pill, so several can sit stacked without wrapping unevenly, and each is
+    a big enough target that a thumb doesn't clip the neighbor. */
+function LedgerRow({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      whileTap={{ scale: 0.995 }}
+      transition={pressSpring}
+      className={cn(
+        "flex h-12 w-full items-center justify-between font-mono text-[12px] font-medium",
+        "tracking-[0.14em] uppercase transition-colors",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary",
+        active ? "text-kds-text-primary" : "text-kds-text-secondary",
+      )}
+    >
+      {children}
+      {active && <Check aria-hidden size={14} strokeWidth={2} className="text-accent-primary" />}
     </motion.button>
   );
 }

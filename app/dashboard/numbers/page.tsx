@@ -21,7 +21,7 @@ export const metadata = {
 // Money that moved four seconds ago is the reason anyone opens this mid-service.
 export const dynamic = "force-dynamic";
 
-const PER_PAGE = 50;
+const PER_PAGE = 20;
 
 export default async function NumbersPage({
   searchParams,
@@ -107,7 +107,10 @@ export default async function NumbersPage({
 
   const header = (
     <header className="px-5 pt-10 pb-9 sm:px-10 lg:px-14">
-      <h1 className="font-serif text-[clamp(36px,5vw,64px)] leading-[1.05] tracking-[-0.02em]">
+      <p className="font-mono text-[11px] font-medium tracking-[0.18em] text-accent-primary uppercase">
+        {rangeLabel(range.fromKey, range.toKey, today)}
+      </p>
+      <h1 className="mt-2 font-serif text-[clamp(36px,5vw,64px)] leading-[1.05] tracking-[-0.02em]">
         The numbers
       </h1>
     </header>

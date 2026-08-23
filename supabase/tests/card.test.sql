@@ -80,6 +80,14 @@ begin
   update orders set status = 'cancelled' where id = v_order.id;
   v_n := card_punches(v_user);
   assert v_n = 2, format('cancelling the drinks order returns to 2, got %s', v_n);
+
+  -- 5b. and so does a refund. Without 'refunded' in card_punches' exclusion
+  -- list a refunded order keeps its punches, which is refunds minting free
+  -- coffee. Added with the store dashboard, which introduced the status.
+  update orders set status = 'refunded' where id = v_order.id;
+  v_n := card_punches(v_user);
+  assert v_n = 2, format('a refunded drinks order also returns to 2, got %s', v_n);
+
   update orders set status = 'pending' where id = v_order.id;
 
   ------------------------------------------------------------- 6. my_usual

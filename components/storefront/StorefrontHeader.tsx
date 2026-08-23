@@ -11,7 +11,11 @@ import {
 import Link from "next/link";
 import { ShoppingBag, UserRound } from "lucide-react";
 
+import { pickupCountdown } from "@/lib/active-order";
 import { numberTransition, pressSpring, spring } from "@/lib/motion";
+import { ORDER_STATUS_LABELS } from "@/lib/order-status";
+import { glide } from "@/lib/reveal";
+import { useActiveOrder } from "@/lib/use-active-order";
 import { cn } from "@/lib/utils";
 import { Wordmark } from "@/components/Logo";
 
@@ -30,6 +34,14 @@ export function StorefrontHeader({
   const reduced = useReducedMotion();
   const { scrollY } = useScroll();
   const [onCanvas, setOnCanvas] = useState(false);
+  const active = useActiveOrder(signedIn);
+
+  // The bar's own wording for the state, then the minutes left. A ready order
+  // has no minutes — it is waiting, and the compact pill says so on its own.
+  const statusText = active ? ORDER_STATUS_LABELS[active.status].text : null;
+  const countdown = active
+    ? pickupCountdown(active.status, active.pickup_at)
+    : null;
 
   useMotionValueEvent(scrollY, "change", (value) => {
     setOnCanvas(value > window.innerHeight * 0.7);
@@ -62,40 +74,61 @@ export function StorefrontHeader({
           </span>
         </div>
 
-        <p
-          role="status"
-          className={cn(
-            "absolute left-1/2 hidden -translate-x-1/2 items-center gap-2.5 rounded-full border px-3.5 py-1.5 font-mono text-[10px] font-semibold tracking-[0.18em] text-accent-primary uppercase shadow-float backdrop-blur-md transition-colors duration-300 sm:flex",
-            onCanvas
-              ? "border-accent-primary/75 bg-accent-subtle"
-              : "border-accent-primary bg-accent-subtle/20",
+        <AnimatePresence>
+          {active && (
+            <>
+              <motion.p
+                key="order-status-wide"
+                role="status"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={glide}
+                className={cn(
+                  "absolute left-1/2 hidden -translate-x-1/2 items-center gap-2.5 rounded-full border px-3.5 py-1.5 font-mono text-[10px] font-semibold tracking-[0.18em] text-accent-primary uppercase shadow-float backdrop-blur-md transition-colors duration-300 sm:flex",
+                  onCanvas
+                    ? "border-accent-primary/75 bg-accent-subtle"
+                    : "border-accent-primary bg-accent-subtle/20",
+                )}
+              >
+                <motion.span
+                  aria-hidden
+                  className="size-1.5 shrink-0 rounded-full bg-accent-primary"
+                  animate={reduced ? undefined : { opacity: [1, 0.25, 1] }}
+                  transition={{ duration: 2.4, ease: "easeInOut", repeat: Infinity }}
+                />
+                <span className="text-shadow-text-primary/10 text-shadow-2xs">
+                  {statusText}
+                  {countdown && ` — ${countdown}`}
+                </span>
+              </motion.p>
+              <motion.p
+                key="order-status-compact"
+                role="status"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={glide}
+                className={cn(
+                  "flex items-center gap-2 rounded-full border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.18em] text-accent-primary uppercase shadow-float backdrop-blur-sm transition-colors duration-300 sm:hidden",
+                  onCanvas
+                    ? "border-accent-primary/75 bg-accent-subtle"
+                    : "border-accent-primary/75 bg-accent-subtle/15",
+                )}
+              >
+                <motion.span
+                  aria-hidden
+                  className="size-1.5 shrink-0 rounded-full bg-accent-primary"
+                  animate={reduced ? undefined : { opacity: [1, 0.25, 1] }}
+                  transition={{ duration: 2.4, ease: "easeInOut", repeat: Infinity }}
+                />
+                <span className="text-shadow-text-primary/10 text-shadow-2xs">
+                  {countdown ?? statusText}
+                </span>
+              </motion.p>
+            </>
           )}
-        >
-          <motion.span
-            aria-hidden
-            className="size-1.5 shrink-0 rounded-full bg-accent-primary"
-            animate={reduced ? undefined : { opacity: [1, 0.25, 1] }}
-            transition={{ duration: 2.4, ease: "easeInOut", repeat: Infinity }}
-          />
-          <span className="text-shadow-text-primary/10 text-shadow-2xs">Brewing now — 8-12 min</span>
-        </p>
-        <p
-          role="status"
-          className={cn(
-            "flex items-center gap-2 rounded-full border px-2.5 py-1 font-mono text-[10px] font-semibold tracking-[0.18em] text-accent-primary uppercase shadow-float backdrop-blur-sm transition-colors duration-300 sm:hidden",
-            onCanvas
-              ? "border-accent-primary/75 bg-accent-subtle"
-              : "border-accent-primary/75 bg-accent-subtle/15",
-          )}
-        >
-          <motion.span
-            aria-hidden
-            className="size-1.5 shrink-0 rounded-full bg-accent-primary"
-            animate={reduced ? undefined : { opacity: [1, 0.25, 1] }}
-            transition={{ duration: 2.4, ease: "easeInOut", repeat: Infinity }}
-          />
-          <span className="text-shadow-text-primary/10 text-shadow-2xs">8-12 min</span>
-        </p>
+        </AnimatePresence>
 
         <div className="flex items-center gap-2">
           <motion.div whileTap={{ scale: 0.98 }} transition={pressSpring}>

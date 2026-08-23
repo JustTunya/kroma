@@ -1,0 +1,16 @@
+-- Alone in this file for the same reason 'refunded' was: Postgres refuses to
+-- USE a new enum value in the transaction that adds it, and each migration
+-- file runs in its own transaction. Everything that references 'abandoned'
+-- lands in 20260822091100_order_removal.sql.
+--
+-- Three ways an order ends early, and they are not interchangeable. What
+-- separates them is only ever the stock and the money:
+--
+--   cancelled  nothing was made      stock returns   money returns
+--   abandoned  it was made, then binned  stock stays  money stays
+--   refunded   it was collected      stock stays     money returns
+--
+-- Before this value existed, a barista closing up with three untouched lattes
+-- had only "void" — which handed phantom stock back to the storefront and told
+-- the customer their order was cancelled, implying a refund nobody was sending.
+alter type order_status add value 'abandoned';

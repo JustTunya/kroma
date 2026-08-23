@@ -251,6 +251,8 @@ export type Database = {
       orders: {
         Row: {
           access_token: string
+          claimed_by: string | null
+          collected_at: string | null
           customer_name: string | null
           expires_at: string | null
           id: string
@@ -260,6 +262,7 @@ export type Database = {
           pickup_at: string | null
           placed_at: string
           ready_at: string | null
+          started_at: string | null
           status: Database["public"]["Enums"]["order_status"]
           stripe_payment_intent_id: string | null
           stripe_session_id: string | null
@@ -270,6 +273,8 @@ export type Database = {
         }
         Insert: {
           access_token?: string
+          claimed_by?: string | null
+          collected_at?: string | null
           customer_name?: string | null
           expires_at?: string | null
           id?: string
@@ -279,6 +284,7 @@ export type Database = {
           pickup_at?: string | null
           placed_at?: string
           ready_at?: string | null
+          started_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
@@ -289,6 +295,8 @@ export type Database = {
         }
         Update: {
           access_token?: string
+          claimed_by?: string | null
+          collected_at?: string | null
           customer_name?: string | null
           expires_at?: string | null
           id?: string
@@ -298,6 +306,7 @@ export type Database = {
           pickup_at?: string | null
           placed_at?: string
           ready_at?: string | null
+          started_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
@@ -306,7 +315,15 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_claimed_by_fkey"
+            columns: ["claimed_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -344,12 +361,144 @@ export type Database = {
         }
         Relationships: []
       }
+      staff: {
+        Row: {
+          created_at: string
+          display_name: string
+          failed_pins: number
+          id: string
+          is_active: boolean
+          kind: string
+          locked_until: string | null
+          pin_hash: string | null
+          role: Database["public"]["Enums"]["staff_role"]
+          station: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          failed_pins?: number
+          id?: string
+          is_active?: boolean
+          kind?: string
+          locked_until?: string | null
+          pin_hash?: string | null
+          role?: Database["public"]["Enums"]["staff_role"]
+          station?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          failed_pins?: number
+          id?: string
+          is_active?: boolean
+          kind?: string
+          locked_until?: string | null
+          pin_hash?: string | null
+          role?: Database["public"]["Enums"]["staff_role"]
+          station?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      staff_events: {
+        Row: {
+          action: string
+          created_at: string
+          detail: Json
+          id: number
+          staff_id: string | null
+          station_id: string | null
+          subject_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          detail?: Json
+          id?: never
+          staff_id?: string | null
+          station_id?: string | null
+          subject_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          detail?: Json
+          id?: never
+          staff_id?: string | null
+          station_id?: string | null
+          subject_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_events_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_events_station_id_fkey"
+            columns: ["station_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      manage_bar: {
+        Args: { p_actor: string; p_from: string; p_to: string }
+        Returns: Json
+      }
+      manage_earnings: {
+        Args: { p_actor: string; p_from: string; p_to: string }
+        Returns: Json
+      }
+      manage_ledger: {
+        Args: {
+          p_actions?: string[]
+          p_actor: string
+          p_from: string
+          p_limit?: number
+          p_offset?: number
+          p_staff?: string
+          p_to: string
+        }
+        Returns: {
+          action: string
+          created_at: string
+          detail: Json
+          id: number
+          item_name: string | null
+          order_number: number | null
+          staff_id: string | null
+          staff_name: string | null
+          station_name: string | null
+          subject_id: string | null
+        }[]
+      }
+      advance_order: {
+        Args: {
+          p_actor: string
+          p_order_id: string
+          p_station?: string
+          p_to: Database["public"]["Enums"]["order_status"]
+        }
+        Returns: Json
+      }
+      cancel_order_by_token: { Args: { p_token: string }; Returns: Json }
       card_punches: { Args: { p_user: string }; Returns: number }
+      claim_owner: { Args: { p_display_name: string }; Returns: string }
       create_order: {
         Args: {
           p_customer_name: string
@@ -363,6 +512,8 @@ export type Database = {
         }
         Returns: {
           access_token: string
+          claimed_by: string | null
+          collected_at: string | null
           customer_name: string | null
           expires_at: string | null
           id: string
@@ -372,6 +523,7 @@ export type Database = {
           pickup_at: string | null
           placed_at: string
           ready_at: string | null
+          started_at: string | null
           status: Database["public"]["Enums"]["order_status"]
           stripe_payment_intent_id: string | null
           stripe_session_id: string | null
@@ -387,12 +539,51 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      current_staff: {
+        Args: never
+        Returns: {
+          created_at: string
+          display_name: string
+          failed_pins: number
+          id: string
+          is_active: boolean
+          kind: string
+          locked_until: string | null
+          pin_hash: string | null
+          role: Database["public"]["Enums"]["staff_role"]
+          station: string
+          updated_at: string
+          user_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "staff"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       my_card: { Args: never; Returns: Json }
       my_usual: { Args: never; Returns: Json }
+      note_order: {
+        Args: {
+          p_actor: string
+          p_note: string
+          p_order_id: string
+          p_station?: string
+        }
+        Returns: string
+      }
       order_by_token: { Args: { p_token: string }; Returns: Json }
       order_lines: {
         Args: { p_items: Json; p_lock: boolean; p_redeem_item_id?: string }
         Returns: Json
+      }
+      order_transition_action: {
+        Args: {
+          p_from: Database["public"]["Enums"]["order_status"]
+          p_to: Database["public"]["Enums"]["order_status"]
+        }
+        Returns: string
       }
       quote_order: {
         Args: { p_items: Json; p_redeem_item_id?: string }
@@ -400,6 +591,33 @@ export type Database = {
       }
       release_expired_orders: { Args: never; Returns: number }
       release_order: { Args: { p_order_id: string }; Returns: boolean }
+      set_item_stock: {
+        Args: {
+          p_actor: string
+          p_item_id: string
+          p_station?: string
+          p_stock?: number
+        }
+        Returns: number
+      }
+      shift_mark: {
+        Args: { p_open: boolean; p_staff_id: string; p_station?: string }
+        Returns: string | null
+      }
+      staff_board: { Args: never; Returns: Json }
+      staff_can: {
+        Args: {
+          p_action: string
+          p_role: Database["public"]["Enums"]["staff_role"]
+        }
+        Returns: boolean
+      }
+      staff_order: { Args: { p_order_id: string }; Returns: Json }
+      staff_shift: { Args: { p_staff_id: string }; Returns: string | null }
+      staff_unlock: {
+        Args: { p_pin: string; p_staff_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       order_status:
@@ -409,6 +627,9 @@ export type Database = {
         | "ready"
         | "collected"
         | "cancelled"
+        | "refunded"
+        | "abandoned"
+      staff_role: "owner" | "manager" | "staff"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -543,7 +764,10 @@ export const Constants = {
         "ready",
         "collected",
         "cancelled",
+        "refunded",
+        "abandoned",
       ],
+      staff_role: ["owner", "manager", "staff"],
     },
   },
 } as const

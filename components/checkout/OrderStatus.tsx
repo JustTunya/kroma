@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { motion } from "framer-motion";
 
+import { cancelOwnOrderAction } from "@/app/order/actions";
+import { rememberOrderToken } from "@/lib/active-order";
 import { clearGuestCart } from "@/lib/cart";
 import { readServerCart, writeServerCart } from "@/lib/cart-sync";
 import { createClient } from "@/lib/client";
+import { pressSpring } from "@/lib/motion";
+import { canCancelSelf } from "@/lib/order-transitions";
 import { ORDER_STATUS_LABELS, isSettled, type OrderStatus } from "@/lib/order-status";
 
 export type OrderDocItem = {
@@ -31,18 +36,18 @@ export type OrderDoc = {
 
 export function OrderStatus({ token, initial }: { token: string; initial: OrderDoc }) {
   const [order, setOrder] = useState(initial);
+  // Two presses, no modal. Cancelling an order you did mean to place is as bad
+  // as the accident it undoes, and a sheet over a confirmation page is heavier
+  // than the decision.
+  const [confirming, setConfirming] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
 
-  // ponytail: last 10 order tokens in localStorage so a guest can find a recent
-  // order. Replace with an account lookup if guests start losing them.
+  // The guest's own record of the order: no account, so the token in
+  // localStorage is the only way back to it — and the header pill reads the
+  // same list to know there is something on the pass.
   useEffect(() => {
-    try {
-      const KEY = "kroma-orders";
-      const stored = JSON.parse(window.localStorage.getItem(KEY) ?? "[]") as string[];
-      if (stored.includes(token)) return;
-      window.localStorage.setItem(KEY, JSON.stringify([token, ...stored].slice(0, 10)));
-    } catch {
-      // Private mode or a full quota — the order still works, it is just not remembered.
-    }
+    rememberOrderToken(token);
   }, [token]);
 
   // The order owns these lines now. Deliberately here and not at submit time:
@@ -70,22 +75,88 @@ export function OrderStatus({ token, initial }: { token: string; initial: OrderD
     return () => clearInterval(timer);
   }, [token, order.status]);
 
+  function cancel() {
+    setError(null);
+    startTransition(async () => {
+      const result = await cancelOwnOrderAction(token);
+      // The action reports the status it landed on, not whether everything
+      // worked: a failed refund still cancelled the order, and a refusal
+      // ("already on the bar") left it exactly where it was.
+      if (result.status) {
+        setOrder((current) => ({ ...current, status: result.status! }));
+      }
+      setConfirming(false);
+      if (!result.ok) setError(result.error ?? "Ask at the bar.");
+    });
+  }
+
   const label = ORDER_STATUS_LABELS[order.status];
+  const cancellable = canCancelSelf(order.status);
 
   return (
-    <p
-      role="status"
-      className={`font-mono text-[11px] font-medium tracking-[0.14em] uppercase ${label.tone}`}
-    >
-      {label.text}
-      {order.status === "pending" && order.payment_method === "counter" && (
-        <>
-          <span aria-hidden className="mx-3 text-hairline">
-            /
-          </span>
-          Pay at the bar
-        </>
+    <>
+      <p
+        role="status"
+        className={`font-mono text-[11px] font-medium tracking-[0.14em] uppercase ${label.tone}`}
+      >
+        {label.text}
+        {order.status === "pending" && order.payment_method === "counter" && (
+          <>
+            <span aria-hidden className="mx-3 text-hairline">
+              /
+            </span>
+            Pay at the bar
+          </>
+        )}
+        {order.status === "cancelled" && order.payment_method === "online" && !error && (
+          <>
+            <span aria-hidden className="mx-3 text-hairline">
+              /
+            </span>
+            Back on your card in 5-10 days
+          </>
+        )}
+      </p>
+
+      {cancellable && (
+        <motion.button
+          type="button"
+          // No blur reset: React dispatches blur before click, so disarming
+          // there makes the second press a no-op. An armed button says
+          // "Yes — cancel it" on its face, which is warning enough.
+          onClick={() => (confirming ? cancel() : setConfirming(true))}
+          disabled={pending}
+          whileTap={{ scale: 0.98 }}
+          transition={pressSpring}
+          aria-label={
+            confirming
+              ? `Confirm cancelling order ${order.order_number}`
+              : `Cancel order ${order.order_number}, €${order.total.toFixed(2)}`
+          }
+          className={`mt-5 h-9 rounded-full border px-4 font-mono text-[10px] font-medium tracking-[0.18em] uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:opacity-50 ${
+            confirming
+              ? "border-badge-alert text-badge-alert"
+              : "border-hairline text-text-tertiary hover:border-badge-alert hover:text-badge-alert"
+          }`}
+        >
+          {confirming ? "Yes — cancel it" : "Cancel this order"}
+        </motion.button>
       )}
-    </p>
+
+      {cancellable && (
+        <p className="mt-3 max-w-md font-mono text-[10px] tracking-[0.14em] text-text-tertiary uppercase">
+          Only until the bar starts it
+        </p>
+      )}
+
+      {error && (
+        <p
+          role="status"
+          className="mt-3 font-mono text-[11px] font-medium tracking-[0.14em] text-badge-alert uppercase"
+        >
+          {error}
+        </p>
+      )}
+    </>
   );
 }

@@ -86,7 +86,7 @@ Loaded in `app/layout.tsx` via `next/font/google`, exposed as CSS variables and 
 
 ### Font Families
 * **Display / Editorial:** `Instrument Serif` — weight **400 only**, normal + italic. `font-serif`.
-* **Body / UI:** `Plus Jakarta Sans` — the `html` default. `font-sans`.
+* **Body / UI:** system sans-serif stack (`ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif`) — the `html` default. `font-sans`. No web font loaded for this role; native OS font only.
 * **Data, labels, metadata:** `JetBrains Mono`. `font-mono`.
 
 ### The Mono Rule (defining KROMA characteristic)
@@ -365,3 +365,13 @@ Non-negotiable, and already consistent across the page — match it.
 * `cn()` from `lib/utils.ts` for every conditional class.
 * Prices are `number` euros, rendered `€${price.toFixed(2)}` with `tabular-nums`.
 * `ponytail:` comments mark deliberate shortcuts with their upgrade path — read them before extending a file.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

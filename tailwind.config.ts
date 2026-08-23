@@ -28,7 +28,7 @@ export default {
       },
       fontFamily: {
         serif: ["var(--font-instrument-serif)", "serif"],
-        sans: ["var(--font-plus-jakarta-sans)", "sans-serif"],
+        sans: ["ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "sans-serif"],
         mono: ["var(--font-jetbrains-mono)", "monospace"],
       },
       borderRadius: {

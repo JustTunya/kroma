@@ -106,11 +106,8 @@ export default async function NumbersPage({
   const lastDay = take.latest ? shopDayKey(new Date(take.latest)) : null;
 
   const header = (
-    <header className="px-5 pt-10 sm:px-10 lg:px-14">
-      <p className="font-mono text-[10px] font-medium tracking-[0.18em] text-accent-primary uppercase">
-        {rangeLabel(range.fromKey, range.toKey, today)}
-      </p>
-      <h1 className="mt-4 font-serif text-[clamp(36px,5vw,64px)] leading-[1.05] tracking-[-0.02em]">
+    <header className="px-5 pt-10 pb-9 sm:px-10 lg:px-14">
+      <h1 className="font-serif text-[clamp(36px,5vw,64px)] leading-[1.05] tracking-[-0.02em]">
         The numbers
       </h1>
     </header>

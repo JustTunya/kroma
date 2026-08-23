@@ -86,7 +86,7 @@ Loaded in `app/layout.tsx` via `next/font/google`, exposed as CSS variables and 
 
 ### Font Families
 * **Display / Editorial:** `Instrument Serif` — weight **400 only**, normal + italic. `font-serif`.
-* **Body / UI:** `Plus Jakarta Sans` — the `html` default. `font-sans`.
+* **Body / UI:** system sans-serif stack (`ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif`) — the `html` default. `font-sans`. No web font loaded for this role; native OS font only.
 * **Data, labels, metadata:** `JetBrains Mono`. `font-mono`.
 
 ### The Mono Rule (defining KROMA characteristic)

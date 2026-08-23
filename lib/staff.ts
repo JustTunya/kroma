@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
 
 import { createClient } from "@/lib/server";
@@ -61,3 +62,17 @@ export async function roster(): Promise<RosterEntry[]> {
     .order("display_name");
   return (data as RosterEntry[] | null) ?? [];
 }
+
+/**
+ * ISO timestamp of this actor's open shift, or null if they are off.
+ * Cached per request: the header and the board both ask on every render.
+ */
+export const currentShift = cache(async (): Promise<string | null> => {
+  const actor = await currentActor();
+  if (!actor) return null;
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("staff_shift", {
+    p_staff_id: actor.staffId,
+  });
+  return (data as string | null) ?? null;
+});

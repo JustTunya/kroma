@@ -1,6 +1,6 @@
 import { OrderBoard } from "@/components/dashboard/OrderBoard";
 import { createClient } from "@/lib/server";
-import { currentActor } from "@/lib/staff";
+import { currentActor, currentShift } from "@/lib/staff";
 
 import type { BoardOrder } from "@/types/board";
 
@@ -15,10 +15,9 @@ export default async function BoardPage() {
   ]);
 
   // Whether this person is mid-shift, not whether this browser has seen the
-  // overlay: a reload during service must not ask them to start again.
-  const { data: shiftSince } = actor
-    ? await supabase.rpc("staff_shift", { p_staff_id: actor.staffId })
-    : { data: null };
+  // overlay: a reload during service must not ask them to start again. Shared
+  // with the header's End-the-shift button through the per-request cache.
+  const shiftSince = await currentShift();
 
   return (
     <OrderBoard

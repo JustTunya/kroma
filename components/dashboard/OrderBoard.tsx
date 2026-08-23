@@ -3,11 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { LayoutGroup } from "framer-motion";
 
-import {
-  advanceOrderAction,
-  endShiftAction,
-  startShiftAction,
-} from "@/app/dashboard/actions";
+import { advanceOrderAction, startShiftAction } from "@/app/dashboard/actions";
 import { useBoardStatus } from "@/components/dashboard/BoardStatus";
 import { LaneRail } from "@/components/dashboard/LaneRail";
 import { OrderLane } from "@/components/dashboard/OrderLane";
@@ -232,22 +228,6 @@ export function OrderBoard({
         >
           Print pass list
         </button>
-
-        {/* Down here on purpose. Ending the shift locks the terminal, and that
-            is not a thing to put a thumb width from the lane rail. */}
-        {unlocked && onShift && (
-          <button
-            type="button"
-            onClick={async () => {
-              setError(null);
-              const result = await endShiftAction();
-              if (!result.ok) setError(result.error ?? "That did not go through.");
-            }}
-            className="font-mono text-[10px] font-medium tracking-[0.18em] text-accent-primary uppercase transition-colors hover:text-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary"
-          >
-            End the shift
-          </button>
-        )}
       </div>
     </>
   );

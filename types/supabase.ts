@@ -456,6 +456,37 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      manage_bar: {
+        Args: { p_actor: string; p_from: string; p_to: string }
+        Returns: Json
+      }
+      manage_earnings: {
+        Args: { p_actor: string; p_from: string; p_to: string }
+        Returns: Json
+      }
+      manage_ledger: {
+        Args: {
+          p_actions?: string[]
+          p_actor: string
+          p_from: string
+          p_limit?: number
+          p_offset?: number
+          p_staff?: string
+          p_to: string
+        }
+        Returns: {
+          action: string
+          created_at: string
+          detail: Json
+          id: number
+          item_name: string | null
+          order_number: number | null
+          staff_id: string | null
+          staff_name: string | null
+          station_name: string | null
+          subject_id: string | null
+        }[]
+      }
       advance_order: {
         Args: {
           p_actor: string

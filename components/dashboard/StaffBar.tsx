@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { ChartNoAxesColumn } from "lucide-react";
 
 import { endShiftAction, lockAction } from "@/app/dashboard/actions";
 import { ConnectionPill } from "@/components/dashboard/ConnectionPill";
 import { pressSpring } from "@/lib/motion";
+import { cn } from "@/lib/utils";
 
 /**
  * Who is unlocked, whether their shift is still open, and whether the board is
@@ -16,12 +19,16 @@ import { pressSpring } from "@/lib/motion";
 export function StaffBar({
   actorName,
   onShift,
+  canSeeNumbers,
 }: {
   actorName: string | null;
   /** Whether this person has an open shift — the only state End can end. */
   onShift: boolean;
+  /** Manager and owner only. The page redirects too; this hides the door. */
+  canSeeNumbers: boolean;
 }) {
   const [error, setError] = useState<string | null>(null);
+  const pathname = usePathname();
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 flex h-14 items-center justify-between gap-4 border-b border-kds-border bg-kds-canvas px-5 sm:px-10 lg:px-14">
@@ -87,6 +94,26 @@ export function StaffBar({
             </Link>
           </motion.div>
         )}
+
+        {canSeeNumbers && (
+          <motion.div whileTap={{ scale: 0.98 }} transition={pressSpring}>
+            <Link
+              href="/dashboard/numbers"
+              aria-label="The numbers — takings, shifts and the ledger"
+              aria-current={pathname === "/dashboard/numbers" ? "page" : undefined}
+              className={cn(
+                "flex size-9 items-center justify-center rounded-full border transition-colors",
+                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary",
+                pathname === "/dashboard/numbers"
+                  ? "border-kds-text-primary bg-kds-text-primary text-kds-canvas"
+                  : "border-kds-border text-kds-text-secondary hover:border-kds-text-secondary hover:text-kds-text-primary",
+              )}
+            >
+              <ChartNoAxesColumn aria-hidden className="size-4" strokeWidth={1.75} />
+            </Link>
+          </motion.div>
+        )}
+
       </div>
     </header>
   );

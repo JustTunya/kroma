@@ -1,6 +1,7 @@
 import { BoardStatusProvider } from "@/components/dashboard/BoardStatus";
 import { StaffBar } from "@/components/dashboard/StaffBar";
 import { currentActor, currentShift } from "@/lib/staff";
+import { staffCan } from "@/lib/staff-permissions";
 
 import type { Metadata } from "next";
 
@@ -23,7 +24,11 @@ export default async function DashboardLayout({
       {/* The pill is in the header and the socket is in the page. This is what
           lets the second tell the first what it is hearing. */}
       <BoardStatusProvider>
-        <StaffBar actorName={actor?.name ?? null} onShift={Boolean(shiftSince)} />
+        <StaffBar
+          actorName={actor?.name ?? null}
+          onShift={Boolean(shiftSince)}
+          canSeeNumbers={actor ? staffCan(actor.role, "analytics.view") : false}
+        />
         {/* h-14, one line shorter than the storefront header: a bar screen owes
             every pixel it can to the orders. */}
         <main className="pt-14">{children}</main>

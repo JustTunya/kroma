@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { BehindTheBar } from "@/components/dashboard/numbers/BehindTheBar";
@@ -74,6 +75,12 @@ export default async function NumbersPage({
     roster(),
   ]);
 
+  // A read that FAILED and a morning where nothing sold both arrive here as a
+  // null. Drawing €0.00 for the first one is the worst thing this page could
+  // do: it is a confident, wrong answer about money, and it looks exactly like
+  // a true one. So a failed read stops the page instead of filling it in.
+  const broken = [earned.error, bar.error, ledger.error, stock.error].find(Boolean);
+
   const take = (earned.data as Earnings | null) ?? EMPTY;
   const staff = (bar.data as BarStat[] | null) ?? [];
   const rows = (ledger.data as LedgerEntry[] | null) ?? [];
@@ -95,17 +102,51 @@ export default async function NumbersPage({
   ).toString();
 
   const lost = take.voided + take.refunded;
+  // The shop day of the newest order anywhere, for the empty-window pointer.
+  const lastDay = take.latest ? shopDayKey(new Date(take.latest)) : null;
+
+  const header = (
+    <header className="px-5 pt-10 sm:px-10 lg:px-14">
+      <p className="font-mono text-[10px] font-medium tracking-[0.18em] text-accent-primary uppercase">
+        {rangeLabel(range.fromKey, range.toKey, today)}
+      </p>
+      <h1 className="mt-4 font-serif text-[clamp(36px,5vw,64px)] leading-[1.05] tracking-[-0.02em]">
+        The numbers
+      </h1>
+    </header>
+  );
+
+  if (broken) {
+    return (
+      <>
+        {header}
+        <section
+          aria-label="The numbers could not be read"
+          className="px-5 py-16 sm:px-10 lg:px-14"
+        >
+          <p
+            role="status"
+            className="border-y border-kds-border py-6 font-mono text-[11px] leading-[1.7] tracking-[0.14em] text-badge-alert uppercase"
+          >
+            The numbers could not be read. Nothing is lost — the till and the
+            pass are unaffected.
+          </p>
+          <p className="mt-6 max-w-lg font-sans text-[15px] leading-[1.6] text-kds-text-secondary">
+            The database refused the request. Whoever looks after the server
+            needs the line below.
+          </p>
+          <p className="mt-4 font-mono text-[11px] leading-[1.7] tracking-[0.02em] text-kds-text-secondary">
+            {broken.code ? `${broken.code} — ` : ""}
+            {broken.message}
+          </p>
+        </section>
+      </>
+    );
+  }
 
   return (
     <>
-      <header className="px-5 pt-10 sm:px-10 lg:px-14">
-        <p className="font-mono text-[10px] font-medium tracking-[0.18em] text-accent-primary uppercase">
-          {rangeLabel(range.fromKey, range.toKey, today)}
-        </p>
-        <h1 className="mt-4 font-serif text-[clamp(36px,5vw,64px)] leading-[1.05] tracking-[-0.02em]">
-          The numbers
-        </h1>
-      </header>
+      {header}
 
       <FilterRail
         range={range}
@@ -120,15 +161,33 @@ export default async function NumbersPage({
           {money(take.taken)}
         </p>
 
-        <MetaLine
-          className="mt-6"
-          parts={[
-            { text: `${take.orders} ${take.orders === 1 ? "order" : "orders"}` },
-            { text: `${money(take.average)} average` },
-            { text: `${money(take.online)} online` },
-            { text: `${money(take.counter)} counter` },
-          ]}
-        />
+        {take.orders === 0 && lastDay && lastDay !== range.toKey ? (
+          // €0.00 is the truth, but on its own it reads as a broken page. The
+          // shop has takings, just not in this window — say which day has them
+          // and make it one tap, rather than leaving a manager to guess.
+          <div className="mt-6">
+            <p className="max-w-lg font-sans text-[15px] leading-[1.6] text-kds-text-secondary">
+              Nothing came in {range.days > 1 ? "in this window" : "on this day"}.
+              The last order was {rangeLabel(lastDay, lastDay, today)}.
+            </p>
+            <Link
+              href={`?from=${lastDay}&to=${lastDay}`}
+              className="mt-5 inline-flex h-9 items-center rounded-full border border-kds-border px-4 font-mono text-[10px] font-medium tracking-[0.18em] text-accent-primary uppercase transition-colors hover:border-accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary"
+            >
+              Show {rangeLabel(lastDay, lastDay, today)}
+            </Link>
+          </div>
+        ) : (
+          <MetaLine
+            className="mt-6"
+            parts={[
+              { text: `${take.orders} ${take.orders === 1 ? "order" : "orders"}` },
+              { text: `${money(take.average)} average` },
+              { text: `${money(take.online)} online` },
+              { text: `${money(take.counter)} counter` },
+            ]}
+          />
+        )}
 
         <div className="mt-10 grid gap-x-14 gap-y-8 border-t border-kds-border pt-8 md:grid-cols-2">
           <div>
@@ -327,6 +386,7 @@ const EMPTY: Earnings = {
   refunded: 0,
   abandoned: 0,
   unpaid: 0,
+  latest: null,
   by_hour: [],
   items: [],
 };

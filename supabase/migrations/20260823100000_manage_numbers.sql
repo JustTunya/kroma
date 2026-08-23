@@ -154,6 +154,11 @@ begin
     'abandoned', coalesce((select sum(total) from scoped
                             where status = 'abandoned'), 0),
     'unpaid',    (select count(*) from scoped where status = 'pending'),
+    -- Deliberately NOT scoped: it is what the empty state points at when the
+    -- chosen window has nothing but the shop does. A manager opening this at
+    -- 09:00 on a quiet Monday should not have to guess whether the page is
+    -- broken or the morning is.
+    'latest',    (select max(placed_at) from orders),
     'by_hour', coalesce((
       select jsonb_agg(jsonb_build_object(
                'hour',    coalesce(h.hour, c.hour),

@@ -78,7 +78,12 @@ create or replace function advance_order(
   p_order_id uuid,
   p_to       order_status,
   p_actor    uuid,
-  p_station  uuid
+  -- Keeps the default rpc_optional_args added. Postgres refuses to drop a
+  -- parameter default through `create or replace`, so leaving it off here made
+  -- this whole migration unrunnable against any database that already had it —
+  -- and the default is load-bearing: app/dashboard/actions.ts passes
+  -- `p_station: station?.id`, which supabase-js omits when it is undefined.
+  p_station  uuid default null
 ) returns jsonb
 language plpgsql
 security definer

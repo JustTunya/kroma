@@ -27,6 +27,11 @@ export type Earnings = {
   abandoned: number;
   /** Orders still sitting unpaid on the pass. */
   unpaid: number;
+  /**
+   * When the shop last took an order, across all of history — not the window.
+   * Null on a shop that has never sold anything.
+   */
+  latest: string | null;
   by_hour: HourSlice[];
   items: SoldItem[];
 };

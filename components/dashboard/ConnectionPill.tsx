@@ -5,16 +5,10 @@ import { motion, useReducedMotion } from "framer-motion";
 import { useBoardStatus } from "@/components/dashboard/BoardStatus";
 import { cn } from "@/lib/utils";
 
-/**
- * Always on screen while a board is mounted. A board that silently stops
- * updating loses orders and loses trust permanently, so this never hides when
- * everything is fine — the steady green dot IS the reassurance.
- */
 export function ConnectionPill() {
   const reduced = useReducedMotion();
   const { connection, freshAt } = useBoardStatus();
 
-  // No board on this screen. Nothing honest to say.
   if (!connection) return null;
 
   const label =
@@ -38,13 +32,13 @@ export function ConnectionPill() {
     <p
       role="status"
       className={cn(
-        "flex items-center gap-2 font-mono text-[10px] font-medium tracking-[0.18em] uppercase",
+        "flex items-center justify-center gap-2 font-mono text-[10px] font-medium leading-none uppercase",
         tone,
       )}
     >
       <motion.span
         aria-hidden
-        className="size-1.5 shrink-0 rounded-full bg-current"
+        className="size-1.5 shrink-0 rounded-full bg-current mb-0.5"
         animate={
           reduced || connection !== "live" ? undefined : { opacity: [1, 0.25, 1] }
         }

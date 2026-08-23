@@ -31,17 +31,17 @@ export function StaffBar({
   const pathname = usePathname();
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 flex h-14 items-center justify-between gap-4 border-b border-kds-border bg-kds-canvas px-5 sm:px-10 lg:px-14">
+    <header className="fixed inset-x-0 top-0 z-50 flex h-14 items-center justify-between gap-2 border-b border-kds-border bg-kds-canvas px-4 sm:gap-4 sm:px-10 lg:px-14">
       <Link
         href="/dashboard/board"
-        className="flex min-w-0 items-baseline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-kds-text-primary"
+        className="flex min-w-0 shrink-0 items-baseline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-kds-text-primary"
       >
         <span className="font-serif text-[22px] leading-none tracking-[-0.02em]">
           KROMA
         </span>
       </Link>
 
-      <div className="flex shrink-0 items-center gap-4">
+      <div className="flex min-w-0 shrink items-center gap-2 overflow-x-auto scrollbar-hide sm:gap-4">
         {error && (
           <span
             role="status"
@@ -51,7 +51,9 @@ export function StaffBar({
           </span>
         )}
 
-        <ConnectionPill />
+        <div className="shrink-0">
+          <ConnectionPill />
+        </div>
 
         {actorName && onShift && (
           <motion.button
@@ -63,9 +65,12 @@ export function StaffBar({
               const result = await endShiftAction();
               if (!result.ok) setError(result.error ?? "That did not go through.");
             }}
-            className="flex h-9 items-center rounded-full border border-kds-border px-4 font-mono text-[10px] font-medium tracking-[0.18em] text-accent-primary uppercase transition-colors hover:border-accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary"
+            className="flex h-9 shrink-0 items-center justify-center rounded-full border border-kds-border px-4 font-mono text-[10px] font-medium text-accent-primary uppercase transition-colors hover:border-accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary"
           >
-            End the shift
+            <span className="-mr-[0.18em] tracking-[0.18em]">
+              <span className="hidden sm:inline">End the shift</span>
+              <span className="sm:hidden">End shift</span>
+            </span>
           </motion.button>
         )}
 
@@ -75,28 +80,32 @@ export function StaffBar({
               type="submit"
               whileTap={{ scale: 0.98 }}
               transition={pressSpring}
-              className="flex h-9 items-center rounded-full border border-kds-border px-4 font-mono text-[10px] font-medium tracking-[0.18em] uppercase transition-colors hover:border-kds-text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary"
+              className="flex h-9 shrink-0 items-center rounded-full border border-kds-border px-4 font-mono text-[10px] font-medium uppercase transition-colors hover:border-kds-text-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary"
             >
-              {actorName}
-              <span aria-hidden className="mx-2.5 text-kds-border">
-                /
+              <span className="tracking-[0.18em]">{actorName}</span>
+              <span className="hidden items-center sm:flex">
+                <span aria-hidden className="mx-2.5 text-kds-border">
+                  /
+                </span>
+                <span className="-mr-[0.18em] tracking-[0.18em] text-kds-text-secondary">
+                  Hand over
+                </span>
               </span>
-              <span className="text-kds-text-secondary">Hand over</span>
             </motion.button>
           </form>
         ) : (
-          <motion.div whileTap={{ scale: 0.98 }} transition={pressSpring}>
+          <motion.div className="shrink-0" whileTap={{ scale: 0.98 }} transition={pressSpring}>
             <Link
               href="/dashboard/unlock"
-              className="flex h-9 items-center rounded-full bg-accent-primary px-4 font-mono text-[10px] font-medium tracking-[0.18em] text-surface-card uppercase transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary"
+              className="flex h-9 shrink-0 items-center justify-center rounded-full bg-accent-primary px-4 font-mono text-[10px] font-medium text-surface-card uppercase transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary"
             >
-              Unlock
+              <span className="-mr-[0.18em] tracking-[0.18em]">Unlock</span>
             </Link>
           </motion.div>
         )}
 
         {canSeeNumbers && (
-          <motion.div whileTap={{ scale: 0.98 }} transition={pressSpring}>
+          <motion.div className="shrink-0" whileTap={{ scale: 0.98 }} transition={pressSpring}>
             <Link
               href="/dashboard/numbers"
               aria-label="The numbers — takings, shifts and the ledger"

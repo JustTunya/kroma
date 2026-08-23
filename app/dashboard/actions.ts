@@ -3,8 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
+import { refundOrder } from "@/lib/refund";
 import { createClient } from "@/lib/server";
-import { currentStaff, requireActor } from "@/lib/staff";
+import { currentActor, currentStaff, requireActor } from "@/lib/staff";
 import {
   ACTOR_COOKIE,
   ACTOR_TTL_MS,
@@ -113,6 +114,44 @@ export async function lockAction(): Promise<void> {
 }
 
 /**
+ * The two ends of a shift, stamped in staff_events.
+ *
+ * No requireActor(): there is no `shift.*` in staff_can because there is
+ * nothing to gate. Holding a valid PIN cookie is the whole permission, and it
+ * only ever marks your own row — shift_mark() takes the actor from here, not
+ * from an argument the client could choose.
+ */
+export async function startShiftAction(): Promise<Result> {
+  return markShift(true);
+}
+
+/** Ends the shift and hands the terminal back in one tap. */
+export async function endShiftAction(): Promise<Result> {
+  const result = await markShift(false);
+  if (result.ok) await lockAction();
+  return result;
+}
+
+async function markShift(open: boolean): Promise<Result> {
+  const actor = await currentActor();
+  if (!actor) return { ok: false, error: "Unlock with your PIN first." };
+
+  const station = await currentStaff();
+  const supabase = await createClient();
+
+  const { error } = await supabase.rpc("shift_mark", {
+    p_staff_id: actor.staffId,
+    p_open: open,
+    p_station: station?.id,
+  });
+  if (error) return fail(error);
+
+  await slide(actor);
+  revalidatePath("/dashboard/board");
+  return { ok: true };
+}
+
+/**
  * One transition. advance_order() owns the rules — this only carries the actor
  * and the station, and re-signs the cookie so an active shift slides forward.
  */
@@ -128,7 +167,7 @@ export async function advanceOrderAction(
     const station = await currentStaff();
     const supabase = await createClient();
 
-    const { error } = await supabase.rpc("advance_order", {
+    const { data, error } = await supabase.rpc("advance_order", {
       p_order_id: orderId,
       p_to: to,
       p_actor: actor.staffId,
@@ -139,6 +178,15 @@ export async function advanceOrderAction(
     await slide(actor);
     revalidatePath("/dashboard/board");
     revalidatePath(`/dashboard/order/${orderId}`);
+
+    // The transition is already committed. Only the money is still open, so a
+    // failure here is reported as a failure of the refund and not of the void —
+    // the order really has moved, and the board will show it.
+    if ((data as { refund_owed?: boolean } | null)?.refund_owed) {
+      const refund = await refundOrder(orderId);
+      if (!refund.ok) return { ok: false, error: refund.error };
+    }
+
     return { ok: true };
   } catch (error) {
     return fail(error);

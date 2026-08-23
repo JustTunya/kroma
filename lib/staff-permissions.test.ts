@@ -8,6 +8,10 @@ test("staff may run the pass but not settle money", () => {
   assert.equal(staffCan("staff", "order.advance"), true);
   assert.equal(staffCan("staff", "order.note"), true);
   assert.equal(staffCan("staff", "item.86"), true);
+  // Writing off a drink nobody came for moves neither stock nor money, so it
+  // is the closing barista's call. Doing it EARLY is not: advance_order()
+  // charges an abandon inside the half hour to order.void.
+  assert.equal(staffCan("staff", "order.abandon"), true);
   assert.equal(staffCan("staff", "order.void"), false);
   assert.equal(staffCan("staff", "order.refund"), false);
   assert.equal(staffCan("staff", "customer.contact"), false);

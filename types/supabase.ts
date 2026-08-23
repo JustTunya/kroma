@@ -465,6 +465,7 @@ export type Database = {
         }
         Returns: Json
       }
+      cancel_order_by_token: { Args: { p_token: string }; Returns: Json }
       card_punches: { Args: { p_user: string }; Returns: number }
       claim_owner: { Args: { p_display_name: string }; Returns: string }
       create_order: {
@@ -568,6 +569,10 @@ export type Database = {
         }
         Returns: number
       }
+      shift_mark: {
+        Args: { p_open: boolean; p_staff_id: string; p_station?: string }
+        Returns: string | null
+      }
       staff_board: { Args: never; Returns: Json }
       staff_can: {
         Args: {
@@ -577,6 +582,7 @@ export type Database = {
         Returns: boolean
       }
       staff_order: { Args: { p_order_id: string }; Returns: Json }
+      staff_shift: { Args: { p_staff_id: string }; Returns: string | null }
       staff_unlock: {
         Args: { p_pin: string; p_staff_id: string }
         Returns: Json
@@ -591,6 +597,7 @@ export type Database = {
         | "collected"
         | "cancelled"
         | "refunded"
+        | "abandoned"
       staff_role: "owner" | "manager" | "staff"
     }
     CompositeTypes: {
@@ -727,6 +734,7 @@ export const Constants = {
         "collected",
         "cancelled",
         "refunded",
+        "abandoned",
       ],
       staff_role: ["owner", "manager", "staff"],
     },

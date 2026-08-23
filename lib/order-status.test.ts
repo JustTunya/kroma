@@ -19,9 +19,11 @@ test("the label map has no entries beyond the enum", () => {
   );
 });
 
-test("only collected and cancelled are settled", () => {
+test("every ending is settled and nothing on the pass is", () => {
   assert.equal(isSettled("collected"), true);
   assert.equal(isSettled("cancelled"), true);
+  assert.equal(isSettled("refunded"), true);
+  assert.equal(isSettled("abandoned"), true);
   assert.equal(isSettled("paid"), false);
   assert.equal(isSettled("preparing"), false);
 });

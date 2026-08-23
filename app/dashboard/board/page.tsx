@@ -14,10 +14,17 @@ export default async function BoardPage() {
     currentActor(),
   ]);
 
+  // Whether this person is mid-shift, not whether this browser has seen the
+  // overlay: a reload during service must not ask them to start again.
+  const { data: shiftSince } = actor
+    ? await supabase.rpc("staff_shift", { p_staff_id: actor.staffId })
+    : { data: null };
+
   return (
     <OrderBoard
       initial={(data as BoardOrder[] | null) ?? []}
       unlocked={Boolean(actor)}
+      shiftSince={shiftSince}
     />
   );
 }

@@ -29,6 +29,15 @@ export const PREV_STATUS: Partial<Record<OrderStatus, OrderStatus>> = {
 const VOIDABLE: OrderStatus[] = ["pending", "paid", "preparing", "ready"];
 
 /**
+ * The customer's own escape hatch, and the whole of it: while the order is
+ * still waiting it costs the shop nothing to drop, and the moment someone
+ * presses Start it is being made. No timer to tune — the board decides.
+ */
+export function canCancelSelf(status: OrderStatus): boolean {
+  return status === "pending" || status === "paid";
+}
+
+/**
  * "order.undo" is not a permission. advance_order() resolves it to
  * order.advance inside the 90-second window and order.undo_late outside it,
  * because only the database knows when the stamp was written.
@@ -39,6 +48,7 @@ export function transitionAction(
 ): StaffAction | "order.undo" | null {
   if (to === "cancelled") return VOIDABLE.includes(from) ? "order.void" : null;
   if (to === "refunded") return from === "collected" ? "order.refund" : null;
+  if (to === "abandoned") return from === "ready" ? "order.abandon" : null;
   if (NEXT_STATUS[from] === to) return "order.advance";
   if (PREV_STATUS[from] === to) return "order.undo";
   return null;

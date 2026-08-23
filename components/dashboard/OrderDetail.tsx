@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 
 import { advanceOrderAction, noteOrderAction } from "@/app/dashboard/actions";
 import { pressSpring } from "@/lib/motion";
+import { isStale } from "@/lib/order-age";
 import { ORDER_STATUS_LABELS } from "@/lib/order-status";
 import { ADVANCE_LABELS, NEXT_STATUS, PREV_STATUS } from "@/lib/order-transitions";
 import { staffCan } from "@/lib/staff-permissions";
@@ -26,6 +27,8 @@ const EVENT_WORDS: Record<string, string> = {
   "order.advance": "moved it on",
   "order.undo_late": "stepped it back",
   "order.void": "voided it",
+  "order.abandon": "marked it not collected",
+  "order.cancel_self": "cancelled it from their phone",
   "order.refund": "refunded it",
   "order.note": "left a note",
   "item.86": "86'd an item",
@@ -50,6 +53,12 @@ export function OrderDetail({
 
   const canVoid = role ? staffCan(role, "order.void") : false;
   const canRefund = role ? staffCan(role, "order.refund") : false;
+  // Half an hour on the bar is when the board stops calling it late and starts
+  // calling it nobody's. Before that the button is still there but the RPC
+  // charges it to order.void, so a barista gets "Not yours to do."
+  const canAbandon =
+    order.status === "ready" &&
+    (canVoid || isStale(new Date(order.ready_at ?? order.placed_at), new Date()));
   const next = NEXT_STATUS[order.status];
   const previous = PREV_STATUS[order.status];
 
@@ -57,8 +66,10 @@ export function OrderDetail({
     setError(null);
     startTransition(async () => {
       const result = await advanceOrderAction(order.id, to);
-      if (result.ok) router.refresh();
-      else setError(result.error ?? "That did not go through.");
+      // Always refresh: a failed refund still moved the order, and the page
+      // must not go on showing the old lane while the error says otherwise.
+      router.refresh();
+      if (!result.ok) setError(result.error ?? "That did not go through.");
     });
   }
 
@@ -225,17 +236,33 @@ export function OrderDetail({
 
         {canVoid && order.status !== "collected" && (
           <SettleButton
-            label="Void — stock returns"
+            label={
+              order.payment_method === "online"
+                ? "Void — stock and money return"
+                : "Void — stock returns"
+            }
             onClick={() => move("cancelled")}
-            disabled={pending}
+            disabled={pending || !role}
+          />
+        )}
+
+        {canAbandon && (
+          <SettleButton
+            label="Not collected — nothing comes back"
+            onClick={() => move("abandoned")}
+            disabled={pending || !role}
           />
         )}
 
         {canRefund && order.status === "collected" && (
           <SettleButton
-            label="Refund — stock stays gone"
+            label={
+              order.payment_method === "online"
+                ? "Refund — stock stays gone"
+                : "Refund — from the till"
+            }
             onClick={() => move("refunded")}
-            disabled={pending}
+            disabled={pending || !role}
           />
         )}
       </div>

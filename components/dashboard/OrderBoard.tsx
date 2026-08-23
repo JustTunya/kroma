@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { LayoutGroup } from "framer-motion";
 
-import { advanceOrderAction } from "@/app/dashboard/actions";
+import {
+  advanceOrderAction,
+  endShiftAction,
+  startShiftAction,
+} from "@/app/dashboard/actions";
 import { useBoardStatus } from "@/components/dashboard/BoardStatus";
 import { LaneRail } from "@/components/dashboard/LaneRail";
 import { OrderLane } from "@/components/dashboard/OrderLane";
@@ -43,19 +47,41 @@ const SCHEDULED_LEAD_MS = 30 * 60_000;
 export function OrderBoard({
   initial,
   unlocked,
+  shiftSince,
 }: {
   initial: BoardOrder[];
   unlocked: boolean;
+  /** ISO timestamp of this person's open shift, or null if they are off. */
+  shiftSince: string | null;
 }) {
   const { orders, refetch } = useBoard(initial);
   const { connection, freshAt } = useBoardStatus();
   const [now, setNow] = useState(() => new Date());
   const [error, setError] = useState<string | null>(null);
   const [lane, setLane] = useState(LANES[0].title);
-  const [started, setStarted] = useState(false);
+  // The transition stays pending until the revalidated page lands, which is
+  // exactly the window where shiftSince is still stale and the overlay would
+  // otherwise sit there after the tap. Nothing to reset, and nothing left
+  // holding a previous person's answer after a hand-over.
+  const [starting, startShift] = useTransition();
   const { arm, play } = useChime();
 
+  // Nobody is asked to start a shift they are already on, and a locked
+  // terminal is not asked at all — it cannot move an order anyway.
+  const onShift = Boolean(shiftSince) || starting;
+  const askToStart = unlocked && !onShift;
+
   useBoardPoll(connection, refetch);
+
+  // iPadOS keeps audio suspended until a gesture. The overlay's tap normally
+  // supplies it; on a reload mid-shift there is no overlay, so the first touch
+  // anywhere does.
+  useEffect(() => {
+    if (askToStart) return;
+    const gesture = () => arm();
+    window.addEventListener("pointerdown", gesture, { once: true });
+    return () => window.removeEventListener("pointerdown", gesture);
+  }, [askToStart, arm]);
 
   // Ping only when an order the board has never seen appears. Comparing ids
   // rather than counts means an advance or a collection stays silent, and a
@@ -125,11 +151,18 @@ export function OrderBoard({
           component every second, and an unkeyed presence child restarts its
           entrance on each tick — the overlay never finished fading in. There
           is nothing to animate on the way out anyway; the shift starts once. */}
-      {!started && (
+      {askToStart && (
         <ShiftStart
+          error={error}
           onStart={() => {
             arm();
-            setStarted(true);
+            setError(null);
+            startShift(async () => {
+              const result = await startShiftAction();
+              if (!result.ok) {
+                setError(result.error ?? "That did not go through.");
+              }
+            });
           }}
         />
       )}
@@ -191,7 +224,7 @@ export function OrderBoard({
         </div>
       </LayoutGroup>
 
-      <div className="px-5 py-10 sm:px-10 lg:px-14 print:hidden">
+      <div className="flex items-center gap-5 px-5 py-10 sm:px-10 lg:px-14 print:hidden">
         <button
           type="button"
           onClick={() => window.print()}
@@ -199,6 +232,22 @@ export function OrderBoard({
         >
           Print pass list
         </button>
+
+        {/* Down here on purpose. Ending the shift locks the terminal, and that
+            is not a thing to put a thumb width from the lane rail. */}
+        {unlocked && onShift && (
+          <button
+            type="button"
+            onClick={async () => {
+              setError(null);
+              const result = await endShiftAction();
+              if (!result.ok) setError(result.error ?? "That did not go through.");
+            }}
+            className="font-mono text-[10px] font-medium tracking-[0.18em] text-accent-primary uppercase transition-colors hover:text-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary"
+          >
+            End the shift
+          </button>
+        )}
       </div>
     </>
   );

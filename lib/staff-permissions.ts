@@ -16,6 +16,7 @@ export const STAFF_ACTIONS = [
   "order.note",
   "order.claim",
   "item.86",
+  "order.abandon",
   "order.void",
   "order.refund",
   "order.discount",
@@ -39,6 +40,10 @@ export function staffCan(role: StaffRole, action: StaffAction): boolean {
     // The person who finds the tray empty is the one holding it. Making them
     // fetch a manager means the storefront keeps selling something that is gone.
     case "item.86":
+    // Nothing moves: the drink was made and the customer paid for it. Doing it
+    // EARLY is still a manager's call — advance_order() re-routes an abandon
+    // inside the half hour to order.void.
+    case "order.abandon":
       return true;
     case "order.void":
     case "order.refund":

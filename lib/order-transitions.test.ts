@@ -4,6 +4,7 @@ import { test } from "node:test";
 
 import {
   UNDO_WINDOW_MS,
+  canCancelSelf,
   canUndoFreely,
   transitionAction,
 } from "./order-transitions.ts";
@@ -56,4 +57,25 @@ test("the undo window is 90 seconds, inclusive at the boundary", () => {
   assert.equal(canUndoFreely(justInside, now), true);
   assert.equal(canUndoFreely(justOutside, now), false);
   assert.equal(canUndoFreely(null, now), false);
+});
+
+test("not-collected is reachable only from ready, and is its own permission", () => {
+  assert.equal(transitionAction("ready", "abandoned"), "order.abandon");
+  assert.equal(transitionAction("preparing", "abandoned"), null);
+  assert.equal(transitionAction("paid", "abandoned"), null);
+  assert.equal(transitionAction("collected", "abandoned"), null);
+});
+
+test("an abandoned order is an ending, not a lane", () => {
+  assert.equal(transitionAction("abandoned", "collected"), null);
+  assert.equal(transitionAction("abandoned", "cancelled"), null);
+  assert.equal(transitionAction("abandoned", "ready"), null);
+});
+
+test("a customer may drop their own order only before the bar starts it", () => {
+  assert.equal(canCancelSelf("pending"), true);
+  assert.equal(canCancelSelf("paid"), true);
+  assert.equal(canCancelSelf("preparing"), false);
+  assert.equal(canCancelSelf("ready"), false);
+  assert.equal(canCancelSelf("collected"), false);
 });

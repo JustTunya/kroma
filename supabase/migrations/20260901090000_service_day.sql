@@ -28,6 +28,15 @@ create table service_days (
 -- for espresso-bar drinks.
 alter table menu_items add column par_stock integer check (par_stock >= 0);
 
+-- Today's counts are the only estimate of intended par that exists yet.
+-- Leaving par_stock null on every batch-limited item would mean the first
+-- open_service() sets daily_stock = null on all of them — unlimited, batch
+-- control silently off — until someone hand-enters pars later.
+update menu_items
+   set par_stock = daily_stock
+ where is_active
+   and daily_stock is not null;
+
 alter table orders
   add column service_day date references service_days(day),
   add column day_number  integer;
@@ -37,11 +46,16 @@ create index orders_service_day_idx on orders (service_day, day_number);
 -- ------------------------------------------------------------------ backfill
 -- Every historical order belongs to a day that really happened. Creating those
 -- rows closed, with next_number past their highest ticket, means the sequence
--- is correct if one of them is ever reopened.
+-- is correct if one of them is ever reopened. Today is the one day that is not
+-- history: if this migration runs mid-morning against a database that already
+-- has orders today, closing "today" would leave open_service() finding it
+-- closed with no reopen path in this task, locking out the day that has not
+-- ended yet. So today's row, if orders already exist for it, is backfilled
+-- open (closed_at null) with next_number past its highest ticket so far.
 insert into service_days (day, opened_at, closed_at, next_number)
 select d.day,
        d.first_at,
-       d.last_at,
+       case when d.day < (now() at time zone shop_tz())::date then d.last_at end,
        d.n + 1
   from (select (placed_at at time zone shop_tz())::date as day,
                min(placed_at) as first_at,
@@ -130,17 +144,22 @@ begin
   end if;
 
   -- Two iPads tapping Open must not produce two openings, and must not wipe a
-  -- morning's sales back to par. Same rule shift_mark() applies to a shift.
-  select * into v_row from service_days where day = v_today;
-  if found then
+  -- morning's sales back to par. A plain select-then-insert has a gap under
+  -- read-committed: both callers can see no row before either commits. The
+  -- insert itself is the lock — on conflict, the loser gets nothing back
+  -- (not an error) and falls through to read the winner's row, same as
+  -- shift_mark() treats a repeated state as a no-op.
+  insert into service_days (day, opened_by) values (v_today, p_actor)
+  on conflict (day) do nothing
+  returning * into v_row;
+
+  if v_row.day is null then
+    select * into v_row from service_days where day = v_today;
     if v_row.closed_at is not null then
       raise exception 'The day is already closed.' using errcode = 'P0001';
     end if;
     return v_row;
   end if;
-
-  insert into service_days (day, opened_by) values (v_today, p_actor)
-  returning * into v_row;
 
   update menu_items set daily_stock = par_stock where is_active;
 

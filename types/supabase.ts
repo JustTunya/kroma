@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.15"
   }
   public: {
     Tables: {
@@ -629,12 +629,12 @@ export type Database = {
           created_at: string
           detail: Json
           id: number
-          item_name: string
-          order_number: number
-          staff_id: string
-          staff_name: string
-          station_name: string
-          subject_id: string
+          item_name: string | null
+          order_number: number | null
+          staff_id: string | null
+          staff_name: string | null
+          station_name: string | null
+          subject_id: string | null
         }[]
       }
       my_card: { Args: never; Returns: Json }
@@ -702,7 +702,7 @@ export type Database = {
       }
       shift_mark: {
         Args: { p_open: boolean; p_staff_id: string; p_station?: string }
-        Returns: string
+        Returns: string | null
       }
       shop_tz: { Args: never; Returns: string }
       staff_board: { Args: never; Returns: Json }
@@ -718,7 +718,7 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["staff_role"]
       }
-      staff_shift: { Args: { p_staff_id: string }; Returns: string }
+      staff_shift: { Args: { p_staff_id: string }; Returns: string | null }
       staff_unlock: {
         Args: { p_pin: string; p_staff_id: string }
         Returns: Json

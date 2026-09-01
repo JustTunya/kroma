@@ -39,12 +39,19 @@ begin
   assert current_service_day() = v_day.day,                'the day is now open';
   assert (select daily_stock from menu_items where id = v_item) = 12,
          'opening resets daily_stock to par';
+  assert (select par_stock from menu_items where id = v_item) = 12,
+         'opening reads par_stock but never rewrites it';
 
-  -- idempotent ----------------------------------------------------------------
+  -- idempotent ------------------------------------------------------------
+  -- Also the on-conflict path: open_service's insert races an existing row
+  -- on the real primary key, so this second call goes through the exact
+  -- "someone already opened today" branch a second concurrent iPad would hit.
   update menu_items set daily_stock = 3 where id = v_item;
   v_day := open_service(v_barista);
   assert (select daily_stock from menu_items where id = v_item) = 3,
          'a second open writes nothing';
+  assert (select par_stock from menu_items where id = v_item) = 12,
+         'par_stock still survives a second open';
   assert (select count(*) from staff_events where action = 'shop.open') = 1,
          'and audits nothing';
 

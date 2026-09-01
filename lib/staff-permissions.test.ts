@@ -33,6 +33,13 @@ test("owner can do everything on the list", () => {
   }
 });
 
+test("anyone on shift opens the day; only a manager closes it", () => {
+  assert.equal(staffCan("staff", "shop.open"), true);
+  assert.equal(staffCan("staff", "shop.close"), false);
+  assert.equal(staffCan("manager", "shop.close"), true);
+  assert.equal(staffCan("owner", "shop.close"), true);
+});
+
 test("an unknown action denies rather than grants", () => {
   // @ts-expect-error deliberately outside the union — a typo must not grant.
   assert.equal(staffCan("owner", "nonsense.action"), false);

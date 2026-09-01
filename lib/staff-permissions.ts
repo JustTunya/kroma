@@ -17,6 +17,7 @@ export const STAFF_ACTIONS = [
   "order.claim",
   "item.86",
   "order.abandon",
+  "shop.open",
   "order.void",
   "order.refund",
   "order.discount",
@@ -24,6 +25,7 @@ export const STAFF_ACTIONS = [
   "customer.contact",
   "menu.edit",
   "analytics.view",
+  "shop.close",
   "staff.manage",
   "shop.settings",
 ] as const;
@@ -44,6 +46,8 @@ export function staffCan(role: StaffRole, action: StaffAction): boolean {
     // EARLY is still a manager's call — advance_order() re-routes an abandon
     // inside the half hour to order.void.
     case "order.abandon":
+    // The first person in opens the shop. Same reasoning as item.86.
+    case "shop.open":
       return true;
     case "order.void":
     case "order.refund":
@@ -52,6 +56,8 @@ export function staffCan(role: StaffRole, action: StaffAction): boolean {
     case "customer.contact":
     case "menu.edit":
     case "analytics.view":
+    // The drawer is money, not bread.
+    case "shop.close":
       return MANAGER_UP.includes(role);
     case "staff.manage":
     case "shop.settings":

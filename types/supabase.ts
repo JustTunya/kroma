@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -141,6 +141,7 @@ export type Database = {
           is_featured: boolean
           modifiers: Json
           name: string
+          par_stock: number | null
           slug: string
           sort_order: number
           unsplash_query: string | null
@@ -160,6 +161,7 @@ export type Database = {
           is_featured?: boolean
           modifiers?: Json
           name: string
+          par_stock?: number | null
           slug: string
           sort_order?: number
           unsplash_query?: string | null
@@ -179,6 +181,7 @@ export type Database = {
           is_featured?: boolean
           modifiers?: Json
           name?: string
+          par_stock?: number | null
           slug?: string
           sort_order?: number
           unsplash_query?: string | null
@@ -254,6 +257,7 @@ export type Database = {
           claimed_by: string | null
           collected_at: string | null
           customer_name: string | null
+          day_number: number | null
           expires_at: string | null
           id: string
           notes: string | null
@@ -262,6 +266,7 @@ export type Database = {
           pickup_at: string | null
           placed_at: string
           ready_at: string | null
+          service_day: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["order_status"]
           stripe_payment_intent_id: string | null
@@ -276,6 +281,7 @@ export type Database = {
           claimed_by?: string | null
           collected_at?: string | null
           customer_name?: string | null
+          day_number?: number | null
           expires_at?: string | null
           id?: string
           notes?: string | null
@@ -284,6 +290,7 @@ export type Database = {
           pickup_at?: string | null
           placed_at?: string
           ready_at?: string | null
+          service_day?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           stripe_payment_intent_id?: string | null
@@ -298,6 +305,7 @@ export type Database = {
           claimed_by?: string | null
           collected_at?: string | null
           customer_name?: string | null
+          day_number?: number | null
           expires_at?: string | null
           id?: string
           notes?: string | null
@@ -306,6 +314,7 @@ export type Database = {
           pickup_at?: string | null
           placed_at?: string
           ready_at?: string | null
+          service_day?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           stripe_payment_intent_id?: string | null
@@ -322,6 +331,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_service_day_fkey"
+            columns: ["service_day"]
+            isOneToOne: false
+            referencedRelation: "service_days"
+            referencedColumns: ["day"]
           },
         ]
       }
@@ -360,6 +376,60 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      service_days: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          count_detail: Json | null
+          counted_cash: number | null
+          day: string
+          float_cash: number
+          next_number: number
+          opened_at: string
+          opened_by: string | null
+          report: Json | null
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          count_detail?: Json | null
+          counted_cash?: number | null
+          day: string
+          float_cash?: number
+          next_number?: number
+          opened_at?: string
+          opened_by?: string | null
+          report?: Json | null
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          count_detail?: Json | null
+          counted_cash?: number | null
+          day?: string
+          float_cash?: number
+          next_number?: number
+          opened_at?: string
+          opened_by?: string | null
+          report?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_days_closed_by_fkey"
+            columns: ["closed_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_days_opened_by_fkey"
+            columns: ["opened_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       staff: {
         Row: {
@@ -456,37 +526,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      manage_bar: {
-        Args: { p_actor: string; p_from: string; p_to: string }
-        Returns: Json
-      }
-      manage_earnings: {
-        Args: { p_actor: string; p_from: string; p_to: string }
-        Returns: Json
-      }
-      manage_ledger: {
-        Args: {
-          p_actions?: string[]
-          p_actor: string
-          p_from: string
-          p_limit?: number
-          p_offset?: number
-          p_staff?: string
-          p_to: string
-        }
-        Returns: {
-          action: string
-          created_at: string
-          detail: Json
-          id: number
-          item_name: string | null
-          order_number: number | null
-          staff_id: string | null
-          staff_name: string | null
-          station_name: string | null
-          subject_id: string | null
-        }[]
-      }
       advance_order: {
         Args: {
           p_actor: string
@@ -515,6 +554,7 @@ export type Database = {
           claimed_by: string | null
           collected_at: string | null
           customer_name: string | null
+          day_number: number | null
           expires_at: string | null
           id: string
           notes: string | null
@@ -523,6 +563,7 @@ export type Database = {
           pickup_at: string | null
           placed_at: string
           ready_at: string | null
+          service_day: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["order_status"]
           stripe_payment_intent_id: string | null
@@ -539,6 +580,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      current_service_day: { Args: never; Returns: string }
       current_staff: {
         Args: never
         Returns: {
@@ -562,6 +604,39 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      is_staff: { Args: never; Returns: boolean }
+      manage_bar: {
+        Args: { p_actor: string; p_from: string; p_to: string }
+        Returns: Json
+      }
+      manage_earnings: {
+        Args: { p_actor: string; p_from: string; p_to: string }
+        Returns: Json
+      }
+      manage_guard: { Args: { p_actor: string }; Returns: undefined }
+      manage_ledger: {
+        Args: {
+          p_actions?: string[]
+          p_actor: string
+          p_from: string
+          p_limit?: number
+          p_offset?: number
+          p_staff?: string
+          p_to: string
+        }
+        Returns: {
+          action: string
+          created_at: string
+          detail: Json
+          id: number
+          item_name: string
+          order_number: number
+          staff_id: string
+          staff_name: string
+          station_name: string
+          subject_id: string
+        }[]
+      }
       my_card: { Args: never; Returns: Json }
       my_usual: { Args: never; Returns: Json }
       note_order: {
@@ -572,6 +647,27 @@ export type Database = {
           p_station?: string
         }
         Returns: string
+      }
+      open_service: {
+        Args: { p_actor: string; p_stock?: Json }
+        Returns: {
+          closed_at: string | null
+          closed_by: string | null
+          count_detail: Json | null
+          counted_cash: number | null
+          day: string
+          float_cash: number
+          next_number: number
+          opened_at: string
+          opened_by: string | null
+          report: Json | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_days"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       order_by_token: { Args: { p_token: string }; Returns: Json }
       order_lines: {
@@ -584,6 +680,10 @@ export type Database = {
           p_to: Database["public"]["Enums"]["order_status"]
         }
         Returns: string
+      }
+      order_was_paid: {
+        Args: { p_status: Database["public"]["Enums"]["order_status"] }
+        Returns: boolean
       }
       quote_order: {
         Args: { p_items: Json; p_redeem_item_id?: string }
@@ -602,8 +702,9 @@ export type Database = {
       }
       shift_mark: {
         Args: { p_open: boolean; p_staff_id: string; p_station?: string }
-        Returns: string | null
+        Returns: string
       }
+      shop_tz: { Args: never; Returns: string }
       staff_board: { Args: never; Returns: Json }
       staff_can: {
         Args: {
@@ -613,7 +714,11 @@ export type Database = {
         Returns: boolean
       }
       staff_order: { Args: { p_order_id: string }; Returns: Json }
-      staff_shift: { Args: { p_staff_id: string }; Returns: string | null }
+      staff_role_now: {
+        Args: never
+        Returns: Database["public"]["Enums"]["staff_role"]
+      }
+      staff_shift: { Args: { p_staff_id: string }; Returns: string }
       staff_unlock: {
         Args: { p_pin: string; p_staff_id: string }
         Returns: Json

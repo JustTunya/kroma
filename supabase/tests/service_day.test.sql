@@ -61,6 +61,35 @@ begin
   assert (select daily_stock from menu_items where id = v_item) = 5,
          'the opening screen count beats par';
 
+  -- numbering -----------------------------------------------------------------
+  declare
+    v_a orders;
+    v_b orders;
+    v_items jsonb;
+  begin
+    v_items := jsonb_build_array(jsonb_build_object(
+      'menu_item_id', v_item, 'quantity', 1, 'modifiers', '[]'::jsonb));
+
+    v_a := create_order(v_items, 'A', '', 'counter');
+    v_b := create_order(v_items, 'B', '', 'counter');
+
+    assert v_a.day_number = 1,                 'the first ticket of the day is 1';
+    assert v_b.day_number = 2,                 'the second is 2';
+    assert v_a.service_day = current_service_day(), 'the order joins the open day';
+    assert v_a.order_number <> v_b.order_number,    'the global id still differs';
+  end;
+
+  -- a closed shop refuses -----------------------------------------------------
+  update service_days set closed_at = now() where day = current_date;
+  begin
+    perform create_order(jsonb_build_array(jsonb_build_object(
+      'menu_item_id', v_item, 'quantity', 1, 'modifiers', '[]'::jsonb)),
+      'C', '', 'counter');
+    assert false, 'a closed shop must refuse an order';
+  exception when sqlstate 'P0001' then
+    assert sqlerrm = 'The bakehouse is closed.', 'and say so plainly';
+  end;
+
   raise notice 'service_day: all assertions passed';
 end $$;
 

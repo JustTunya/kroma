@@ -111,7 +111,7 @@ export function OrderDetail({
           {order.bar_name ?? order.customer_name ?? "Guest"}
         </h1>
         <span className="shrink-0 font-mono text-[28px] font-medium tabular-nums">
-          {order.order_number}
+          {order.day_number ?? order.order_number}
         </span>
       </div>
 

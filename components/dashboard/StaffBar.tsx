@@ -8,6 +8,7 @@ import { ChartNoAxesColumn } from "lucide-react";
 
 import { endShiftAction, lockAction } from "@/app/dashboard/actions";
 import { ConnectionPill } from "@/components/dashboard/ConnectionPill";
+import { DayPill } from "@/components/dashboard/DayPill";
 import { pressSpring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -20,12 +21,15 @@ export function StaffBar({
   actorName,
   onShift,
   canSeeNumbers,
+  dayOpenedAt,
 }: {
   actorName: string | null;
   /** Whether this person has an open shift — the only state End can end. */
   onShift: boolean;
   /** Manager and owner only. The page redirects too; this hides the door. */
   canSeeNumbers: boolean;
+  /** null when the shop has not opened today — the pill reads Closed. */
+  dayOpenedAt: string | null;
 }) {
   const [error, setError] = useState<string | null>(null);
   const pathname = usePathname();
@@ -53,6 +57,10 @@ export function StaffBar({
 
         <div className="shrink-0">
           <ConnectionPill />
+        </div>
+
+        <div className="shrink-0">
+          <DayPill openedAt={dayOpenedAt} />
         </div>
 
         {actorName && onShift && (

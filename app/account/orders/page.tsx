@@ -56,7 +56,7 @@ export default async function OrdersPage({
   const { data: orders, count } = await supabase
     .from("orders")
     .select(
-      "id, order_number, status, total, placed_at, order_items(item_name, base_price, quantity, selected_modifiers, menu_item_id, menu_items(daily_stock))",
+      "id, order_number, day_number, status, total, placed_at, order_items(item_name, base_price, quantity, selected_modifiers, menu_item_id, menu_items(daily_stock))",
       { count: "exact" },
     )
     .order("placed_at", { ascending: false })
@@ -75,7 +75,10 @@ export default async function OrdersPage({
     return {
       id: order.id,
       month: month(order.placed_at),
-      orderNumber: order.order_number,
+      // The bar calls the day's ticket, not the all-time one. order_number stays
+      // as the permanent id behind the ledger; day_number is what a person says
+      // out loud.
+      orderNumber: order.day_number ?? order.order_number,
       date: day(order.placed_at),
       summary: summarize(items),
       status: order.status as OrderStatus,

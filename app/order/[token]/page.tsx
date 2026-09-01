@@ -56,8 +56,10 @@ export default async function OrderPage({
           {order.customer_name ?? "Collected at the bar"}
         </p>
 
+        {/* The bar calls the day's ticket, not the all-time one. order_number stays as
+            the permanent id behind the ledger; day_number is what a person says out loud. */}
         <h1 className="mt-5 font-serif text-[clamp(56px,10vw,148px)] leading-[0.92] tracking-[-0.03em] tabular-nums text-text-primary">
-          #{String(order.order_number).padStart(3, "0")}
+          #{String(order.day_number ?? order.order_number).padStart(3, "0")}
         </h1>
 
         <div className="mt-6">

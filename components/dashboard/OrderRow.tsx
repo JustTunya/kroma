@@ -84,7 +84,7 @@ export function OrderRow({
       <div className="min-w-0 flex-1 py-5">
         <div className="flex items-baseline justify-between gap-4">
           <span className="font-mono text-[28px] leading-none font-medium tabular-nums">
-            {order.order_number}
+            {order.day_number ?? order.order_number}
           </span>
           <span
             className={cn(
@@ -145,7 +145,7 @@ export function OrderRow({
               onClick={() => onAdvance(order)}
               whileTap={disabled ? undefined : { scale: 0.98 }}
               transition={pressSpring}
-              aria-label={`${ADVANCE_LABELS[order.status]} — order ${order.order_number}, ${name}`}
+              aria-label={`${ADVANCE_LABELS[order.status]} — order ${order.day_number ?? order.order_number}, ${name}`}
               className="h-10 shrink-0 rounded-full bg-accent-primary px-5 font-mono text-[10px] font-medium tracking-[0.18em] text-surface-card uppercase transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary disabled:bg-kds-surface disabled:text-kds-text-secondary"
             >
               {ADVANCE_LABELS[order.status]}

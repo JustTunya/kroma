@@ -23,6 +23,7 @@ export type OrderDocItem = {
 export type OrderDoc = {
   id: string;
   order_number: number;
+  day_number: number | null;
   status: OrderStatus;
   customer_name: string | null;
   notes: string | null;
@@ -130,8 +131,8 @@ export function OrderStatus({ token, initial }: { token: string; initial: OrderD
           transition={pressSpring}
           aria-label={
             confirming
-              ? `Confirm cancelling order ${order.order_number}`
-              : `Cancel order ${order.order_number}, €${order.total.toFixed(2)}`
+              ? `Confirm cancelling order ${order.day_number ?? order.order_number}`
+              : `Cancel order ${order.day_number ?? order.order_number}, €${order.total.toFixed(2)}`
           }
           className={`mt-5 h-9 rounded-full border px-4 font-mono text-[10px] font-medium tracking-[0.18em] uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:opacity-50 ${
             confirming

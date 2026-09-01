@@ -8,6 +8,7 @@ import type { OrderStatus } from "@/lib/order-status";
 export type BoardOrder = {
   id: string;
   order_number: number;
+  day_number: number | null;
   status: OrderStatus;
   customer_name: string | null;
   /** The name called over the pass, not the name on the account. */

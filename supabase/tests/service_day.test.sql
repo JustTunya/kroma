@@ -80,12 +80,24 @@ begin
   end;
 
   -- a closed shop refuses -----------------------------------------------------
-  update service_days set closed_at = now() where day = current_date;
+  -- The shop day, not the session day: the session's TimeZone is UTC while
+  -- shop_tz() is Europe/Bucharest, so current_date/now()::date drifts from the
+  -- actual open row for the ~3h between Bucharest midnight and UTC midnight.
+  update service_days set closed_at = now()
+   where day = (now() at time zone shop_tz())::date;
   begin
     perform create_order(jsonb_build_array(jsonb_build_object(
       'menu_item_id', v_item, 'quantity', 1, 'modifiers', '[]'::jsonb)),
       'C', '', 'counter');
     assert false, 'a closed shop must refuse an order';
+  exception when sqlstate 'P0001' then
+    assert sqlerrm = 'The bakehouse is closed.', 'and say so plainly';
+  end;
+
+  begin
+    perform quote_order(jsonb_build_array(jsonb_build_object(
+      'menu_item_id', v_item, 'quantity', 1, 'modifiers', '[]'::jsonb)));
+    assert false, 'a closed shop must refuse a quote too';
   exception when sqlstate 'P0001' then
     assert sqlerrm = 'The bakehouse is closed.', 'and say so plainly';
   end;

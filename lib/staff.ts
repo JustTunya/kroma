@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
 
+import { shopDayKey } from "@/lib/manage";
 import { createClient } from "@/lib/server";
 import { staffCan } from "@/lib/staff-permissions";
 import { ACTOR_COOKIE, actorSecret, readActor } from "@/lib/staff-session";
@@ -79,18 +80,23 @@ export const currentShift = cache(async (): Promise<string | null> => {
 });
 
 /**
- * The open service day, or null when the shop is shut. Cached per request: the
- * header pill and the board both ask on every render, exactly as currentShift
+ * The open service day for today, or null when the shop is shut. Cached per request:
+ * the header pill and the board both ask on every render, exactly as currentShift
  * is already shared.
+ *
+ * Must filter to today's date to converge with current_service_day() in SQL. If the
+ * filter is removed, a stale unclosed day from yesterday would make the dashboard
+ * claim the shop is open while the storefront refuses all orders. That contradiction
+ * is the result the UI must never show.
  */
 export const currentDay = cache(async (): Promise<ServiceDay | null> => {
   const supabase = await createClient();
+  const today = shopDayKey();
   const { data } = await supabase
     .from("service_days")
     .select("day, opened_at, opened_by, closed_at, next_number, float_cash, counted_cash")
+    .eq("day", today)
     .is("closed_at", null)
-    .order("day", { ascending: false })
-    .limit(1)
     .maybeSingle();
   return (data as ServiceDay | null) ?? null;
 });

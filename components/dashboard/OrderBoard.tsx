@@ -9,6 +9,7 @@ import { LaneRail } from "@/components/dashboard/LaneRail";
 import { OrderLane } from "@/components/dashboard/OrderLane";
 import { ageSince } from "@/components/dashboard/OrderRow";
 import { ScheduledDrawer } from "@/components/dashboard/ScheduledDrawer";
+import { ServiceClosed } from "@/components/dashboard/ServiceClosed";
 import { ShiftStart } from "@/components/dashboard/ShiftStart";
 import { NEXT_STATUS } from "@/lib/order-transitions";
 import { useBoard, useBoardPoll } from "@/lib/use-board";
@@ -16,6 +17,7 @@ import { useChime } from "@/lib/use-chime";
 
 import type { BoardOrder } from "@/types/board";
 import type { OrderStatus } from "@/lib/order-status";
+import type { ParItem } from "@/lib/service-day";
 
 /**
  * Four lanes, in the order the work happens. `pending` sits beside `paid`
@@ -44,11 +46,17 @@ export function OrderBoard({
   initial,
   unlocked,
   shiftSince,
+  dayOpen,
+  par,
 }: {
   initial: BoardOrder[];
   unlocked: boolean;
   /** ISO timestamp of this person's open shift, or null if they are off. */
   shiftSince: string | null;
+  /** Whether a service_days row is open right now. */
+  dayOpen: boolean;
+  /** Batch items to prefill on the opening screen. */
+  par: ParItem[];
 }) {
   const { orders, refetch } = useBoard(initial);
   const { connection, freshAt } = useBoardStatus();
@@ -140,6 +148,10 @@ export function OrderBoard({
     title: entry.title,
     count: live.filter((order) => entry.statuses.includes(order.status)).length,
   }));
+
+  // Order matters. A shift cannot start inside a day that has not opened, and
+  // asking for a PIN-holder's shift over a closed shop is the wrong question.
+  if (!dayOpen) return <ServiceClosed items={par} unlocked={unlocked} />;
 
   return (
     <>

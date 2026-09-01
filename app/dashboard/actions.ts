@@ -260,3 +260,32 @@ export async function noteOrderAction(
     return fail(error);
   }
 }
+
+/**
+ * Opens the day. No requireActor("shop.open") gate beyond holding a PIN cookie:
+ * open_service() re-reads the role from the table like every other RPC here,
+ * and the permission is granted to everyone on shift anyway.
+ */
+export async function openServiceAction(
+  counts: Record<string, number>,
+): Promise<Result> {
+  try {
+    const actor = await requireActor("shop.open");
+    const supabase = await createClient();
+
+    const { error } = await supabase.rpc("open_service", {
+      p_actor: actor.staffId,
+      p_stock: Object.keys(counts).length > 0 ? counts : undefined,
+    });
+    if (error) return fail(error);
+
+    await slide(actor);
+    revalidatePath("/dashboard", "layout");
+    // The storefront was refusing orders a second ago. It must not go on doing
+    // so for the thirty seconds app/page.tsx would otherwise cache.
+    revalidatePath("/", "page");
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}

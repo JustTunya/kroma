@@ -6,6 +6,7 @@ import { createClient } from "@/lib/server";
 import { staffCan } from "@/lib/staff-permissions";
 import { ACTOR_COOKIE, actorSecret, readActor } from "@/lib/staff-session";
 
+import type { ServiceDay } from "@/lib/service-day";
 import type { StaffAction, StaffRole } from "@/lib/staff-permissions";
 import type { ActorPayload } from "@/lib/staff-session";
 
@@ -75,4 +76,21 @@ export const currentShift = cache(async (): Promise<string | null> => {
     p_staff_id: actor.staffId,
   });
   return (data as string | null) ?? null;
+});
+
+/**
+ * The open service day, or null when the shop is shut. Cached per request: the
+ * header pill and the board both ask on every render, exactly as currentShift
+ * is already shared.
+ */
+export const currentDay = cache(async (): Promise<ServiceDay | null> => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("service_days")
+    .select("day, opened_at, opened_by, closed_at, next_number, float_cash, counted_cash")
+    .is("closed_at", null)
+    .order("day", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (data as ServiceDay | null) ?? null;
 });

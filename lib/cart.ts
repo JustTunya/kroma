@@ -6,6 +6,7 @@ export type CartLine = {
   quantity: number;
   selectedModifiers: { group: string; option: string; priceOffset: number }[];
   imageUrl: string;
+  vatRate: number;
 };
 
 const STORAGE_KEY = "kroma-cart";

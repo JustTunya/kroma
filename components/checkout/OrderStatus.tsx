@@ -18,6 +18,7 @@ export type OrderDocItem = {
   quantity: number;
   selected_modifiers: { group: string; option: string; priceOffset: number }[];
   line_total: number;
+  vat_rate: number;
 };
 
 export type OrderDoc = {
@@ -29,6 +30,7 @@ export type OrderDoc = {
   notes: string | null;
   subtotal: number;
   total: number;
+  tax_total: number;
   payment_method: "online" | "counter";
   placed_at: string;
   pickup_at: string | null;

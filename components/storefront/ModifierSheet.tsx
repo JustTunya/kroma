@@ -52,6 +52,7 @@ export function ModifierSheet({ item, onClose, onAdd }: ModifierSheetProps) {
       quantity,
       selectedModifiers,
       imageUrl: item.image_url,
+      vatRate: item.vat_rate,
     });
     onClose();
   }

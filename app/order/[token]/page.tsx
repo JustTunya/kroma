@@ -5,6 +5,7 @@ import { OrderStatus, type OrderDoc } from "@/components/checkout/OrderStatus";
 import { SiteFooter } from "@/components/storefront/SiteFooter";
 import { Wordmark } from "@/components/Logo";
 import { createClient } from "@/lib/server";
+import { groupByRate, vatLabel } from "@/lib/vat";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Your order — KROMA" };
@@ -107,6 +108,22 @@ export default async function OrderPage({
             €{Number(order.total).toFixed(2)}
           </span>
         </div>
+
+        {groupByRate(
+          order.items.map((item) => ({
+            line_total: Number(item.line_total),
+            vat_rate: Number(item.vat_rate),
+          })),
+        ).map(({ rate, vat }) => (
+          <p
+            key={rate}
+            className="mt-2 max-w-2xl text-right font-mono text-[11px] font-medium tracking-[0.14em] text-text-tertiary uppercase"
+          >
+            {vatLabel(rate)}
+            <span aria-hidden className="mx-3 text-hairline">/</span>
+            <span className="tabular-nums">€{vat.toFixed(2)}</span>
+          </p>
+        ))}
       </main>
 
       <SiteFooter />

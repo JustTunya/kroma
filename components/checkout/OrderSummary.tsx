@@ -2,6 +2,7 @@
 
 import { cartTotal, lineTotal, type CartLine } from "@/lib/cart";
 import { cn } from "@/lib/utils";
+import { groupByRate, vatLabel } from "@/lib/vat";
 
 export function OrderSummary({
   lines,
@@ -70,6 +71,19 @@ export function OrderSummary({
           €{cartTotal(lines).toFixed(2)}
         </span>
       </div>
+
+      {groupByRate(
+        lines.map((line) => ({ line_total: lineTotal(line), vat_rate: line.vatRate })),
+      ).map(({ rate, vat }) => (
+        <p
+          key={rate}
+          className="mt-2 text-right font-mono text-[11px] font-medium tracking-[0.14em] text-text-tertiary uppercase"
+        >
+          {vatLabel(rate)}
+          <span aria-hidden className="mx-3 text-hairline">/</span>
+          <span className="tabular-nums">€{vat.toFixed(2)}</span>
+        </p>
+      ))}
     </div>
   );
 }

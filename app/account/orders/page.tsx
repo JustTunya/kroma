@@ -16,6 +16,7 @@ type OrderItem = {
   quantity: number;
   selected_modifiers: { group: string; option: string; priceOffset: number }[];
   menu_item_id: string | null;
+  vat_rate: number;
   menu_items: { daily_stock: number | null } | null;
 };
 
@@ -56,7 +57,7 @@ export default async function OrdersPage({
   const { data: orders, count } = await supabase
     .from("orders")
     .select(
-      "id, order_number, day_number, status, total, placed_at, order_items(item_name, base_price, quantity, selected_modifiers, menu_item_id, menu_items(daily_stock))",
+      "id, order_number, day_number, status, total, placed_at, order_items(item_name, base_price, quantity, selected_modifiers, menu_item_id, vat_rate, menu_items(daily_stock))",
       { count: "exact" },
     )
     .order("placed_at", { ascending: false })
@@ -94,6 +95,7 @@ export default async function OrdersPage({
         quantity: item.quantity,
         selectedModifiers: item.selected_modifiers,
         imageUrl: menuImage({ name: item.item_name, category: "", image_url: null }, index),
+        vatRate: item.vat_rate,
       })),
     };
   });

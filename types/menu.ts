@@ -14,6 +14,7 @@ export type MenuItem = Pick<
   "id" | "name" | "description" | "base_price" | "daily_stock" | "dietary_tags"
 > & {
   category: string;
+  vat_rate: number;
   image_url: string;
   /** Farm, region or counter the item comes from. */
   origin: string | null;

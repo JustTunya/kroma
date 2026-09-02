@@ -338,3 +338,97 @@ begin
   return v_order;
 end;
 $$;
+
+-- Both read RPCs project tax_total alongside total — the receipt and the
+-- order-status page need it. Verbatim otherwise, from
+-- 20260901090000_service_day.sql:362 and :397.
+create or replace function order_by_token(p_token uuid)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select jsonb_build_object(
+    'id',             o.id,
+    'order_number',   o.order_number,
+    'day_number',     o.day_number,
+    'status',         o.status,
+    'customer_name',  o.customer_name,
+    'notes',          o.notes,
+    'subtotal',       o.subtotal,
+    'total',          o.total,
+    'tax_total',      o.tax_total,
+    'payment_method', o.payment_method,
+    'placed_at',      o.placed_at,
+    'pickup_at',      o.pickup_at,
+    'items', coalesce((
+      select jsonb_agg(jsonb_build_object(
+               'item_name',          i.item_name,
+               'base_price',         i.base_price,
+               'quantity',           i.quantity,
+               'selected_modifiers', i.selected_modifiers,
+               'line_total',         i.line_total,
+               'vat_rate',           i.vat_rate
+             ) order by i.created_at, i.id)
+        from order_items i
+       where i.order_id = o.id
+    ), '[]'::jsonb)
+  )
+  from orders o
+  where o.access_token = p_token;
+$$;
+
+create or replace function staff_order(p_order_id uuid)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select case when not exists (
+      select 1 from staff s where s.user_id = auth.uid() and s.is_active
+    ) then null
+    else (
+      select jsonb_build_object(
+        'id',              o.id,
+        'order_number',    o.order_number,
+        'day_number',      o.day_number,
+        'status',          o.status,
+        'customer_name',   o.customer_name,
+        'notes',           o.notes,
+        'subtotal',        o.subtotal,
+        'total',           o.total,
+        'tax_total',       o.tax_total,
+        'payment_method',  o.payment_method,
+        'placed_at',       o.placed_at,
+        'pickup_at',       o.pickup_at,
+        'started_at',      o.started_at,
+        'ready_at',        o.ready_at,
+        'collected_at',    o.collected_at,
+        'claimed_by',      (select display_name from staff where id = o.claimed_by),
+        'bar_name',        p.bar_name,
+        'avoid_allergens', coalesce(p.avoid_allergens, '{}'),
+        'is_regular',      coalesce((select count(*) from orders o2
+                                      where o2.user_id = o.user_id
+                                        and o2.status = 'collected'), 0),
+        'items', coalesce((
+          select jsonb_agg(jsonb_build_object(
+                   'item_name',          i.item_name,
+                   'menu_item_id',       i.menu_item_id,
+                   'quantity',           i.quantity,
+                   'selected_modifiers', i.selected_modifiers,
+                   'line_total',         i.line_total,
+                   'gone',               coalesce(m.daily_stock = 0, false)
+                 ) order by i.created_at, i.id)
+            from order_items i
+            left join menu_items m on m.id = i.menu_item_id
+           where i.order_id = o.id
+        ), '[]'::jsonb)
+      )
+      from orders o
+      left join profiles p on p.id = o.user_id
+      where o.id = p_order_id
+    )
+  end;
+$$;

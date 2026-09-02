@@ -14,7 +14,7 @@ async function fetchMenu(): Promise<RawMenuItem[]> {
   const { data, error } = await supabase
     .from("menu_items")
     .select(
-      "id, name, description, base_price, daily_stock, dietary_tags, modifiers, image_url, sort_order, menu_categories!inner (name, sort_order)",
+      "id, name, description, base_price, daily_stock, dietary_tags, modifiers, image_url, sort_order, menu_categories!inner (name, sort_order, vat_rate)",
     )
     .eq("is_active", true);
 
@@ -30,6 +30,7 @@ async function fetchMenu(): Promise<RawMenuItem[]> {
       dietary_tags: item.dietaryTags,
       image_url: null,
       category: item.category,
+      vat_rate: 0.11,
       origin: item.origin,
       process: item.process,
       roast: item.roast,
@@ -52,6 +53,7 @@ async function fetchMenu(): Promise<RawMenuItem[]> {
       dietary_tags: item.dietary_tags,
       image_url: item.image_url,
       category: item.menu_categories.name,
+      vat_rate: item.menu_categories.vat_rate,
       origin: null,
       process: null,
       roast: null,

@@ -43,6 +43,7 @@ export function Storefront({
       quantity: 1,
       selectedModifiers: [],
       imageUrl: item.image_url,
+      vatRate: item.vat_rate,
     });
   }
 

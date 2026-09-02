@@ -16,9 +16,10 @@ type CartDrawerProps = {
   onClose: () => void;
   onQuantityChange: (lineId: string, quantity: number) => void;
   onRemove: (lineId: string) => void;
+  serviceOpen: boolean;
 };
 
-export function CartDrawer({ open, lines, onClose, onQuantityChange, onRemove }: CartDrawerProps) {
+export function CartDrawer({ open, lines, onClose, onQuantityChange, onRemove, serviceOpen }: CartDrawerProps) {
   const total = cartTotal(lines);
 
   return (
@@ -144,20 +145,22 @@ export function CartDrawer({ open, lines, onClose, onQuantityChange, onRemove }:
               <Link
                 href="/checkout"
                 onClick={onClose}
-                aria-disabled={lines.length === 0}
+                aria-disabled={lines.length === 0 || !serviceOpen}
                 aria-label={
-                  lines.length === 0
-                    ? "Checkout — nothing on the pass"
-                    : `Checkout, €${total.toFixed(2)}`
+                  !serviceOpen
+                    ? "Checkout — closed, opens 07:30"
+                    : lines.length === 0
+                      ? "Checkout — nothing on the pass"
+                      : `Checkout, €${total.toFixed(2)}`
                 }
                 className={cn(
                   "flex h-10 w-full items-center justify-center rounded-full font-mono text-[11px] font-medium tracking-[0.14em] uppercase transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus",
-                  lines.length === 0
+                  lines.length === 0 || !serviceOpen
                     ? "pointer-events-none bg-surface-muted text-text-tertiary"
                     : "bg-accent-primary text-surface-card hover:bg-accent-hover",
                 )}
               >
-                Checkout
+                {serviceOpen ? "Checkout" : "Closed — opens 07:30"}
               </Link>
             </div>
           </motion.div>

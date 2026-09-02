@@ -19,9 +19,11 @@ const ALL = "All";
 export function Storefront({
   items,
   signedIn,
+  serviceOpen,
 }: {
   items: MenuItem[];
   signedIn: boolean;
+  serviceOpen: boolean;
 }) {
   const [activeCategory, setActiveCategory] = useState(ALL);
   const [cartOpen, setCartOpen] = useState(false);
@@ -67,7 +69,7 @@ export function Storefront({
       <main className="flex-1">
         <StorefrontHero />
         {/* The ledger reads the whole day, not the filtered view. */}
-        <DayLedger items={items} />
+        <DayLedger items={items} serviceOpen={serviceOpen} />
         {/* The rail sticks for as long as there is menu under it, and no longer. */}
         <div>
           <CategoryNav
@@ -97,6 +99,7 @@ export function Storefront({
         onClose={() => setCartOpen(false)}
         onQuantityChange={cart.setQuantity}
         onRemove={cart.remove}
+        serviceOpen={serviceOpen}
       />
     </>
   );

@@ -64,12 +64,14 @@ export function CheckoutForm({
   signedIn,
   defaultName,
   paymentNotice,
+  serviceOpen,
   dietaryPrefs = NO_PREFS,
   dietaryIndex = {},
 }: {
   signedIn: boolean;
   defaultName: string;
   paymentNotice?: Notice;
+  serviceOpen: boolean;
   /** From the signed-in customer's profile. Guests have none, so nothing is flagged. */
   dietaryPrefs?: DietaryPrefs;
   dietaryIndex?: DietaryIndex;
@@ -124,6 +126,14 @@ export function CheckoutForm({
 
   if (cart.lines.length === 0) {
     return <p className={NOTE}>Nothing on the pass yet.</p>;
+  }
+
+  if (!serviceOpen) {
+    return (
+      <p className={NOTE}>
+        The bakehouse is closed. Orders reopen at 07:30 — your cart is still here.
+      </p>
+    );
   }
 
   if (!isOrderable(cart.lines)) {

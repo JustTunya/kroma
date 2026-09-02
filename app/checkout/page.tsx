@@ -21,9 +21,12 @@ export default async function CheckoutPage({
   const { payment } = await searchParams;
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const [
+    {
+      data: { user },
+    },
+    { data: openDay },
+  ] = await Promise.all([supabase.auth.getUser(), supabase.rpc("current_service_day")]);
 
   const { data: profile } = user
     ? await supabase
@@ -97,6 +100,7 @@ export default async function CheckoutPage({
             signedIn={Boolean(user)}
             defaultName={defaultName}
             paymentNotice={payment === "unfinished" || payment === "refunded" ? payment : undefined}
+            serviceOpen={Boolean(openDay)}
             dietaryPrefs={dietaryPrefs}
             dietaryIndex={dietaryIndex}
           />

@@ -61,9 +61,12 @@ async function fetchMenu(): Promise<RawMenuItem[]> {
 
 export default async function Home() {
   const supabase = await createClient();
-  const [{ data: claims }, rawItems] = await Promise.all([
+  const [{ data: claims }, rawItems, { data: openDay }] = await Promise.all([
     supabase.auth.getClaims(),
     fetchMenu(),
+    // Anonymous read: current_service_day() is granted to anon precisely so the
+    // storefront can say "closed" instead of taking an order nobody will make.
+    supabase.rpc("current_service_day"),
   ]);
 
   const items: MenuItem[] = rawItems.map((item, index) => ({
@@ -71,5 +74,11 @@ export default async function Home() {
     image_url: menuImage(item, index),
   }));
 
-  return <Storefront items={items} signedIn={Boolean(claims?.claims)} />;
+  return (
+    <Storefront
+      items={items}
+      signedIn={Boolean(claims?.claims)}
+      serviceOpen={Boolean(openDay)}
+    />
+  );
 }

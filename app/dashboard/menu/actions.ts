@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { fail, slide, type Result } from "@/app/dashboard/actions";
+import { fail, slide, type Result } from "@/lib/dashboard-actions";
 import { createClient } from "@/lib/server";
 import { requireActor } from "@/lib/staff";
 

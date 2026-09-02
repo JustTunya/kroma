@@ -3,52 +3,18 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
+import { COOKIE_OPTIONS, fail, slide, type Result } from "@/lib/dashboard-actions";
 import { notifyReady } from "@/lib/push";
 import { refundOrder } from "@/lib/refund";
 import { sendReceipt } from "@/lib/send-receipt";
 import { createClient } from "@/lib/server";
 import { currentActor, currentStaff, requireActor } from "@/lib/staff";
-import {
-  ACTOR_COOKIE,
-  ACTOR_TTL_MS,
-  actorSecret,
-  signActor,
-} from "@/lib/staff-session";
+import { ACTOR_COOKIE, ACTOR_TTL_MS, actorSecret, signActor } from "@/lib/staff-session";
 
 import type { OrderStatus } from "@/lib/order-status";
 import type { StaffRole } from "@/lib/staff-permissions";
 
-export type Result = { ok: boolean; error?: string };
-
-/** Anything the RPC raises is already worded for a person. Pass it through. */
-export function fail(error: unknown): Result {
-  const message =
-    error instanceof Error
-      ? error.message
-      : typeof error === "object" && error !== null && "message" in error
-        ? String((error as { message: unknown }).message)
-        : String(error);
-  return { ok: false, error: message };
-}
-
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax",
-  // Scoped to the dashboard: the storefront has no business carrying it.
-  path: "/dashboard",
-  maxAge: ACTOR_TTL_MS / 1000,
-} as const;
-
-/** Fifteen minutes from the last thing you did, not from when you unlocked. */
-export async function slide(actor: { staffId: string; role: StaffRole; name: string }) {
-  const store = await cookies();
-  store.set(
-    ACTOR_COOKIE,
-    signActor({ ...actor, exp: Date.now() + ACTOR_TTL_MS }, actorSecret()),
-    COOKIE_OPTIONS,
-  );
-}
+export type { Result };
 
 /**
  * Roster pick plus PIN buys fifteen minutes of write access. The PIN is posted

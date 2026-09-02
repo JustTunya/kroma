@@ -19,12 +19,20 @@ export function NotifyButton({ token }: { token: string }) {
   const [emailSent, setEmailSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Feature detection can only happen on the client, after hydration — an
+  // SSR pass has no navigator to check. That's exactly what an effect is
+  // for: reading state from an external system on mount. "checking" (nothing
+  // rendered) is what keeps the server and the first client paint identical,
+  // so this never causes a hydration mismatch.
   useEffect(() => {
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-      setSupport("email");
-      return;
-    }
-    setSupport(Notification.permission === "granted" ? "granted" : "push");
+    const detected: Support =
+      !("serviceWorker" in navigator) || !("PushManager" in window)
+        ? "email"
+        : Notification.permission === "granted"
+          ? "granted"
+          : "push";
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSupport(detected);
   }, []);
 
   async function enable() {

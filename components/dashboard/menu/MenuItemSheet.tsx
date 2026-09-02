@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 
@@ -30,16 +30,14 @@ export function MenuItemSheet({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  // No effect to reset these when `initial` changes: the parent remounts
+  // this component with a fresh key per item (see MenuAdminList), which
+  // resets local state for free and is the state React itself recommends
+  // over syncing a prop into state by hand.
   const [draft, setDraft] = useState<DraftItem | null>(initial);
   const [slugTouched, setSlugTouched] = useState(Boolean(initial?.id));
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-
-  useEffect(() => {
-    setDraft(initial);
-    setSlugTouched(Boolean(initial?.id));
-    setError(null);
-  }, [initial]);
 
   if (!draft) return null;
 

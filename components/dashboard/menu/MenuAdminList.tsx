@@ -60,6 +60,10 @@ export function MenuAdminList({
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState(categories[0]?.id ?? "");
   const [draft, setDraft] = useState<DraftItem | null>(null);
+  // Bumped every open, so two "+ Item" drafts in a row remount the sheet
+  // instead of one inheriting the other's half-typed fields — a plain
+  // draft.id key can't tell two unsaved drafts apart, since both are null.
+  const [draftKey, setDraftKey] = useState(0);
 
   const visible = useMemo(
     () => items.filter((item) => item.category_id === activeCategory),
@@ -113,7 +117,7 @@ export function MenuAdminList({
 
             <button
               type="button"
-              onClick={() => setDraft(emptyDraft(activeCategory))}
+              onClick={() => { setDraft(emptyDraft(activeCategory)); setDraftKey((k) => k + 1); }}
               className="flex h-9 shrink-0 items-center rounded-full border border-kds-border px-4 font-mono text-[10px] font-medium tracking-[0.16em] text-accent-primary uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary"
             >
               + Item
@@ -138,7 +142,7 @@ export function MenuAdminList({
             <li key={item.id} className="flex items-center gap-4 py-5">
               <button
                 type="button"
-                onClick={() => setDraft(toDraft(item))}
+                onClick={() => { setDraft(toDraft(item)); setDraftKey((k) => k + 1); }}
                 className={cn(
                   "min-w-0 flex-1 text-left focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-kds-text-primary",
                   !item.is_active && "text-kds-text-secondary",
@@ -192,6 +196,7 @@ export function MenuAdminList({
       </ul>
 
       <MenuItemSheet
+        key={draftKey}
         draft={draft}
         categories={categories}
         onClose={() => setDraft(null)}

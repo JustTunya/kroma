@@ -136,7 +136,7 @@ export default async function SettingsPage() {
 
       <Block title="Security" note="How you get in, and how to shut every way in at once.">
         <dl className="divide-y divide-hairline border-y border-hairline">
-          <Detail term="Email">{user!.email}</Detail>
+          <Detail term="Email">{user!.email ?? "Not provided"}</Detail>
           <Detail term="Email status">
             <span
               className={`font-mono text-[11px] font-medium tracking-[0.14em] uppercase ${

@@ -186,6 +186,9 @@ export function SocialAuth({ next = "/" }: { next?: string }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
+        // Facebook's `email` scope needs App Review for public login; skip it
+        // and stay on public_profile so anyone can sign in without approval.
+        ...(provider === "facebook" ? { scopes: "public_profile" } : {}),
         redirectTo: `${window.location.origin}/auth/oauth?next=${encodeURIComponent(next)}`,
       },
     });

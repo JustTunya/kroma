@@ -137,34 +137,34 @@ export function OrderStatus({ token, initial }: { token: string; initial: OrderD
       )}
 
       {cancellable && (
-        <motion.button
-          type="button"
-          // No blur reset: React dispatches blur before click, so disarming
-          // there makes the second press a no-op. An armed button says
-          // "Yes — cancel it" on its face, which is warning enough.
-          onClick={() => (confirming ? cancel() : setConfirming(true))}
-          disabled={pending}
-          whileTap={{ scale: 0.98 }}
-          transition={pressSpring}
-          aria-label={
-            confirming
-              ? `Confirm cancelling order ${order.day_number ?? order.order_number}`
-              : `Cancel order ${order.day_number ?? order.order_number}, €${order.total.toFixed(2)}`
-          }
-          className={`mt-5 h-9 rounded-full border px-4 font-mono text-[10px] font-medium tracking-[0.18em] uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:opacity-50 ${
-            confirming
-              ? "border-badge-alert text-badge-alert"
-              : "border-hairline text-text-tertiary hover:border-badge-alert hover:text-badge-alert"
-          }`}
-        >
-          {confirming ? "Yes — cancel it" : "Cancel this order"}
-        </motion.button>
-      )}
+        <div className="mt-8 max-w-md border-t border-hairline pt-6">
+          <motion.button
+            type="button"
+            // No blur reset: React dispatches blur before click, so disarming
+            // there makes the second press a no-op. An armed button says
+            // "Yes — cancel it" on its face, which is warning enough.
+            onClick={() => (confirming ? cancel() : setConfirming(true))}
+            disabled={pending}
+            whileTap={{ scale: 0.98 }}
+            transition={pressSpring}
+            aria-label={
+              confirming
+                ? `Confirm cancelling order ${order.day_number ?? order.order_number}`
+                : `Cancel order ${order.day_number ?? order.order_number}, €${order.total.toFixed(2)}`
+            }
+            className={`h-9 rounded-full border px-4 font-mono text-[10px] font-medium tracking-[0.18em] uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:opacity-50 ${
+              confirming
+                ? "border-badge-alert text-badge-alert"
+                : "border-hairline text-text-tertiary hover:border-badge-alert hover:text-badge-alert"
+            }`}
+          >
+            {confirming ? "Yes — cancel it" : "Cancel this order"}
+          </motion.button>
 
-      {cancellable && (
-        <p className="mt-3 max-w-md font-mono text-[10px] tracking-[0.14em] text-text-tertiary uppercase">
-          Only until the bar starts it
-        </p>
+          <p className="mt-3 font-mono text-[10px] tracking-[0.14em] text-text-tertiary uppercase">
+            Only until the bar starts it
+          </p>
+        </div>
       )}
 
       {error && (

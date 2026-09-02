@@ -1,6 +1,4 @@
-/** Shaping for the account's order history: what an order was, and when. */
 
-/** "Cortado + 2 more" — the whole order in the width a meta line has. */
 export function summarize(items: { item_name: string; quantity: number }[]): string {
   if (items.length === 0) return "No lines";
 
@@ -10,10 +8,6 @@ export function summarize(items: { item_name: string; quantity: number }[]): str
   return rest > 0 ? `${items[0].item_name} + ${rest} more` : items[0].item_name;
 }
 
-/**
- * Consecutive runs of the same month, in the order given. The query already
- * sorts by date, so a run is a month — no sorting or keying needed here.
- */
 export function groupByMonth<T extends { month: string }>(
   rows: T[],
 ): { month: string; rows: T[] }[] {

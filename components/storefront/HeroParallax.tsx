@@ -3,29 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
-/**
- * Depth-map parallax.
- *
- * One photo plus a grayscale depth map (scripts/depth.py). The shader walks
- * each pixel's UV along the cursor vector in proportion to its depth, so the
- * near table drifts further than the far wall and the room reads as layers
- * without anything ever having been cut into layers.
- *
- * No WebGL, or reduced motion: the plain <img> below carries the same framing.
- */
-
 const COLOR_SRC = "/kroma_bg.webp";
 const DEPTH_SRC = "/kroma_bg_depth.webp";
 const IMAGE_ASPECT = 2560 / 1440;
 
-/** UV units the nearest pixels travel at full cursor deflection. */
 const STRENGTH_X = 0.03;
 const STRENGTH_Y = 0.018;
-/** Depth that stays put; everything nearer leads, everything further trails. */
+
 const PIVOT = 0.45;
-/** Oversample so displaced edges never reach past the texture. */
+
 const ZOOM = 1.06;
-/** Cursor easing — heavy enough to feel like the room has mass. */
+
 const EASE = 0.045;
 
 const VERT = `
@@ -77,7 +65,7 @@ function compile(gl: WebGLRenderingContext, type: number, source: string) {
 function texture(gl: WebGLRenderingContext, image: HTMLImageElement) {
   const tex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, tex);
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); // GL's origin is bottom-left
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -209,8 +197,6 @@ export function HeroParallax({ className = "" }: { className?: string }) {
         setFallback(true);
       });
 
-    // Deliberately no loseContext() here: a canvas element cannot recover a
-    // lost context, and StrictMode remounts this effect onto the same one.
     return () => {
       disposed = true;
       cancelAnimationFrame(frame);

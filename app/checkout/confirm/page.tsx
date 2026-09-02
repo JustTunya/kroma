@@ -5,12 +5,6 @@ import { getStripe } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Where Stripe returns a paid customer. It writes the order rather than
- * displaying one, so a webhook that is slow, blocked or misconfigured never
- * leaves someone who paid without an order — whichever of the two arrives
- * first creates it, and both end up on the same confirmation page.
- */
 export default async function ConfirmPage({
   searchParams,
 }: {
@@ -24,8 +18,6 @@ export default async function ConfirmPage({
     return null;
   });
 
-  // Unreadable session: nothing was placed, and the cart is still on the
-  // checkout page. The webhook still settles a payment that did go through.
   if (!session) redirect("/checkout?payment=unfinished");
 
   const outcome = await placeOrderFromSession(session);

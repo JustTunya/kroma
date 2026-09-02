@@ -16,11 +16,6 @@ import type { StaffRole } from "@/lib/staff-permissions";
 
 export type { Result };
 
-/**
- * Roster pick plus PIN buys fifteen minutes of write access. The PIN is posted
- * here and verified inside staff_unlock(); it is never compared in this file
- * and never logged.
- */
 export async function unlockAction(
   staffId: string,
   pin: string,
@@ -46,9 +41,7 @@ export async function unlockAction(
   if (!result.ok) {
     return {
       ok: false,
-      // Deliberately the same wording for a wrong PIN and an unknown row: the
-      // roster is already public to staff, but the error should not confirm
-      // which names carry a working PIN.
+
       error:
         result.reason === "locked"
           ? "Locked for 15 minutes. Ask the owner."
@@ -74,26 +67,16 @@ export async function unlockAction(
   return { ok: true };
 }
 
-/** Hand the terminal back. The station session stays; only the person leaves. */
 export async function lockAction(): Promise<void> {
   const store = await cookies();
   store.delete(ACTOR_COOKIE);
   revalidatePath("/dashboard", "layout");
 }
 
-/**
- * The two ends of a shift, stamped in staff_events.
- *
- * No requireActor(): there is no `shift.*` in staff_can because there is
- * nothing to gate. Holding a valid PIN cookie is the whole permission, and it
- * only ever marks your own row — shift_mark() takes the actor from here, not
- * from an argument the client could choose.
- */
 export async function startShiftAction(): Promise<Result> {
   return markShift(true);
 }
 
-/** Ends the shift and hands the terminal back in one tap. */
 export async function endShiftAction(): Promise<Result> {
   const result = await markShift(false);
   if (result.ok) await lockAction();
@@ -119,21 +102,14 @@ async function markShift(open: boolean): Promise<Result> {
   return { ok: true };
 }
 
-/**
- * One transition. advance_order() owns the rules — this only carries the actor
- * and the station, and re-signs the cookie so an active shift slides forward.
- */
 export async function advanceOrderAction(
   orderId: string,
   to: OrderStatus,
-  // Required by advance_order() for a counter order's pending → paid, ignored
-  // everywhere else. The RPC is the enforcement; this only carries it.
+
   tender?: "cash" | "card",
 ): Promise<Result> {
   try {
-    // 'order.advance' is the floor. The RPC re-derives the real action from the
-    // transition and refuses if this actor's role cannot do it, so a void or a
-    // refund is still manager-only even though it enters through here.
+
     const actor = await requireActor("order.advance");
     const station = await currentStaff();
     const supabase = await createClient();
@@ -151,17 +127,11 @@ export async function advanceOrderAction(
     revalidatePath("/dashboard/board");
     revalidatePath(`/dashboard/order/${orderId}`);
 
-    // The transition is already committed. Only the money is still open, so a
-    // failure here is reported as a failure of the refund and not of the void —
-    // the order really has moved, and the board will show it.
     if ((data as { refund_owed?: boolean } | null)?.refund_owed) {
       const refund = await refundOrder(orderId);
       if (!refund.ok) return { ok: false, error: refund.error };
     }
 
-    // The pass does not wait on a notification or a receipt. Fire and
-    // forget — a failed push is not a failed transition, and the order
-    // page's own poll still works.
     if (to === "paid") void sendReceipt(orderId).catch(console.error);
     if (to === "ready") void notifyReady(orderId).catch(console.error);
 
@@ -171,7 +141,6 @@ export async function advanceOrderAction(
   }
 }
 
-/** 0 is the 86 button; a number is the bake count; null is unlimited. */
 export async function setStockAction(
   itemId: string,
   stock: number | null,
@@ -184,8 +153,7 @@ export async function setStockAction(
     const { error } = await supabase.rpc("set_item_stock", {
       p_item_id: itemId,
       p_actor: actor.staffId,
-      // Omitted means unlimited, matching what a null daily_stock already
-      // means for espresso-bar drinks.
+
       p_stock: stock ?? undefined,
       p_station: station?.id,
     });
@@ -199,16 +167,6 @@ export async function setStockAction(
   }
 }
 
-/**
- * Appends to the order's note.
- *
- * Goes through note_order() rather than an UPDATE, because staff have no
- * update policy on orders and staff_events has no insert policy at all — both
- * deliberate. A direct write from here would have silently touched zero rows.
- *
- * The length checks are duplicated in the RPC. These two exist to save a round
- * trip; the ones in SQL are the enforcement.
- */
 export async function noteOrderAction(
   orderId: string,
   note: string,
@@ -239,11 +197,6 @@ export async function noteOrderAction(
   }
 }
 
-/**
- * discount_order() owns the arithmetic, the clamp and the refusal on a
- * settled order — this only carries the actor and, when money already moved,
- * hands the refund to the same caller advanceOrderAction uses for a void.
- */
 export async function discountOrderAction(
   orderId: string,
   kind: "percent" | "amount" | "comp",
@@ -281,11 +234,6 @@ export async function discountOrderAction(
   }
 }
 
-/**
- * Opens the day. No requireActor("shop.open") gate beyond holding a PIN cookie:
- * open_service() re-reads the role from the table like every other RPC here,
- * and the permission is granted to everyone on shift anyway.
- */
 export async function openServiceAction(
   counts: Record<string, number>,
 ): Promise<Result> {
@@ -301,8 +249,7 @@ export async function openServiceAction(
 
     await slide(actor);
     revalidatePath("/dashboard", "layout");
-    // The storefront was refusing orders a second ago. It must not go on doing
-    // so for the thirty seconds app/page.tsx would otherwise cache.
+
     revalidatePath("/", "page");
     return { ok: true };
   } catch (error) {
@@ -310,10 +257,6 @@ export async function openServiceAction(
   }
 }
 
-/**
- * Shuts the day. close_service() owns every rule — the permission, the refusal
- * over live orders, and freezing the report — so this only carries the count.
- */
 export async function closeServiceAction(
   counted: number,
   detail: Record<string, number>,
@@ -331,7 +274,7 @@ export async function closeServiceAction(
 
     await slide(actor);
     revalidatePath("/dashboard", "layout");
-    // The storefront must stop taking orders the moment the till is counted.
+
     revalidatePath("/", "page");
     return { ok: true };
   } catch (error) {

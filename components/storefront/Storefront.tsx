@@ -69,9 +69,9 @@ export function Storefront({
       />
       <main className="flex-1">
         <StorefrontHero />
-        {/* The ledger reads the whole day, not the filtered view. */}
+        {}
         <DayLedger items={items} serviceOpen={serviceOpen} />
-        {/* The rail sticks for as long as there is menu under it, and no longer. */}
+        {}
         <div>
           <CategoryNav
             categories={categories}

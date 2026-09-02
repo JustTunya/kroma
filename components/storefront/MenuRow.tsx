@@ -14,21 +14,18 @@ import type { MenuItem } from "@/types/menu";
 type MenuRowProps = {
   item: MenuItem;
   onAdd: (item: MenuItem) => void;
-  /** Raises the item into the preview slot on hover or keyboard focus. */
+
   onPreview: (item: MenuItem) => void;
 };
 
-/** Exit: fades out on the spot instead of gating the reflow behind its own spring. */
 const rowExit: Transition = { duration: 0.12, ease: "easeOut" };
 
-/** Origin, process and roast, in the order a spec sheet would list them. */
 function spec(item: MenuItem): string[] {
   return [item.origin, item.process, item.roast].filter(
     (part): part is string => Boolean(part),
   );
 }
 
-/** Icon shown before each dietary tag. Falls back to no icon for unlisted tags. */
 const dietaryIcons: Record<string, LucideIcon> = {
   Vegan: Leaf,
   Vegetarian: Sprout,
@@ -154,7 +151,7 @@ export function MenuRow({ item, onAdd, onPreview }: MenuRowProps) {
             )}
 
             {!soldOut && (
-              /* Plain CSS: a variant here would fight the row's entrance state. */
+
               <span
                 aria-hidden
                 className="text-accent-primary opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100"

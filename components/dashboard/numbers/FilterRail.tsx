@@ -16,17 +16,6 @@ import { pressSpring, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { useEscapeClose } from "@/lib/use-escape-close";
 
-/**
- * Every filter on the page, in the URL.
- *
- * State lives in the query string rather than in React so a manager can send
- * "look at last Tuesday" as a link, and so the back button walks the windows
- * they actually looked at. Nothing here holds a value of its own.
- *
- * Two lines, because there are two scopes and they are not the same: the
- * window on top governs the whole page, the ledger line under it governs only
- * the last section. Reading it top to bottom says so.
- */
 export function FilterRail({
   range,
   staff,
@@ -47,14 +36,13 @@ export function FilterRail({
   const [sheetOpen, setSheetOpen] = useState(false);
   const still = useReducedMotion();
 
-  /** Every control routes through here. `null` removes the key entirely. */
   function go(changes: Record<string, string | null>) {
     const next = new URLSearchParams(params);
     for (const [key, value] of Object.entries(changes)) {
       if (value === null || value === "") next.delete(key);
       else next.set(key, value);
     }
-    // A new window means the old page of the ledger is meaningless.
+
     if (!("page" in changes)) next.delete("page");
     start(() => router.replace(`${pathname}?${next}`, { scroll: false }));
   }
@@ -66,8 +54,6 @@ export function FilterRail({
     go({ cat: next.join(",") });
   }
 
-  // What the trigger reads on mobile, since the sheet it opens is hidden
-  // until tapped: the one line has to say the whole state of the filter.
   const activePreset = RANGE_PRESETS.find((preset) => preset.id === range.preset);
   const windowText = activePreset
     ? activePreset.label
@@ -80,21 +66,15 @@ export function FilterRail({
     : "Everyone";
   const activeCount = categories.length + (staffId ? 1 : 0);
 
-  // Desktop's own window control, same idea as the mobile sheet: a segmented
-  // row of buttons, dates only surface once "Custom" is picked so a plain
-  // preset window doesn't cost the row two date fields' worth of space.
   const [customOpen, setCustomOpen] = useState(range.preset === null);
 
   return (
     <div
       aria-busy={pending}
-      // Parks under the h-14 staff bar, so the window you are reading is
-      // still named when you have scrolled down into the ledger.
+
       className="sticky top-14 z-30 border-b border-kds-border bg-kds-canvas/95 px-5 backdrop-blur-xl sm:px-10 lg:px-14"
     >
-      {/* Mobile: one line, one control. A sticky bar that spent two rows
-          arguing with itself over scroll space was the actual problem — this
-          reads the state at a glance and opens everything at once below. */}
+      {}
       <button
         type="button"
         onClick={() => setSheetOpen(true)}
@@ -128,12 +108,9 @@ export function FilterRail({
         </span>
       </button>
 
-      {/* Desktop: the window, then the ledger's own lens, both on their own
-          row — untouched by the mobile redesign above. */}
+      {}
       <div className="hidden lg:block">
-        {/* The window: a segmented row picks the preset, and only when
-            "Custom" is lit do the two date fields show up — a plain preset
-            window no longer pays rent for date text nobody is reading. */}
+        {}
         <div className="flex h-14 items-center gap-x-6">
           <div className="-ml-4 flex shrink-0 items-center gap-1">
             {RANGE_PRESETS.map((preset) => (
@@ -185,9 +162,7 @@ export function FilterRail({
           )}
         </div>
 
-        {/* The ledger's own lens, set as a spec line rather than a second row of
-            chips: it reads as one sentence about which events are showing, and
-            it stays quieter than the window it sits under. */}
+        {}
         <div className="scrollbar-hide -mx-14 flex items-center overflow-x-auto px-14 pt-4 pb-3.5">
           <span className="shrink-0 pr-4 font-mono text-[10px] font-medium tracking-[0.18em] text-kds-text-secondary uppercase">
             Ledger
@@ -215,8 +190,7 @@ export function FilterRail({
         </div>
       </div>
 
-      {/* Re-reading the numbers. A terracotta hairline running the bottom edge
-          rather than a dimmed bar: the labels you are aiming at stay legible. */}
+      {}
       {pending && (
         <span
           aria-hidden
@@ -250,8 +224,6 @@ export function FilterRail({
   );
 }
 
-/** The mobile sheet: every control the desktop row has, at thumb size, with
-    nothing off the edge of the screen. */
 function FilterSheet({
   open,
   onClose,
@@ -273,17 +245,11 @@ function FilterSheet({
   go: (changes: Record<string, string | null>) => void;
   toggleCategory: (name: string) => void;
 }) {
-  // Which of the four window buttons reads as pressed. Starts on "custom"
-  // when the URL is already outside the three presets, so reopening the
-  // sheet mid-custom-range doesn't hide the dates that are actually active.
+
   const [activeTab, setActiveTab] = useState<string>(range.preset ?? "custom");
 
   useEscapeClose(open, onClose);
 
-  // Portalled to <body>: a sticky ancestor up the tree carries
-  // backdrop-blur-xl, which — like `filter` and `transform` — makes that
-  // ancestor the containing block for anything `fixed` inside it. Left in
-  // place, the sheet would pin to that small bar instead of the viewport.
   if (typeof document === "undefined") return null;
 
   return createPortal(
@@ -436,7 +402,6 @@ function FilterSheet({
   );
 }
 
-/** Terracotta mono eyebrow — one per section of the filter sheet. */
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
     <p className="font-mono text-[10px] font-medium tracking-[0.18em] text-accent-primary uppercase">
@@ -445,7 +410,6 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** `23 Aug`, and the year too once the window crosses out of this one. */
 function dayLabel(key: string, today: string): string {
   return new Date(`${key}T12:00:00Z`).toLocaleDateString("en-GB", {
     day: "numeric",
@@ -454,11 +418,6 @@ function dayLabel(key: string, today: string): string {
   });
 }
 
-/**
- * One end of the window. The value is drawn as text and the real input lies
- * over it at zero opacity, so the picker, the keyboard and the min/max clamp
- * are all still the browser's while the type is ours.
- */
 function DateField({
   label,
   value,
@@ -483,7 +442,7 @@ function DateField({
         value={value}
         min={min}
         max={max}
-        // Anywhere on the field opens the calendar, not just a 16px icon.
+
         onClick={(event) => event.currentTarget.showPicker?.()}
         onChange={(event) => event.target.value && onChange(event.target.value)}
         className="absolute inset-0 size-full cursor-pointer opacity-0 [color-scheme:dark]"
@@ -492,7 +451,6 @@ function DateField({
   );
 }
 
-/** Who filter, shared by the mobile and desktop ledger lines. */
 function StaffSelect({
   staffId,
   staff,
@@ -528,7 +486,6 @@ function StaffSelect({
   );
 }
 
-/** One of three windows, and only ever one of them. */
 function Preset({
   active,
   onClick,
@@ -567,7 +524,6 @@ function Preset({
   );
 }
 
-/** One term on the ledger's spec line. Any number of them can be on. */
 function Lens({
   active,
   onClick,
@@ -598,8 +554,6 @@ function Lens({
   );
 }
 
-/** One choice in the filter sheet — a window preset or a ledger category,
-    sized for a thumb rather than a cursor. */
 function Chip({
   active,
   onClick,
@@ -630,9 +584,6 @@ function Chip({
   );
 }
 
-/** One category in the mobile Ledger filter — a full-width row rather than a
-    pill, so several can sit stacked without wrapping unevenly, and each is
-    a big enough target that a thumb doesn't clip the neighbor. */
 function LedgerRow({
   active,
   onClick,

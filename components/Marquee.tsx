@@ -28,11 +28,6 @@ function Run({ entries }: { entries: MarqueeEntry[] }) {
   );
 }
 
-/**
- * A mono-uppercase running strip between two hairlines. Rendered twice side by
- * side so the loop point never shows a seam; reduced motion turns it into a
- * plain horizontally scrollable strip instead of stopping it dead.
- */
 export function Marquee({
   entries,
   label,

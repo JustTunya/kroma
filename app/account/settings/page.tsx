@@ -24,11 +24,6 @@ const PROVIDER_LABELS: Record<string, string> = {
   facebook: "Facebook",
 };
 
-/**
- * Every block is the same shape: a mono heading and its one sentence on the
- * left, the controls on the right, a hairline underneath. Same full-bleed rule
- * as the storefront — the section owns its gutters, nothing is boxed.
- */
 function Block({
   title,
   note,
@@ -57,7 +52,7 @@ function Block({
           {note}
         </p>
       </div>
-      {/* Capped: a label at the gutter and its switch 1200px away is a long throw. */}
+      {}
       <div className="min-w-0 max-w-3xl">{children}</div>
     </section>
   );

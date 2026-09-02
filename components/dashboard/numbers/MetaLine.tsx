@@ -1,13 +1,7 @@
 import { cn } from "@/lib/utils";
 
-/** One metric on a spec line. */
 export type MetaPart = { text: string; tone?: string };
 
-/**
- * The storefront's spec line: mono uppercase at 11px, parts joined by a `/`
- * glyph in hairline. Built from an array rather than from siblings so the
- * separator can never trail off the end of a line that dropped its last part.
- */
 export function MetaLine({
   parts,
   className,

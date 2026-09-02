@@ -12,13 +12,6 @@ import { pressSpring } from "@/lib/motion";
 import { glide, rise } from "@/lib/reveal";
 import { cn } from "@/lib/utils";
 
-/**
- * The shared parts of every auth screen. The landing page has no card, no
- * shadow and no grey — neither do these: hairlines, mono labels and one
- * terracotta CTA. Form inputs are the one place `rounded-md` is allowed.
- */
-
-/** The panel arrives on the same ease-out as every other block on the site. */
 export function AuthPanel({ children }: { children: React.ReactNode }) {
   return (
     <motion.div
@@ -42,8 +35,7 @@ export function AuthHeader({
   title: React.ReactNode;
   children?: React.ReactNode;
 }) {
-  // Vertical rhythm is `vh`-clamped throughout the auth screens so a form fits
-  // a short laptop viewport without scrolling. Type sizes stay in px.
+
   return (
     <header className="mb-[clamp(1rem,2.6vh,2.5rem)]">
       <p className="font-mono text-[10px] font-medium tracking-[0.18em] text-accent-primary uppercase">
@@ -70,7 +62,7 @@ export function Field({
 }: React.ComponentProps<typeof Input> & {
   label: string;
   hint?: React.ReactNode;
-  /** Rendered under the input — the password meter, and nothing else so far. */
+
   footer?: React.ReactNode;
 }) {
   return (
@@ -89,7 +81,7 @@ export function Field({
         className={cn(
           "h-11 rounded-md border-hairline bg-surface-card px-3.5 font-mono text-[14px] tracking-[0.02em] text-text-primary placeholder:text-text-tertiary",
           "focus-visible:border-hairline focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus",
-          // The shadcn invalid ring is a cold red — state reads off the meter instead.
+
           "aria-invalid:border-hairline aria-invalid:ring-0",
           className,
         )}
@@ -99,7 +91,6 @@ export function Field({
   );
 }
 
-/** Errors read like the kitchen, not like a stack trace. */
 export function FormError({ message }: { message: string | null }) {
   if (!message) return null;
   return (
@@ -132,7 +123,6 @@ export function Submit({
   );
 }
 
-/** The one-line link row that closes every form. */
 export function AuthNote({
   children,
   href,
@@ -159,15 +149,11 @@ const PROVIDERS = [
   {
     id: "google",
     label: "Google",
-    // simple-icons: Google
+
     path: "M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z",
   },
 ] as const;
 
-/**
- * Google only. The mark is monochrome on purpose — the palette has no room
- * for a brand blue next to a terracotta on the same screen.
- */
 export function SocialAuth({ next = "/" }: { next?: string }) {
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -184,7 +170,6 @@ export function SocialAuth({ next = "/" }: { next?: string }) {
       },
     });
 
-    // On success the browser leaves for the provider, so only failure lands here.
     if (error) {
       setError(error.message);
       setPending(null);
@@ -221,7 +206,7 @@ export function SocialAuth({ next = "/" }: { next?: string }) {
         ))}
       </div>
 
-      {/* Only takes vertical space once there is something to say. */}
+      {}
       {error && (
         <div className="mt-4">
           <FormError message={error} />

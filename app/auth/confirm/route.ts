@@ -4,7 +4,6 @@ import { type NextRequest } from "next/server";
 
 import { createClient } from "@/lib/server";
 
-/** Email verification and password-recovery links land here. */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const token_hash = searchParams.get("token_hash");

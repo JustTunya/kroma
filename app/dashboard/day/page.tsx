@@ -13,7 +13,6 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-// Stock and the order count move all morning.
 export const dynamic = "force-dynamic";
 
 export default async function DayPage() {
@@ -39,15 +38,14 @@ export default async function DayPage() {
       .select("name, daily_stock")
       .gt("daily_stock", 0)
       .order("name"),
-    // A barista sees the day's state and the leftover stock, never the
-    // takings — matching how /dashboard/numbers is already gated.
+
     day && canClose
       ? supabase.rpc("service_report", { p_actor: actor.staffId, p_day: day.day })
       : Promise.resolve({ data: null, error: null }),
   ]);
 
   const openedByName = staff.data?.display_name ?? null;
-  // A read error must not render as €0.00 — see app/dashboard/numbers/page.tsx.
+
   const reportBroken = day && canClose && report.error;
   const clock = (iso: string) =>
     new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });

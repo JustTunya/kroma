@@ -9,11 +9,6 @@ import { cn } from "@/lib/utils";
 
 export type AccountNavItem = { href: string; label: string; badge?: string };
 
-/**
- * The storefront's category rail, pointed at the account. One pill row at every
- * breakpoint — four destinations never earned a sidebar, and the rail parks in
- * the same sticky slot CategoryNav does so both pages feel like one building.
- */
 export function AccountNav({ items }: { items: AccountNavItem[] }) {
   const pathname = usePathname();
 
@@ -23,8 +18,7 @@ export function AccountNav({ items }: { items: AccountNavItem[] }) {
   return (
     <nav
       aria-label="Account"
-      /* No negative gutters: the rail already sits inside the page gutter, and a
-         negative right margin would run the pills under the sign-out button. */
+
       className="scrollbar-hide flex gap-2 overflow-x-auto"
     >
       {items.map((item) => (

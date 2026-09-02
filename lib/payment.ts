@@ -11,19 +11,10 @@ export type SessionOutcome =
   | { status: "unpaid" }
   | { status: "refunded" };
 
-/**
- * Turns a paid Stripe session into the order. Nothing else creates a card
- * order, so an unpaid card is not an order in any state — there is no pending
- * row to clean up, and the customer can simply come back and try again.
- *
- * Called by the webhook and by /checkout/confirm, in whichever order they
- * arrive. The unique index on stripe_session_id settles the race: the loser
- * gets 23505 and reads back the row the winner wrote.
- */
 export async function placeOrderFromSession(
   session: Stripe.Checkout.Session,
 ): Promise<SessionOutcome> {
-  // The one line that means money moved. `complete` alone does not.
+
   if (session.payment_status !== "paid") return { status: "unpaid" };
 
   const db = admin();
@@ -53,12 +44,11 @@ export async function placeOrderFromSession(
   });
 
   if (!error && data) {
-    // Fire-and-forget: a receipt must never block the pass.
+
     void sendReceipt(data.id).catch(console.error);
     return { status: "placed", token: data.access_token };
   }
 
-  // The other caller got there first between the read above and this insert.
   if (error?.code === "23505") {
     const raced = await db
       .from("orders")
@@ -68,9 +58,6 @@ export async function placeOrderFromSession(
     if (raced.data) return { status: "placed", token: raced.data.access_token };
   }
 
-  // Stock is no longer held while the customer is at Stripe, so the last bun
-  // can go between the quote and the payment. We are holding their money and
-  // have no order to give them: hand it straight back.
   return refund(session, error?.message ?? "create_order returned nothing");
 }
 
@@ -91,7 +78,7 @@ async function refund(
   }
 
   try {
-    // Keyed on the session so a webhook retry cannot refund twice.
+
     await getStripe().refunds.create(
       { payment_intent: intent },
       { idempotencyKey: `refund_${session.id}` },

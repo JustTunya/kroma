@@ -22,8 +22,6 @@ export default function ForgotPasswordPage() {
     setPending(true);
     setError(null);
 
-    // This URL must be listed under Auth → URL Configuration in the Supabase
-    // dashboard, otherwise the link in the email is rejected on arrival.
     const { error } = await createClient().auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/confirm?next=/auth/update-password`,
     });

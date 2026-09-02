@@ -19,26 +19,18 @@ export default async function AccountLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
-  // The proxy already redirects, this is the belt to its braces.
   if (!user) redirect("/auth/login");
 
-  // Card is Task 9 of docs/superpowers/plans/2026-08-19-account-dashboard.md and
-  // doesn't exist yet. Restore it by adding an array entry — AccountNav itself
-  // needs no changes.
   const items: AccountNavItem[] = [
     { href: "/account", label: "Overview" },
     { href: "/account/orders", label: "Orders" },
     { href: "/account/settings", label: "Settings" },
   ];
 
-  // Same check the /dashboard redirect itself makes — this is only ever a
-  // shortcut for someone who'd land there anyway, never a wider grant.
   const staff = await currentStaff();
 
   return (
     <>
-      {/* ponytail: the bar stays on canvas even where the band behind it is dark.
-          Invert it on scroll the way StorefrontHeader does if the seam reads wrong. */}
       <header className="fixed top-0 z-50 flex h-16 w-full items-center justify-between border-b border-hairline bg-surface-canvas/85 px-5 backdrop-blur-xl sm:px-10 lg:px-14">
         <Link
           href="/"
@@ -50,7 +42,7 @@ export default async function AccountLayout({
       </header>
 
       <main className="flex-1 pt-16">
-        {/* Parks exactly under the header, the slot CategoryNav uses on the storefront. */}
+        {}
         <div className="sticky top-16 z-40 border-b border-hairline bg-surface-canvas/85 backdrop-blur-xl">
           <div className="flex h-14 items-center gap-4 px-5 sm:px-10 lg:px-14">
             <AccountNav items={items} />
@@ -66,7 +58,7 @@ export default async function AccountLayout({
           </div>
         </div>
 
-        {/* Sections are full-bleed and carry their own gutters — no wrapper here. */}
+        {}
         {children}
       </main>
 

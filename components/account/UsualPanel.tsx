@@ -7,12 +7,6 @@ import { ReorderButton } from "@/components/account/ReorderButton";
 import { glide, inView, rise } from "@/lib/reveal";
 import type { CartLine } from "@/lib/cart";
 
-/**
- * The item you order twice, given the storefront's editorial row treatment —
- * thumbnail, serif name, spec line — because a name in mono is a receipt.
- * A single row, not the multi-item menu's hero-preview split: one item never
- * earns a 360px dedicated image column.
- */
 export function UsualPanel({
   name,
   price,

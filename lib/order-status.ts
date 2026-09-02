@@ -1,8 +1,4 @@
-/**
- * One source of truth for how an order's state is worded. Both the guest
- * confirmation page and the account order list read it, so the bar and the
- * customer never see two different words for the same thing.
- */
+
 export const ORDER_STATUSES = [
   "pending",
   "paid",
@@ -24,12 +20,10 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, { text: string; tone: stri
   collected: { text: "Collected", tone: "text-text-tertiary" },
   cancelled: { text: "Cancelled", tone: "text-badge-alert" },
   refunded: { text: "Refunded", tone: "text-badge-alert" },
-  // Made, waited, binned. Deliberately not "Cancelled": that word promises a
-  // refund, and nobody is sending one.
+
   abandoned: { text: "Not collected", tone: "text-badge-alert" },
 };
 
-/** Settled orders stop polling — nothing more will happen to them. */
 export function isSettled(status: OrderStatus): boolean {
   return (
     status === "collected" ||

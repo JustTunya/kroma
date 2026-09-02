@@ -4,11 +4,6 @@ import { useEffect } from "react";
 
 import "./globals.css";
 
-/**
- * Only fires when the root layout itself throws. Renders its own html/body
- * since it replaces layout.tsx entirely — kept plain, no fonts or header, so
- * it never depends on the thing that just broke.
- */
 export default function GlobalError({
   error,
   reset,

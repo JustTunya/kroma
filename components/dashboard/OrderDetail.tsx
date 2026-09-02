@@ -23,7 +23,6 @@ type StaffEvent = {
   staff: { display_name: string } | null;
 };
 
-/** The audit trail reads as sentences, not as event names. */
 const EVENT_WORDS: Record<string, string> = {
   "order.advance": "moved it on",
   "order.undo_late": "stepped it back",
@@ -56,9 +55,7 @@ export function OrderDetail({
   const canRefund = role ? staffCan(role, "order.refund") : false;
   const canDiscount = role ? staffCan(role, "order.discount") : false;
   const [discounting, setDiscounting] = useState(false);
-  // Half an hour on the bar is when the board stops calling it late and starts
-  // calling it nobody's. Before that the button is still there but the RPC
-  // charges it to order.void, so a barista gets "Not yours to do."
+
   const canAbandon =
     order.status === "ready" &&
     (canVoid || isStale(new Date(order.ready_at ?? order.placed_at), new Date()));
@@ -69,8 +66,7 @@ export function OrderDetail({
     setError(null);
     startTransition(async () => {
       const result = await advanceOrderAction(order.id, to, tender);
-      // Always refresh: a failed refund still moved the order, and the page
-      // must not go on showing the old lane while the error says otherwise.
+
       router.refresh();
       if (!result.ok) setError(result.error ?? "That did not go through.");
     });
@@ -211,11 +207,10 @@ export function OrderDetail({
         </motion.button>
       </div>
 
-      {/* Actions, quietest to loudest: move it on, step it back, settle it. */}
+      {}
       <div className="mt-10 flex flex-wrap items-center gap-3 border-t border-kds-border pt-8">
         {order.status === "pending" && order.payment_method === "counter" ? (
-          // Two taps become one, and the drawer becomes countable. The same
-          // press that says "paid" says how.
+
           TENDERS.map((tender) => (
             <motion.button
               key={tender}
@@ -392,7 +387,6 @@ function SettleButton({
   );
 }
 
-/** The `/` glyph between metadata, per the brand's hairline vocabulary. */
 function Divider() {
   return (
     <span aria-hidden className="mx-3 text-kds-border">

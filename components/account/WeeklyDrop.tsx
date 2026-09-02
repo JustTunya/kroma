@@ -6,12 +6,6 @@ import { motion } from "framer-motion";
 
 import { glide, inView, rise } from "@/lib/reveal";
 
-/**
- * The owner-curated "this week" teaser — a reason to open the account page
- * beyond reordering the usual. Points at the storefront rather than adding to
- * cart directly: a featured item can carry required modifiers the account
- * page has no picker for.
- */
 export function WeeklyDrop({
   name,
   description,

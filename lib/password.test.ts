@@ -1,4 +1,4 @@
-// node --test lib/password.test.ts
+
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
@@ -8,11 +8,11 @@ const score = (value: string) => PASSWORD_RULES.filter((rule) => rule.test(value
 
 test("every class is required", () => {
   assert.equal(isStrongPassword("Fl4t-white"), true);
-  assert.equal(isStrongPassword("flatwhite"), false); // no upper, digit, symbol
-  assert.equal(isStrongPassword("FLATWHITE1!"), false); // no lowercase
-  assert.equal(isStrongPassword("Flatwhite!"), false); // no digit
-  assert.equal(isStrongPassword("Flatwhite1"), false); // no symbol
-  assert.equal(isStrongPassword("Fl4t-w"), false); // 6 characters
+  assert.equal(isStrongPassword("flatwhite"), false);
+  assert.equal(isStrongPassword("FLATWHITE1!"), false);
+  assert.equal(isStrongPassword("Flatwhite!"), false);
+  assert.equal(isStrongPassword("Flatwhite1"), false);
+  assert.equal(isStrongPassword("Fl4t-w"), false);
 });
 
 test("score drives the label", () => {

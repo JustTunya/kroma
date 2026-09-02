@@ -4,13 +4,6 @@ import Link from "next/link";
 
 import type { BoardOrder } from "@/types/board";
 
-/**
- * Orders for later. They promote themselves into the live lanes half an hour
- * before pickup, so this is a place to look ahead rather than a queue to work.
- *
- * A native <details>: the platform already has a disclosure widget with
- * keyboard handling and correct semantics, and it does not need to animate.
- */
 export function ScheduledDrawer({ orders }: { orders: BoardOrder[] }) {
   if (orders.length === 0) return null;
 

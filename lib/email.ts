@@ -1,13 +1,5 @@
 import "server-only";
 
-/**
- * One POST to Resend. No SDK: this is a single endpoint with a JSON body, and a
- * client library here would be tens of kilobytes to avoid nine lines.
- *
- * ponytail: no retry and no queue. A failed send logs and returns false — the
- * receipt link on the order page is the source of truth and the email is a
- * convenience. If sends ever start mattering, put them behind Vercel Queues.
- */
 export async function sendEmail(message: {
   to: string;
   subject: string;

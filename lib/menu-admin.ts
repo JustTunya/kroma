@@ -1,11 +1,3 @@
-/**
- * The staff-side menu form's own vocabulary.
- *
- * validModifiers mirrors valid_modifiers() in
- * 20260901093000_menu_admin.sql — its only job is disabling the Save button
- * before the round trip. The RPC is the authority; keep the two in step, the
- * way lib/staff-permissions.ts mirrors staff_can().
- */
 
 import type { ModifierGroup } from "@/types/menu";
 
@@ -25,7 +17,6 @@ export type DraftItem = {
   isActive: boolean;
 };
 
-/** `Șocolată  Caldă` → `socolata-calda`. No dependency: normalize + kebab. */
 export function slugify(name: string): string {
   return name
     .normalize("NFD")
@@ -36,7 +27,6 @@ export function slugify(name: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-/** The exact shape order_lines() parses. See valid_modifiers() for the SQL twin. */
 export function validModifiers(groups: ModifierGroup[]): boolean {
   if (!Array.isArray(groups)) return false;
   const groupNames = new Set(groups.map((g) => g.name));

@@ -1,11 +1,5 @@
 import { admin } from "@/lib/admin";
 
-/**
- * ponytail: card orders no longer hold stock — they are only written once the
- * payment clears — so this drains pending online rows left by the old flow and
- * then finds nothing. Delete the route, its cron entry and release_order() once
- * no such rows remain.
- */
 export async function GET(request: Request) {
   if (request.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
     return new Response("unauthorized", { status: 401 });
@@ -18,12 +12,6 @@ export async function GET(request: Request) {
     return new Response("failed", { status: 500 });
   }
 
-  // Demo mode: this is a portfolio piece, not a real bakehouse, so nobody is
-  // walking in at 07:30 to tap Open on the iPad. open_service() is a no-op
-  // once today's row exists (on conflict do nothing), so riding along here
-  // daily just means the storefront is never stuck showing "closed" to a
-  // visitor. Opens as whichever active person-staff row is oldest — on this
-  // project that's the owner account.
   const { data: opener } = await admin()
     .from("staff")
     .select("id")
@@ -38,11 +26,6 @@ export async function GET(request: Request) {
     if (openError) console.error("open_service failed:", openError.message);
   }
 
-  // Push subscriptions die with the order, but nothing deletes the row once
-  // the order settles. Every order this shop has is same-day pickup, so a
-  // subscription older than a day belongs to an order long since resolved.
-  // The Hobby plan allows one daily cron and this job already runs, so the
-  // sweep rides along rather than getting a cron entry of its own.
   const { error: sweepError } = await admin()
     .from("order_push_subscriptions")
     .delete()

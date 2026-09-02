@@ -20,11 +20,6 @@ import type { BoardOrder } from "@/types/board";
 import type { OrderStatus } from "@/lib/order-status";
 import type { ParItem } from "@/lib/service-day";
 
-/**
- * Four lanes, in the order the work happens. `pending` sits beside `paid`
- * rather than in a queue of its own: it is a real order that someone is
- * standing there waiting for, it just has not been paid for yet.
- */
 const LANES: { title: string; statuses: OrderStatus[]; empty: string }[] = [
   {
     title: "On the pass",
@@ -40,7 +35,6 @@ const LANES: { title: string; statuses: OrderStatus[]; empty: string }[] = [
   { title: "Collected", statuses: ["collected"], empty: "Nothing collected yet." },
 ];
 
-/** An order this far out is not work yet — it waits in the drawer. */
 const SCHEDULED_LEAD_MS = 30 * 60_000;
 
 export function OrderBoard({
@@ -52,11 +46,11 @@ export function OrderBoard({
 }: {
   initial: BoardOrder[];
   unlocked: boolean;
-  /** ISO timestamp of this person's open shift, or null if they are off. */
+
   shiftSince: string | null;
-  /** Whether a service_days row is open right now. */
+
   dayOpen: boolean;
-  /** Batch items to prefill on the opening screen. */
+
   par: ParItem[];
 }) {
   const { orders, refetch } = useBoard(initial);
@@ -64,23 +58,15 @@ export function OrderBoard({
   const [now, setNow] = useState(() => new Date());
   const [error, setError] = useState<string | null>(null);
   const [lane, setLane] = useState(LANES[0].title);
-  // The transition stays pending until the revalidated page lands, which is
-  // exactly the window where shiftSince is still stale and the overlay would
-  // otherwise sit there after the tap. Nothing to reset, and nothing left
-  // holding a previous person's answer after a hand-over.
+
   const [starting, startShift] = useTransition();
   const { arm, play } = useChime();
 
-  // Nobody is asked to start a shift they are already on, and a locked
-  // terminal is not asked at all — it cannot move an order anyway.
   const onShift = Boolean(shiftSince) || starting;
   const askToStart = unlocked && !onShift;
 
   useBoardPoll(connection, refetch);
 
-  // iPadOS keeps audio suspended until a gesture. The overlay's tap normally
-  // supplies it; on a reload mid-shift there is no overlay, so the first touch
-  // anywhere does.
   useEffect(() => {
     if (askToStart) return;
     const gesture = () => arm();
@@ -88,9 +74,6 @@ export function OrderBoard({
     return () => window.removeEventListener("pointerdown", gesture);
   }, [askToStart, arm]);
 
-  // Ping only when an order the board has never seen appears. Comparing ids
-  // rather than counts means an advance or a collection stays silent, and a
-  // reconnect re-fetch does not replay the morning.
   const known = useRef(new Set(initial.map((order) => order.id)));
   useEffect(() => {
     const fresh = orders.filter((order) => !known.current.has(order.id));
@@ -98,7 +81,6 @@ export function OrderBoard({
     if (fresh.length > 0) play();
   }, [orders, play]);
 
-  // One clock for every timer and every spine, so nothing ticks out of step.
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
@@ -111,8 +93,7 @@ export function OrderBoard({
 
     for (const order of orders) {
       const pickup = order.pickup_at ? new Date(order.pickup_at).getTime() : null;
-      // Only a not-yet-started order can wait: once someone has begun making
-      // it, it belongs on the board whatever the pickup time says.
+
       if (pickup && pickup > cutoff && (order.status === "pending" || order.status === "paid")) {
         scheduled.push(order);
       } else {
@@ -123,8 +104,7 @@ export function OrderBoard({
     scheduled.sort(
       (a, b) => new Date(a.pickup_at!).getTime() - new Date(b.pickup_at!).getTime(),
     );
-    // Longest wait first, per lane. In the ready lane that puts the order
-    // nobody has come for at the top, which is the point.
+
     live.sort((a, b) => ageSince(a).getTime() - ageSince(b).getTime());
 
     return { live, scheduled };
@@ -142,9 +122,6 @@ export function OrderBoard({
     void refetch();
   }
 
-  // Writes are refused while the socket is down. Queuing them for replay would
-  // leave two iPads to reconcile divergent order state on reconnect, which is
-  // far worse than ten minutes on paper.
   const disabled = connection === "offline" || !unlocked;
 
   const counts = LANES.map((entry) => ({
@@ -152,16 +129,11 @@ export function OrderBoard({
     count: live.filter((order) => entry.statuses.includes(order.status)).length,
   }));
 
-  // Order matters. A shift cannot start inside a day that has not opened, and
-  // asking for a PIN-holder's shift over a closed shop is the wrong question.
   if (!dayOpen) return <ServiceClosed items={par} unlocked={unlocked} />;
 
   return (
     <>
-      {/* Not wrapped in AnimatePresence: the clock below re-renders this
-          component every second, and an unkeyed presence child restarts its
-          entrance on each tick — the overlay never finished fading in. There
-          is nothing to animate on the way out anyway; the shift starts once. */}
+      {}
       {askToStart && (
         <ShiftStart
           error={error}
@@ -229,9 +201,7 @@ export function OrderBoard({
               now={now}
               onAdvance={advance}
               disabled={disabled}
-              // Below lg only the chosen lane renders. Four columns need width
-              // the phone in an apron pocket does not have, and one stacked
-              // scroll buries "ready at the bar" under the whole pass.
+
               hiddenOnSmall={entry.title !== lane}
             />
           ))}

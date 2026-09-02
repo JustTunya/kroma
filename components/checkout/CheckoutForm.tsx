@@ -33,8 +33,6 @@ const LABEL =
 const NOTE =
   "border-y border-hairline py-10 font-mono text-[13px] tracking-[0.02em] text-text-secondary";
 
-// Survives the round trip to Stripe so a cancelled payment comes back to a
-// filled-in form. Tab-scoped on purpose: nothing about an order outlives the tab.
 const DETAILS_KEY = "kroma-checkout-details";
 
 type Notice = "unfinished" | "refunded";
@@ -44,16 +42,12 @@ const NOTICES: Record<Notice, string> = {
   refunded: "Card refunded — something on the order went while you were paying.",
 };
 
-/**
- * Safe to read while initialising state: the form only ever renders after the
- * cart has hydrated, so this never runs on the server or during hydration.
- */
 function savedDetails(): { name?: string; notes?: string; email?: string } | null {
   if (typeof window === "undefined") return null;
   try {
     return JSON.parse(window.sessionStorage.getItem(DETAILS_KEY) ?? "null");
   } catch {
-    // Private mode or a stale shape — the customer retypes their name.
+
     return null;
   }
 }
@@ -72,7 +66,7 @@ export function CheckoutForm({
   defaultName: string;
   paymentNotice?: Notice;
   serviceOpen: boolean;
-  /** From the signed-in customer's profile. Guests have none, so nothing is flagged. */
+
   dietaryPrefs?: DietaryPrefs;
   dietaryIndex?: DietaryIndex;
 }) {
@@ -106,16 +100,15 @@ export function CheckoutForm({
       }
 
       if (result.url.startsWith("/")) {
-        // Paid at the bar: placing it IS the order, so the lines move now.
+
         cart.clear();
         router.push(result.url);
       } else {
-        // Off to Stripe. The cart stays put until the confirmation page proves
-        // the card cleared — a cancelled payment must come back to a full cart.
+
         try {
           window.sessionStorage.setItem(DETAILS_KEY, JSON.stringify({ name, notes, email }));
         } catch {
-          // Not worth blocking a payment over.
+
         }
         window.location.href = result.url;
       }

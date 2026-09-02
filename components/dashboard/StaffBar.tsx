@@ -12,11 +12,6 @@ import { DayPill } from "@/components/dashboard/DayPill";
 import { pressSpring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
-/**
- * Who is unlocked, whether their shift is still open, and whether the board is
- * still hearing from the server. Fixed at h-14 — one line shorter than the storefront header, because
- * a bar screen owes every pixel it can to the orders.
- */
 export function StaffBar({
   actorName,
   onShift,
@@ -25,13 +20,13 @@ export function StaffBar({
   dayOpenedAt,
 }: {
   actorName: string | null;
-  /** Whether this person has an open shift — the only state End can end. */
+
   onShift: boolean;
-  /** Manager and owner only. The page redirects too; this hides the door. */
+
   canSeeNumbers: boolean;
-  /** Manager and owner only. The page redirects too; this hides the door. */
+
   canEditMenu: boolean;
-  /** null when the shop has not opened today — the pill reads Closed. */
+
   dayOpenedAt: string | null;
 }) {
   const [error, setError] = useState<string | null>(null);

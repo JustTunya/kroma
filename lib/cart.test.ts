@@ -1,4 +1,4 @@
-// node --test lib/cart.test.ts
+
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
@@ -55,13 +55,6 @@ test("mergeCarts does not mutate its inputs", () => {
   assert.equal(flatWhite.quantity, before);
 });
 
-// Regression for lib/use-cart.ts's `add`/`addMany`. ReorderButton (and any future
-// caller) does `for (const line of lines) add(line)` — N synchronous calls in the
-// same tick, before React re-renders. `useCart` can't be unit-tested directly here
-// (it's a hook — calling it outside a component render throws, and this repo has
-// no React testing-library installed to fake one), so this reproduces the exact
-// merge formula `add` uses against the exact call pattern ReorderButton uses. It
-// must accumulate to three lines, not collapse to one.
 test("three sequential add() calls accumulate to three lines, not collapse to the last one", () => {
   const espresso: CartLine = {
     ...flatWhite,
@@ -81,11 +74,6 @@ test("three sequential add() calls accumulate to three lines, not collapse to th
   };
   const toAdd = [flatWhite, espresso, pourOver];
 
-  // lib/use-cart.ts's fixed `add`/`addMany`: `add` delegates to `addMany([line])`,
-  // which merges onto `linesRef.current` and `persist` updates that ref
-  // synchronously on every call — so each `add` composes onto the *previous
-  // call's result*, not a stale render snapshot. `ref` here stands in for
-  // `linesRef.current`.
   let ref: CartLine[] = [];
   const add = (line: CartLine) => {
     ref = mergeCarts(ref, [line]);

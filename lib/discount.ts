@@ -1,8 +1,3 @@
-/**
- * The mirror of discount_order()'s arithmetic, and its only job is drawing
- * the before/after line before the round trip. The database is the authority
- * on what a discount is.
- */
 
 export type DiscountKind = "percent" | "amount" | "comp";
 

@@ -5,14 +5,6 @@ import { cn } from "@/lib/utils";
 
 import type { LedgerEntry } from "@/types/manage";
 
-/**
- * Everything that happened, newest first.
- *
- * Rows read as sentences rather than as `order.undo_late`: the person reading
- * this is a manager asking why a drink went back, not an engineer grepping an
- * event stream. The action name is still in the DOM as the row's title so the
- * mapping stays checkable.
- */
 export function Ledger({
   entries,
   page,
@@ -24,11 +16,11 @@ export function Ledger({
   entries: LedgerEntry[];
   page: number;
   perPage: number;
-  /** There is at least one more page behind this one. */
+
   more: boolean;
-  /** A single-day window does not need the date on every row. */
+
   showDate: boolean;
-  /** The current filters, already serialised, minus `page`. */
+
   query: string;
 }) {
   if (entries.length === 0) {
@@ -137,11 +129,6 @@ export function Ledger({
   );
 }
 
-/**
- * A plain link, not a router push: paging is a destination and the browser
- * already knows how to walk back through the pages you read. The filters ride
- * along in `query` — a bare `?page=N` would silently reset the window.
- */
 function PageLink({
   query,
   page,

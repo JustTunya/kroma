@@ -20,8 +20,6 @@ type OrderItem = {
   menu_items: { daily_stock: number | null } | null;
 };
 
-/** The bakehouse is in Cluj; the server is in UTC. Without the zone a 00:30
- *  order reads as the previous day on the customer's own history. */
 function day(value: string) {
   return new Date(value).toLocaleDateString("en-GB", {
     day: "2-digit",
@@ -31,7 +29,6 @@ function day(value: string) {
   });
 }
 
-/** "August 2026" — the heading a month's worth of orders sits under. */
 function month(value: string) {
   return new Date(value).toLocaleDateString("en-GB", {
     month: "long",
@@ -51,9 +48,6 @@ export default async function OrdersPage({
 
   const supabase = await createClient();
 
-  // No .eq("user_id", …) on purpose: the "orders read own" policy scopes this,
-  // and leaning on the policy is what proves the policy works. The menu_items
-  // join is only there to tell a reorderable line from one that is gone today.
   const { data: orders, count } = await supabase
     .from("orders")
     .select(
@@ -77,9 +71,7 @@ export default async function OrdersPage({
       id: order.id,
       token: order.access_token,
       month: month(order.placed_at),
-      // The bar calls the day's ticket, not the all-time one. order_number stays
-      // as the permanent id behind the ledger; day_number is what a person says
-      // out loud.
+
       orderNumber: order.day_number ?? order.order_number,
       date: day(order.placed_at),
       summary: summarize(items),
@@ -122,7 +114,7 @@ export default async function OrdersPage({
         <div className="px-5 sm:px-10 lg:px-14">
           {months.map((group) => (
             <section key={group.month} aria-label={group.month}>
-              {/* 120px clears the fixed header and the sticky account rail. */}
+              {}
               <h2 className="sticky top-[120px] z-30 border-y border-hairline bg-surface-canvas/85 py-4 font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase backdrop-blur-xl">
                 {group.month}
               </h2>

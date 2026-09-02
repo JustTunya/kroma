@@ -18,7 +18,6 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-// Money that moved four seconds ago is the reason anyone opens this mid-service.
 export const dynamic = "force-dynamic";
 
 const PER_PAGE = 20;
@@ -35,9 +34,7 @@ export default async function NumbersPage({
   };
 
   const actor = await currentActor();
-  // Two different failures, two different destinations. A locked terminal
-  // needs a PIN; a barista who found the URL needs the pass back, not a 403
-  // telling them there is a page here worth trying again for.
+
   if (!actor) redirect("/dashboard/unlock");
   if (!staffCan(actor.role, "analytics.view")) redirect("/dashboard/board");
 
@@ -61,12 +58,11 @@ export default async function NumbersPage({
       ...span,
       p_staff: staffId ?? undefined,
       p_actions: actionsFor(categories) ?? undefined,
-      // One over the page, so "Older" appears only when there is an older.
+
       p_limit: PER_PAGE + 1,
       p_offset: page * PER_PAGE,
     }),
-    // The 86 panel is its own read rather than a filter of the one above: the
-    // manager's category pills must not be able to empty it.
+
     supabase.rpc("manage_ledger", {
       ...span,
       p_actions: ["item.86"],
@@ -75,10 +71,6 @@ export default async function NumbersPage({
     roster(),
   ]);
 
-  // A read that FAILED and a morning where nothing sold both arrive here as a
-  // null. Drawing €0.00 for the first one is the worst thing this page could
-  // do: it is a confident, wrong answer about money, and it looks exactly like
-  // a true one. So a failed read stops the page instead of filling it in.
   const broken = [earned.error, bar.error, ledger.error, stock.error].find(Boolean);
 
   const take = (earned.data as Earnings | null) ?? EMPTY;
@@ -86,8 +78,6 @@ export default async function NumbersPage({
   const rows = (ledger.data as LedgerEntry[] | null) ?? [];
   const entries = rows.slice(0, PER_PAGE);
 
-  // Stock going to zero is what ran out. The same action also records a
-  // morning's bake count being set, which is not news.
   const ranOut = ((stock.data as LedgerEntry[] | null) ?? []).filter(
     (entry) => entry.detail?.to === 0 && entry.item_name,
   );
@@ -102,7 +92,7 @@ export default async function NumbersPage({
   ).toString();
 
   const lost = take.voided + take.refunded;
-  // The shop day of the newest order anywhere, for the empty-window pointer.
+
   const lastDay = take.latest ? shopDayKey(new Date(take.latest)) : null;
 
   const header = (
@@ -162,9 +152,7 @@ export default async function NumbersPage({
         </p>
 
         {take.orders === 0 && lastDay && lastDay !== range.toKey ? (
-          // €0.00 is the truth, but on its own it reads as a broken page. The
-          // shop has takings, just not in this window — say which day has them
-          // and make it one tap, rather than leaving a manager to guess.
+
           <div className="mt-6">
             <p className="max-w-lg font-sans text-[15px] leading-[1.6] text-kds-text-secondary">
               Nothing came in {range.days > 1 ? "in this window" : "on this day"}.
@@ -225,8 +213,7 @@ export default async function NumbersPage({
                 {money(take.abandoned)}
               </span>
             </p>
-            {/* The distinction the schema went to the trouble of encoding: the
-                till kept this money and the coffee still went in the bin. */}
+            {}
             <p className="mt-3 max-w-md font-sans text-[15px] leading-[1.55] text-kds-text-secondary">
               Paid for, made, and nobody came for it. The money stayed —
               this is milk and beans, not a lost sale.
@@ -325,7 +312,6 @@ export default async function NumbersPage({
   );
 }
 
-/** Every block on the page: eyebrow, serif heading, content, one hairline. */
 function Section({
   eyebrow,
   heading,
@@ -353,11 +339,6 @@ function Section({
   );
 }
 
-/**
- * Takings, grouped. The storefront's rule is a bare `€1284.60` because a price
- * is never four digits; a month behind the bar is, and a headline number you
- * have to count the digits of is not a headline.
- */
 function money(amount: number): string {
   return `€${amount.toLocaleString("en-GB", {
     minimumFractionDigits: 2,

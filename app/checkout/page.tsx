@@ -16,8 +16,7 @@ export default async function CheckoutPage({
 }: {
   searchParams: Promise<{ payment?: string }>;
 }) {
-  // Set when a card payment did not end in an order — the cart and the typed-in
-  // details are still here, so the customer just presses Pay again.
+
   const { payment } = await searchParams;
 
   const supabase = await createClient();
@@ -36,8 +35,6 @@ export default async function CheckoutPage({
         .maybeSingle()
     : { data: null };
 
-  // The cart lives in the browser for guests, so the empty state is decided
-  // client-side by CheckoutForm — not with a redirect from here.
   const defaultName =
     profile?.bar_name?.trim() ||
     profile?.display_name?.trim() ||
@@ -49,12 +46,6 @@ export default async function CheckoutPage({
     ? { diets: profile.dietary_tags, avoid: profile.avoid_allergens }
     : NO_PREFS;
 
-  // Only worth a round trip if there is something to check against. The table is
-  // a couple of dozen rows, so it comes back whole rather than filtered by cart —
-  // the cart is client-side and this page has never seen it.
-  //
-  // ponytail: no menu.json fallback here. If the query fails the notice simply
-  // does not appear; nothing on this page depends on it to take an order.
   const { data: menuDietary } = hasPrefs(dietaryPrefs)
     ? await supabase.from("menu_items").select("id, dietary_tags, allergens")
     : { data: null };

@@ -5,17 +5,6 @@ import { motion } from "framer-motion";
 import { pressSpring, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
-/**
- * Which lane a small screen is showing.
- *
- * Four columns need width the phone in an apron pocket does not have, and a
- * single stacked scroll buries "ready at the bar" under everything still on
- * the pass. This is the storefront's CategoryNav rail — same pill shape, same
- * sliding `layoutId` fill — pointed at the pass and inverted onto the KDS
- * canvas, so the two screens read as one building.
- *
- * Selection is `aria-pressed`, not links: nothing here is a destination.
- */
 export function LaneRail({
   lanes,
   active,

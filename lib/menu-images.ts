@@ -1,14 +1,3 @@
-/**
- * Menu photography.
- *
- * `menu_items.image_url` wins whenever it is set. Until the roastery shoots its
- * own catalogue, cards fall back to a small pool of curated Unsplash frames that
- * match the KROMA look (natural light, warm wood, matte ceramics).
- *
- * ponytail: fixed pool keyed by category, rotated by list position so two
- * neighbouring cards never share a frame. Populate `image_url` on the rows and
- * the pool stops being used — no component changes needed.
- */
 
 const UNSPLASH = "https://images.unsplash.com/photo-";
 
@@ -40,7 +29,6 @@ const POOL: Record<string, string[]> = {
 
 const DEFAULT_POOL = ["1495474472287-4d71bcdd2085"];
 
-/** Custom shoot, keyed by item name. Wins over both `image_url` and the Unsplash pool. */
 const CUSTOM: Record<string, string> = {
   Espresso: "/menu/coffee@espresso.png",
   Cappuccino: "/menu/coffee@cappuccino.png",
@@ -61,10 +49,8 @@ const CUSTOM: Record<string, string> = {
   "Smoked Salmon & Dill Bagel": "/menu/food@smoked_salmon_dill_bagel.png",
 };
 
-/** Hero frame: three flat whites on warm wood, shot from above. */
 export const HERO_IMAGE = `${UNSPLASH}1495474472287-4d71bcdd2085?w=1600&q=80&auto=format&fit=crop`;
 
-/** Photo for a card. `index` is the item's position in the rendered list. */
 export function menuImage(
   item: { name?: string; category: string; image_url: string | null },
   index: number,

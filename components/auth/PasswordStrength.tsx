@@ -6,17 +6,8 @@ import { numberTransition, spring } from "@/lib/motion";
 import { PASSWORD_RULES, strengthLabel } from "@/lib/password";
 import { cn } from "@/lib/utils";
 
-/**
- * Five hairline segments over the requirement line — the same meta-line
- * language as a menu row, not a coloured "strength bar". One grid column per
- * rule, so each segment sits exactly over the label it belongs to. Segments
- * wipe in on the shared spring (scaleX only, never width), rules cross from
- * grey to the live green as they land.
- */
-
 const met = (value: string) => PASSWORD_RULES.map((rule) => rule.test(value));
 
-/** Sits in the `hint` slot beside the label; announces the level, once per change. */
 export function PasswordStrengthLabel({ value }: { value: string }) {
   const reduce = useReducedMotion();
   const score = met(value).filter(Boolean).length;

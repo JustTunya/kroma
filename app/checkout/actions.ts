@@ -19,10 +19,8 @@ type QuoteLine = {
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** Stripe allows 50 metadata keys; the cart chunks must leave room for the rest. */
 const MAX_ITEM_CHUNKS = 45;
 
-/** create_order raises with detail '{"menu_item_id":"…"}' so the UI can mark the row. */
 function offendingItem(details: string | null | undefined): string | undefined {
   if (!details) return undefined;
   try {
@@ -38,11 +36,10 @@ export async function placeOrder(input: {
   customerName: string;
   notes: string;
   paymentMethod: "online" | "counter";
-  /** Guests only — a signed-in customer's own email is used instead. */
+
   receiptEmail?: string;
 }): Promise<PlaceOrderResult> {
-  // Trust boundary. The SQL validates all of this again; this pass exists so
-  // obvious junk never reaches the database.
+
   if (!Array.isArray(input.items) || input.items.length === 0) {
     return { ok: false, message: "Nothing on the pass in this order." };
   }
@@ -71,7 +68,7 @@ export async function placeOrder(input: {
   const supabase = await createClient();
 
   if (input.paymentMethod === "counter") {
-    // Nothing to settle first — placing it IS the order.
+
     const { data, error } = await supabase.rpc("create_order", {
       p_items: input.items,
       p_customer_name: name,
@@ -92,9 +89,6 @@ export async function placeOrder(input: {
     return { ok: true, url: `/order/${data.access_token}` };
   }
 
-  // Card. No order is written here, and no stock is taken: an unpaid card is
-  // not an order. The cart is priced, parked on the Stripe session, and only
-  // becomes an order once the payment clears (lib/payment.ts).
   const { data: quote, error: quoteError } = await supabase.rpc("quote_order", {
     p_items: input.items,
   });
@@ -124,8 +118,7 @@ export async function placeOrder(input: {
     const session = await getStripe().checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
-      // Stripe's floor is 30 minutes. Nothing is held meanwhile, so this is the
-      // life of the quote, not of a reservation.
+
       expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
       metadata: {
         ...packed,
@@ -134,11 +127,10 @@ export async function placeOrder(input: {
         ...(receiptEmail && { receipt_email: receiptEmail }),
         ...(user && { user_id: user.id }),
       },
-      // Both ends come back to us: /checkout/confirm writes the order, and a
-      // cancelled payment lands on a checkout page whose cart is untouched.
+
       success_url: `${origin}/checkout/confirm?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/checkout?payment=unfinished`,
-      // Prices come from quote_order, which is the same SQL create_order uses.
+
       line_items: lines.map((line) => {
         const unit =
           Number(line.base_price) +
@@ -150,7 +142,7 @@ export async function placeOrder(input: {
           quantity: line.quantity,
           price_data: {
             currency: "eur",
-            // Rounded to cents exactly once, here at the Stripe boundary.
+
             unit_amount: Math.round(unit * 100),
             product_data: {
               name: line.item_name,

@@ -66,8 +66,7 @@ export default async function Home() {
   const [{ data: claims }, rawItems, { data: openDay }] = await Promise.all([
     supabase.auth.getClaims(),
     fetchMenu(),
-    // Anonymous read: current_service_day() is granted to anon precisely so the
-    // storefront can say "closed" instead of taking an order nobody will make.
+
     supabase.rpc("current_service_day"),
   ]);
 

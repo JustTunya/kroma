@@ -11,11 +11,6 @@ import { cn } from "@/lib/utils";
 
 import type { BoardOrder } from "@/types/board";
 
-/**
- * Which stamp the row counts from: the age of the CURRENT state, not of the
- * order. A drink that has sat ready for eight minutes is the problem, however
- * long ago it was ordered.
- */
 export function ageSince(order: BoardOrder): Date {
   const stamp =
     order.status === "ready"
@@ -37,7 +32,7 @@ export function OrderRow({
   order: BoardOrder;
   now: Date;
   onAdvance: (order: BoardOrder, tender?: "cash" | "card") => void;
-  /** Offline, or nobody has unlocked the terminal. */
+
   disabled: boolean;
 }) {
   const reduced = useReducedMotion();
@@ -47,8 +42,6 @@ export function OrderRow({
   const gone = order.items.some((item) => item.gone);
   const name = order.bar_name ?? order.customer_name ?? "Guest";
 
-  // Everything that needs saying before the drink is handed over, in the order
-  // it matters: money first, then what is missing, then what would hurt someone.
   const flags: { text: string; tone: string }[] = [
     ...(order.status === "pending"
       ? [{ text: "Take payment", tone: "text-accent-primary" }]
@@ -69,9 +62,7 @@ export function OrderRow({
   return (
     <motion.li
       layout={reduced ? false : "position"}
-      // Shared across lanes: the row travels when it is advanced rather than
-      // vanishing here and appearing there. Reduced motion keeps the reflow —
-      // the board must still be usable — and drops the travel.
+
       layoutId={reduced ? undefined : `order-${order.id}`}
       transition={{ layout: spring }}
       initial={reduced ? false : { opacity: 0, y: 12 }}

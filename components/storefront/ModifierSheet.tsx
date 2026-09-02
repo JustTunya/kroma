@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
@@ -21,18 +21,19 @@ type ModifierSheetProps = {
 export function ModifierSheet({ item, onClose, onAdd }: ModifierSheetProps) {
   const [selections, setSelections] = useState<Record<string, string>>({});
   const [quantity, setQuantity] = useState(1);
+  const [openedItemId, setOpenedItemId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!item) return;
+  useEscapeClose(Boolean(item), onClose);
+
+  if (item && item.id !== openedItemId) {
+    setOpenedItemId(item.id);
     setSelections(
       Object.fromEntries(
         item.modifiers.map((group) => [group.name, group.options[0]?.name ?? ""]),
       ),
     );
     setQuantity(1);
-  }, [item]);
-
-  useEscapeClose(Boolean(item), onClose);
+  }
 
   if (!item) return null;
 

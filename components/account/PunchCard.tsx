@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 
 const CARD_LENGTH = 10;
 
-/** Fill, empty-ring and status colours per surface. Dark is the inverted band. */
 const TONES = {
   canvas: {
     filledBg: "bg-text-primary",
@@ -25,11 +24,6 @@ const TONES = {
   },
 } as const;
 
-/**
- * Ten identical cells. Deliberately not a progress bar: the point of a card
- * is that you can count what is left at a glance. The last earned punch
- * carries the accent so the eye lands on where you are, not on the row.
- */
 export function PunchCard({
   punches,
   size = "sm",
@@ -39,7 +33,7 @@ export function PunchCard({
   punches: number;
   size?: "sm" | "lg";
   tone?: keyof typeof TONES;
-  /** Puts what is left at display size — the goal only pulls while it is visible. */
+
   headline?: boolean;
 }) {
   const reduced = useReducedMotion();

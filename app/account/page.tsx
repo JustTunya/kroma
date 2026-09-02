@@ -17,7 +17,6 @@ type Usual = {
 
 const ZONE = "Europe/Bucharest";
 
-/** Opening hours are 07:30, and they are 07:30 in Cluj, not on the server. */
 function greeting(): string {
   const hour = Number(
     new Intl.DateTimeFormat("en-GB", {
@@ -52,9 +51,9 @@ export default async function AccountOverviewPage() {
       supabase.from("profiles").select("display_name").eq("id", user!.id).maybeSingle(),
       supabase.rpc("my_card"),
       supabase.rpc("my_usual"),
-      // The "orders read own" policy scopes the count.
+
       supabase.from("orders").select("id", { count: "exact", head: true }),
-      // Owner-curated, flipped straight in the table editor — no admin UI yet.
+
       supabase
         .from("menu_items")
         .select("name, description, base_price, image_url, dietary_tags, menu_categories (name)")
@@ -86,9 +85,6 @@ export default async function AccountOverviewPage() {
             quantity: 1,
             selectedModifiers: usual.selected_modifiers,
             imageUrl: menuImage({ name: usual.name, category: "", image_url: usual.image_url }, 0),
-            // ponytail: my_usual() doesn't project vat_rate — the value is
-            // display-only here (order_lines() recomputes it at checkout from
-            // the category), so the standard rate is a safe placeholder.
             vatRate: 0.11,
           },
         ]
@@ -131,9 +127,7 @@ export default async function AccountOverviewPage() {
             `Ordered ${usual.times_ordered}×`,
             ...(soldOut ? ["Gone for today"] : []),
           ]}
-          /* ponytail: my_usual() returns no category, so a row without its own
-             image_url falls to the default frame instead of its category pool.
-             Add category to the RPC's jsonb and pass it through to fix. */
+
           imageUrl={menuImage({ name: usual.name, category: "", image_url: usual.image_url }, 0)}
           soldOut={Boolean(soldOut)}
           lines={usualLine}

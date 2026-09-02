@@ -1,5 +1,4 @@
-// Nothing else lives in this worker. It is not a cache, it is not offline
-// support — it exists because Web Push requires a service worker to receive.
+
 self.addEventListener("push", (event) => {
   const data = event.data ? event.data.json() : {};
   event.waitUntil(

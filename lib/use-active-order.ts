@@ -12,22 +12,10 @@ export type ActiveOrder = {
   pickup_at: string | null;
 };
 
-/** Statuses that still have something happening to them. */
 const OPEN: OrderStatus[] = ["pending", "paid", "preparing", "ready"];
 
-// ponytail: polls every 15s, same as the confirmation page. Realtime would need
-// an RLS policy guests do not have; swap to a channel if the poll load shows up.
 const POLL_MS = 15_000;
 
-/**
- * The one order the header speaks for: the customer's most recent order that
- * the bar has not finished with. Null when there is nothing on the pass, and
- * the header shows nothing at all.
- *
- * Two ways in, because there are two kinds of customer: a signed-in one reads
- * their own rows through the "orders read own" policy, a guest holds a token in
- * localStorage and trades it for one order through order_by_token().
- */
 export function useActiveOrder(signedIn: boolean): ActiveOrder | null {
   const [order, setOrder] = useState<ActiveOrder | null>(null);
 
@@ -37,8 +25,7 @@ export function useActiveOrder(signedIn: boolean): ActiveOrder | null {
 
     async function read(): Promise<ActiveOrder | null> {
       if (signedIn) {
-        // No .eq("user_id", …) on purpose: the policy scopes this, exactly as
-        // it does on the account's order history.
+
         const { data } = await supabase
           .from("orders")
           .select("order_number, status, pickup_at, placed_at")
@@ -50,7 +37,6 @@ export function useActiveOrder(signedIn: boolean): ActiveOrder | null {
         return data && isRecent(data.placed_at) ? (data as ActiveOrder) : null;
       }
 
-      // Newest first, so the head of the list is the only candidate.
       const [token] = recentOrderTokens();
       if (!token) return null;
 
@@ -71,7 +57,7 @@ export function useActiveOrder(signedIn: boolean): ActiveOrder | null {
     }
 
     tick();
-    // Also the clock: every tick re-renders the countdown, not just the status.
+
     const timer = setInterval(tick, POLL_MS);
 
     return () => {

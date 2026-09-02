@@ -10,12 +10,6 @@ import { numberTransition, pressSpring } from "@/lib/motion";
 import { dayLabel, parOverrides, type ParItem } from "@/lib/service-day";
 import { shopDayKey } from "@/lib/manage";
 
-/**
- * The opening checklist, not a splash. Real job: count what is prepped and
- * open the till before the first order lands — so it reads as a worksheet
- * (dense rows, steppers, a footer that is always in reach) rather than a
- * storefront hero with a headline sitting over empty space.
- */
 export function ServiceClosed({
   items,
   unlocked,

@@ -37,7 +37,6 @@ function sameSelection(a: CartLine, b: CartLine): boolean {
   );
 }
 
-/** Sums quantities of matching lines (same item + same modifiers) instead of duplicating rows. */
 export function mergeCarts(a: CartLine[], b: CartLine[]): CartLine[] {
   const merged = a.map((line) => ({ ...line }));
   for (const line of b) {

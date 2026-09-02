@@ -3,14 +3,6 @@
 import { motion } from "framer-motion";
 import { pressSpring } from "@/lib/motion";
 
-/**
- * The one deliberate tap that opens a shift. It is not a splash screen: it
- * only appears to someone who has already entered their PIN and has no shift
- * running, and the tap is what gets stamped in staff_events.
- *
- * An explicit button, not a "tap anywhere" surface — a workstation should not
- * ask someone to discover that a whole blank screen is a button.
- */
 export function ShiftStart({
   onStart,
   error,

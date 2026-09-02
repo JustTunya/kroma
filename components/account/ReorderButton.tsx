@@ -10,18 +10,13 @@ import { cn } from "@/lib/utils";
 import type { CartLine } from "@/lib/cart";
 
 const VARIANTS = {
-  /** Primary affordance: the filled terracotta pill. */
+
   pill: "flex h-10 items-center rounded-full bg-accent-primary px-5 text-surface-card transition-colors hover:bg-accent-hover disabled:bg-surface-muted disabled:text-text-tertiary",
-  /** Sits at the end of a meta line, the way `+ Add` does on a menu row. */
+
   inline:
     "text-accent-primary transition-colors hover:text-accent-hover disabled:text-text-tertiary",
 } as const;
 
-/**
- * Pushes past lines back into the live cart and sends the customer to checkout.
- * Lines whose item is gone for today are dropped, and said so plainly — the
- * alternative is a checkout that raises on a line the customer never chose.
- */
 export function ReorderButton({
   lines,
   unavailable = [],

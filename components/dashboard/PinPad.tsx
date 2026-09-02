@@ -17,13 +17,6 @@ type RosterEntry = { id: string; display_name: string; role: StaffRole };
 const PIN_LENGTH = 4;
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "del"];
 
-/**
- * Pick a name, then type four digits.
- *
- * Two steps rather than a bare PIN: across a roster four digits collide, and
- * more importantly the person gets to see who the terminal thinks they are
- * before anything they do is attributed to that name.
- */
 export function PinPad({ roster }: { roster: RosterEntry[] }) {
   const router = useRouter();
   const reduced = useReducedMotion();
@@ -57,8 +50,7 @@ export function PinPad({ roster }: { roster: RosterEntry[] }) {
 
     const next = pin + key;
     setPin(next);
-    // Four digits is the whole PIN, so there is no reason to make anyone press
-    // an extra confirm key with a tray in the other hand.
+
     if (next.length === PIN_LENGTH && picked) submit(picked.id, next);
   }
 
@@ -68,9 +60,6 @@ export function PinPad({ roster }: { roster: RosterEntry[] }) {
     setError(null);
   }
 
-  // The physical keypad is the primary input, but a terminal is still a
-  // browser: a keyboard should type digits and Backspace/Escape should do
-  // what they do everywhere else.
   useEffect(() => {
     if (!picked) return;
     function onKey(event: KeyboardEvent) {

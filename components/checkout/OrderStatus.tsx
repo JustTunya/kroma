@@ -41,24 +41,15 @@ export type OrderDoc = {
 
 export function OrderStatus({ token, initial }: { token: string; initial: OrderDoc }) {
   const [order, setOrder] = useState(initial);
-  // Two presses, no modal. Cancelling an order you did mean to place is as bad
-  // as the accident it undoes, and a sheet over a confirmation page is heavier
-  // than the decision.
+
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  // The guest's own record of the order: no account, so the token in
-  // localStorage is the only way back to it — and the header pill reads the
-  // same list to know there is something on the pass.
   useEffect(() => {
     rememberOrderToken(token);
   }, [token]);
 
-  // The order owns these lines now. Deliberately here and not at submit time:
-  // an online order is only real once this page has confirmed the payment, and
-  // until then the cart has to survive for a retry. Both calls are no-ops for
-  // the side that does not apply — writeServerCart ignores guests.
   useEffect(() => {
     clearGuestCart();
     readServerCart()
@@ -66,8 +57,6 @@ export function OrderStatus({ token, initial }: { token: string; initial: OrderD
       .catch((error) => console.error("cart clear failed:", error));
   }, []);
 
-  // ponytail: polls every 15s. Realtime would need an RLS policy guests do not
-  // have; swap to a channel if the poll load ever shows up.
   useEffect(() => {
     if (isSettled(order.status)) return;
 
@@ -84,9 +73,7 @@ export function OrderStatus({ token, initial }: { token: string; initial: OrderD
     setError(null);
     startTransition(async () => {
       const result = await cancelOwnOrderAction(token);
-      // The action reports the status it landed on, not whether everything
-      // worked: a failed refund still cancelled the order, and a refusal
-      // ("already on the bar") left it exactly where it was.
+
       if (result.status) {
         setOrder((current) => ({ ...current, status: result.status! }));
       }
@@ -140,9 +127,7 @@ export function OrderStatus({ token, initial }: { token: string; initial: OrderD
         <div className="mt-8 max-w-md border-t border-hairline pt-6">
           <motion.button
             type="button"
-            // No blur reset: React dispatches blur before click, so disarming
-            // there makes the second press a no-op. An armed button says
-            // "Yes — cancel it" on its face, which is warning enough.
+
             onClick={() => (confirming ? cancel() : setConfirming(true))}
             disabled={pending}
             whileTap={{ scale: 0.98 }}

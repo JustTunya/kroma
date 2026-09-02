@@ -8,15 +8,6 @@ import { spring } from "@/lib/motion";
 import { ORDER_STATUS_LABELS, type OrderStatus } from "@/lib/order-status";
 import type { CartLine } from "@/lib/cart";
 
-/**
- * One past order, given the menu row's treatment: the number at display size,
- * everything else on a mono meta line that slides under the cursor with the
- * reorder affordance riding at its end.
- *
- * ponytail: the row is not a link — /account/orders/[id] is Task 8 of
- * docs/superpowers/plans/2026-08-19-account-dashboard.md and would 404 today.
- * Wrap the number in a Link to that route when it lands.
- */
 export function OrderRow({
   token,
   orderNumber,
@@ -92,8 +83,7 @@ export function OrderRow({
         </span>
 
         {lines.length > 0 && (
-          /* Plain CSS for the reveal: paint, not structure. Always shown where
-             there is no cursor to hover with. */
+
           <span className="flex items-center gap-3 opacity-100 transition-opacity duration-300 lg:opacity-0 lg:group-focus-within:opacity-100 lg:group-hover:opacity-100">
             <span aria-hidden className="text-hairline">
               /

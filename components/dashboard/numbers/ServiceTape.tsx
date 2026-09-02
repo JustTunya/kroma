@@ -8,30 +8,14 @@ import { cn } from "@/lib/utils";
 
 import type { HourSlice } from "@/types/manage";
 
-/**
- * Demand and cover on one axis.
- *
- * Every kitchen dashboard draws a bar chart of orders per hour and stops
- * there, which answers half the question. The half a manager actually acts on
- * is whether anyone was standing there when it hit — so the orders sit above
- * the rule as counted ticks, and the staff time sits below it as a solid
- * block, sharing the hours. A tall stack over a thin block is a morning that
- * went badly, and it reads that way before you have read a single number.
- *
- * Two vocabularies on purpose: demand is discrete and countable, so it is
- * drawn in the hairlines this brand builds everything else from, one per
- * order. Cover is continuous, so it is drawn as mass.
- */
-
-/** How deep the cover block runs below the axis. */
 const COVER = 44;
-/** The shop is open 07:30–18:00, so the axis always shows at least that. */
+
 const OPEN_FROM = 7;
 const OPEN_TO = 17;
 
 export function ServiceTape({
   hours,
-  /** Staff-hours below the axis are a total; over a week they need saying so. */
+
   days,
 }: {
   hours: HourSlice[];
@@ -97,9 +81,7 @@ export function ServiceTape({
                 )} taken, ${(slice.seconds / 3600).toFixed(1)}h cover`}
                 className="group flex min-w-0 flex-1 flex-col justify-end"
               >
-                {/* Demand: one hairline per order, losses stacked on top so a
-                    bad hour is speckled rust at the tip rather than a
-                    separate bar nobody lines up. */}
+                {}
                 <div
                   className="flex flex-col-reverse items-stretch justify-start gap-px overflow-hidden px-[3px]"
                   style={{ height: TAPE_STACK }}
@@ -121,7 +103,7 @@ export function ServiceTape({
 
                 <span className="block h-px w-full bg-kds-border" />
 
-                {/* Cover: mass, not count. */}
+                {}
                 <div style={{ height: COVER }} className="px-[3px]">
                   <motion.span
                     className="block w-full origin-top bg-kds-text-secondary/30"

@@ -7,13 +7,6 @@ import { cn } from "@/lib/utils";
 
 import type { BoardOrder } from "@/types/board";
 
-/**
- * One column of the pass.
- *
- * Columns are split by a left hairline rather than a gap, and rows are divided
- * by hairlines rather than being cards — the same two rules the storefront's
- * menu list follows. No radius, no shadow, no card chrome anywhere.
- */
 export function OrderLane({
   title,
   orders,
@@ -29,7 +22,7 @@ export function OrderLane({
   onAdvance: (order: BoardOrder) => void;
   disabled: boolean;
   empty: string;
-  /** Below lg the rail picks one lane; the rest stay mounted but hidden. */
+
   hiddenOnSmall: boolean;
 }) {
   return (
@@ -40,8 +33,7 @@ export function OrderLane({
         hiddenOnSmall ? "hidden" : "flex",
       )}
     >
-      {/* The rail already names the lane below lg, and repeating it there
-          costs a row of orders on the screen that has fewest. */}
+      {}
       <header className="hidden items-baseline justify-between gap-3 border-b border-kds-border px-5 py-4 lg:flex">
         <h2 className="font-mono text-[10px] font-medium tracking-[0.18em] text-kds-text-secondary uppercase">
           {title}

@@ -60,9 +60,7 @@ export function MenuAdminList({
   const router = useRouter();
   const [activeCategory, setActiveCategory] = useState(categories[0]?.id ?? "");
   const [draft, setDraft] = useState<DraftItem | null>(null);
-  // Bumped every open, so two "+ Item" drafts in a row remount the sheet
-  // instead of one inheriting the other's half-typed fields — a plain
-  // draft.id key can't tell two unsaved drafts apart, since both are null.
+
   const [draftKey, setDraftKey] = useState(0);
 
   const visible = useMemo(

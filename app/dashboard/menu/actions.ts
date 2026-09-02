@@ -10,8 +10,7 @@ import type { DraftItem } from "@/lib/menu-admin";
 
 function afterMenuWrite() {
   revalidatePath("/dashboard/menu");
-  // The storefront is on revalidate = 30, so it would self-heal within half a
-  // minute. A manager who changes a price and reloads expects to see it now.
+
   revalidatePath("/", "page");
 }
 

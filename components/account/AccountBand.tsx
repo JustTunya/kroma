@@ -5,7 +5,6 @@ import { motion, useReducedMotion } from "framer-motion";
 import { PunchCard } from "@/components/account/PunchCard";
 import { glide, lineReveal } from "@/lib/reveal";
 
-/** A display line arriving from behind its own clip, hero choreography. */
 function Line({ delay, children }: { delay: number; children: React.ReactNode }) {
   const reduced = useReducedMotion();
 
@@ -24,10 +23,6 @@ function Line({ delay, children }: { delay: number; children: React.ReactNode })
   );
 }
 
-/**
- * The account's one dark surface. It carries the greeting and the card, because
- * the card is the reason to come back and a section three scrolls down is not.
- */
 export function AccountBand({
   greeting,
   name,

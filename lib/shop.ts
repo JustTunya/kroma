@@ -1,10 +1,4 @@
-/**
- * The shop's own details, for the receipt. Literal, from CLAUDE.md §1 — one
- * shop, one address, one set of hours.
- *
- * ponytail: hardcoded. If a second shop ever opens, this becomes a
- * shop_settings row read behind shop.settings, not a bigger constant.
- */
+
 export const SHOP = {
   name: "KROMA Coffee & Bakehouse",
   address: "Str. Universității 12, Cluj-Napoca, Romania",

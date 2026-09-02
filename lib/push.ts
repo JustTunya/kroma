@@ -19,12 +19,6 @@ function configure() {
   configured = true;
 }
 
-/**
- * Pushes to every live subscription on the order, deleting any endpoint that
- * comes back 404 or 410 — a dead endpoint that is never cleaned up is how a
- * push table rots. Falls back to sendEmail when the order has an address and
- * no live subscription (or push is not configured at all).
- */
 export async function notifyReady(orderId: string): Promise<void> {
   const db = admin();
 

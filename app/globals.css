@@ -114,7 +114,6 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
-/* Horizontal category rail scrolls without a visible scrollbar. */
 @utility scrollbar-hide {
   scrollbar-width: none;
   &::-webkit-scrollbar {
@@ -134,7 +133,6 @@
   }
 }
 
-/* The receipt is a document, not a page. 58mm is the common thermal roll. */
 @media print {
   @page {
     size: 58mm auto;

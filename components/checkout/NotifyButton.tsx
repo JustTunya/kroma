@@ -6,7 +6,6 @@ import { setReceiptEmailAction, subscribeToOrderAction } from "@/app/order/actio
 
 type Support = "checking" | "push" | "granted" | "email";
 
-/** Base64url VAPID key → the Uint8Array applicationServerKey expects. */
 function urlBase64ToUint8Array(base64: string): Uint8Array {
   const padding = "=".repeat((4 - (base64.length % 4)) % 4);
   const raw = atob((base64 + padding).replace(/-/g, "+").replace(/_/g, "/"));
@@ -19,11 +18,6 @@ export function NotifyButton({ token }: { token: string }) {
   const [emailSent, setEmailSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Feature detection can only happen on the client, after hydration — an
-  // SSR pass has no navigator to check. That's exactly what an effect is
-  // for: reading state from an external system on mount. "checking" (nothing
-  // rendered) is what keeps the server and the first client paint identical,
-  // so this never causes a hydration mismatch.
   useEffect(() => {
     const detected: Support =
       !("serviceWorker" in navigator) || !("PushManager" in window)
@@ -109,8 +103,6 @@ export function NotifyButton({ token }: { token: string }) {
     );
   }
 
-  // Denied, or no PushManager — iOS Safari outside a home-screen app. One
-  // working path on every device, same position, same weight.
   if (emailSent) {
     return (
       <p className="mt-5 font-mono text-[10px] font-medium tracking-[0.18em] text-badge-live uppercase">

@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/server";
 
-/** Google redirects back here with a PKCE code to exchange. */
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
@@ -14,8 +13,7 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      // Behind a load balancer the origin is the internal host, so trust the
-      // forwarded one in production.
+
       const forwardedHost = request.headers.get("x-forwarded-host");
       const base =
         process.env.NODE_ENV === "development" || !forwardedHost

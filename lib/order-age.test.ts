@@ -1,4 +1,4 @@
-// node --test lib/order-age.test.ts
+
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
@@ -51,6 +51,6 @@ test("the label counts m:ss — a bar reads numbers, not 'about 3 minutes'", () 
 test("past an hour it switches to h:mm, so a stale order is legible", () => {
   assert.equal(elapsedLabel(minutesAgo(60), NOW), "1h00");
   assert.equal(elapsedLabel(minutesAgo(95), NOW), "1h35");
-  // The case that made this necessary: an order left overnight read 4697:19.
+
   assert.equal(elapsedLabel(minutesAgo(4697), NOW), "78h17");
 });

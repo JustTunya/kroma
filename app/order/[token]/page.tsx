@@ -26,7 +26,7 @@ export default async function OrderPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
-  // Guard before the RPC: a non-uuid would raise 22P02 rather than 404.
+
   if (!UUID.test(token)) notFound();
 
   const supabase = await createClient();
@@ -53,19 +53,14 @@ export default async function OrderPage({
         aria-label="Your order"
         className="flex-1 px-5 pt-32 pb-24 sm:px-10 lg:px-14 lg:pt-40 lg:pb-32"
       >
-        {/* The ticket and what it's doing live in one place, on the right on
-            desktop, so it stays in view while a long order scrolls past on
-            the left — same split as the menu's sticky preview. On a phone
-            this block comes first: the number and its status are the thing
-            being checked, the line items are what gets scrolled to. */}
+        {}
         <div className="lg:grid lg:grid-cols-[1fr_380px] lg:items-start lg:gap-16">
           <div className="lg:order-2 lg:sticky lg:top-32">
             <p className="font-mono text-[10px] font-medium tracking-[0.18em] text-accent-primary uppercase">
               {order.customer_name ?? "Collected at the bar"}
             </p>
 
-            {/* The bar calls the day's ticket, not the all-time one. order_number stays as
-                the permanent id behind the ledger; day_number is what a person says out loud. */}
+            {}
             <h1 className="mt-5 font-serif text-[clamp(56px,10vw,148px)] leading-[0.92] tracking-[-0.03em] tabular-nums text-text-primary lg:text-[clamp(56px,7vw,104px)]">
               #{String(order.day_number ?? order.order_number).padStart(3, "0")}
             </h1>

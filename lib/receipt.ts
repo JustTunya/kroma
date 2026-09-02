@@ -1,18 +1,8 @@
-/**
- * The document body, shared by the receipt page and the receipt email — one
- * builder for both, so a `<pre>` and a plain-text send can never drift.
- * Mirrors order_receipt() in 20260901094000_receipts.sql.
- *
- * No import of lib/shop.ts or lib/vat.ts: every lib/*.ts pure module here runs
- * standalone under `node --test`, which has no path-alias resolver, so the
- * handful of lines each would contribute are inlined instead.
- */
 
 const SHOP_NAME = "KROMA Coffee & Bakehouse";
 const SHOP_ADDRESS = "Str. Universității 12, Cluj-Napoca, Romania";
 const SHOP_VAT_ID = process.env.NEXT_PUBLIC_SHOP_VAT_ID ?? "RO00000000";
 
-/** `Incl. VAT 11%`. Mirrors lib/vat.ts's vatLabel — kept in step by hand. */
 function vatLabel(rate: number): string {
   return `Incl. VAT ${Math.round(rate * 100)}%`;
 }
@@ -43,7 +33,6 @@ const WIDTH = 32;
 const RULE = "-".repeat(WIDTH);
 const money = (n: number) => `€${n.toFixed(2)}`;
 
-/** Left text, right amount, padded to the receipt's column width. */
 function row(left: string, right: string): string {
   const gap = Math.max(1, WIDTH - left.length - right.length);
   return left + " ".repeat(gap) + right;

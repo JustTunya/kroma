@@ -12,25 +12,12 @@ import {
 } from "@/lib/cart";
 import { readServerCart, writeServerCart } from "@/lib/cart-sync";
 
-/**
- * The one cart owner. Guests live in localStorage, signed-in customers in the
- * `carts` table; signing in merges the two.
- *
- * `ready` is false until hydration finishes — /checkout must not decide the
- * cart is empty before it has been read.
- */
 export function useCart(signedIn: boolean) {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [ready, setReady] = useState(false);
 
-  // Mirrors `lines` synchronously. `addMany`/`setQuantity`/`remove` read and write
-  // this instead of the closed-over `lines` state, so N calls in the same tick
-  // (e.g. ReorderButton's `for (const line of lines) add(line)`) each compose onto
-  // the previous call's result instead of racing on the same stale render snapshot
-  // — `setLines` alone wouldn't do this, since it only takes effect on the next render.
   const linesRef = useRef<CartLine[]>([]);
 
-  // ponytail: hydrate once on mount / sign-in change; no realtime cross-tab sync yet.
   useEffect(() => {
     let cancelled = false;
 
@@ -54,7 +41,7 @@ export function useCart(signedIn: boolean) {
           await writeServerCart(merged);
           clearGuestCart();
         } catch (error) {
-          // Server write failed — keep the guest copy so nothing is lost.
+
           console.error("cart merge failed:", error);
         }
       }
@@ -85,8 +72,6 @@ export function useCart(signedIn: boolean) {
     [signedIn],
   );
 
-  // Merges a whole batch onto `linesRef.current` in one persist call. `add` is
-  // just `addMany` of one — one merge path, not two.
   const addMany = useCallback(
     (newLines: CartLine[]) => persist(mergeCarts(linesRef.current, newLines)),
     [persist],

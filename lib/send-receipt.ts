@@ -4,11 +4,6 @@ import { admin } from "@/lib/admin";
 import { sendEmail } from "@/lib/email";
 import { receiptText, type Receipt } from "@/lib/receipt";
 
-/**
- * Idempotent by receipt_sent_at, which is what makes a Stripe webhook retry
- * harmless. Returns quietly on every failure: an order is not less placed
- * because an email bounced.
- */
 export async function sendReceipt(orderId: string): Promise<void> {
   const db = admin();
   const { data } = await db

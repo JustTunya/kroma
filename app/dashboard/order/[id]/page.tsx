@@ -24,9 +24,6 @@ export default async function OrderPage({
 
   if (!order) notFound();
 
-  // The audit trail is manager+, matching the RLS policy on staff_events.
-  // Asking for it as a barista would come back empty anyway; not asking keeps
-  // the page honest about why it is not there.
   const canRead = actor ? staffCan(actor.role, "analytics.view") : false;
 
   const { data: events } = canRead

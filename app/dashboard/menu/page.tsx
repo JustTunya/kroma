@@ -18,8 +18,7 @@ export default async function MenuAdminPage() {
   if (!staffCan(actor.role, "menu.edit")) redirect("/dashboard/board");
 
   const supabase = await createClient();
-  // Every category and every item, is_active = false included — this page is
-  // the one place that must see what the storefront hides.
+
   const [{ data: categories }, { data: items }] = await Promise.all([
     supabase.from("menu_categories").select("*").order("sort_order"),
     supabase.from("menu_items").select("*").order("sort_order"),

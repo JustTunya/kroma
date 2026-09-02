@@ -4,10 +4,6 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
-/**
- * The only place mid-service that answers "did anyone actually open?". Text and
- * not an icon, because the state matters more than the affordance.
- */
 export function DayPill({ openedAt }: { openedAt: string | null }) {
   const clock = openedAt
     ? new Date(openedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })

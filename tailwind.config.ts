@@ -8,8 +8,7 @@ export default {
         "surface-card": "#FFFFFF",
         "surface-muted": "#EFECE4",
         "border-subtle": "#E4DFD5",
-        // The menu rules carry the layout now, so they need a touch more weight
-        // than border-subtle, which vanishes at 1px on the canvas.
+
         hairline: "#DCD6CA",
         "border-focus": "#1A1816",
         "text-primary": "#1A1816",

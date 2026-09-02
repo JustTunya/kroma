@@ -1,4 +1,4 @@
-// node --test lib/checkout.test.ts
+
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
@@ -52,7 +52,7 @@ test("isOrderable rejects an empty cart", () => {
 });
 
 test("packItems/unpackItems survive a cart bigger than one metadata value", () => {
-  // 50 lines is the cap create_order enforces — the worst case must still fit.
+
   const items = Array.from({ length: 50 }, (_, index) => ({
     menu_item_id: `2222222${index % 10}-2222-2222-2222-222222222222`,
     quantity: (index % 9) + 1,
@@ -60,7 +60,7 @@ test("packItems/unpackItems survive a cart bigger than one metadata value", () =
   }));
 
   const packed = packItems(items);
-  // More than eleven chunks, so alphabetical key order would scramble it.
+
   assert.ok(Object.keys(packed).length > 11);
   for (const value of Object.values(packed)) assert.ok(value.length <= 500);
   assert.ok(Object.keys(packed).length <= 50, "would not fit in Stripe metadata");
@@ -73,6 +73,6 @@ test("unpackItems refuses anything it cannot trust", () => {
   assert.equal(unpackItems({}), null);
   assert.equal(unpackItems({ items_0: "{not json" }), null);
   assert.equal(unpackItems({ items_0: "[]" }), null);
-  // A gap means a lost chunk — never build a half order out of it.
+
   assert.equal(unpackItems({ items_1: '[{"menu_item_id":"x"}]' }), null);
 });

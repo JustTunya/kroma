@@ -1,4 +1,4 @@
-// node --test lib/staff-session.test.ts
+
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
@@ -46,8 +46,7 @@ test("garbage is rejected without throwing", () => {
   assert.equal(readActor("", SECRET, NOW), null);
   assert.equal(readActor("not-a-token", SECRET, NOW), null);
   assert.equal(readActor("a.b.c", SECRET, NOW), null);
-  // A signature of a different length must not reach timingSafeEqual, which
-  // throws on mismatched buffers rather than returning false.
+
   assert.equal(readActor("abc.short", SECRET, NOW), null);
 });
 
@@ -55,7 +54,7 @@ test("a payload with no expiry is rejected", () => {
   const body = Buffer.from(JSON.stringify({ staffId: "x" })).toString(
     "base64url",
   );
-  // Sign it properly: the point is that a valid signature is not enough.
+
   const token = signActor(
     { ...payload, exp: NOW.getTime() + ACTOR_TTL_MS },
     SECRET,

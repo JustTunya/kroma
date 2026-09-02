@@ -3,7 +3,6 @@
 import { Marquee, type MarqueeEntry } from "@/components/Marquee";
 import type { MenuItem } from "@/types/menu";
 
-/** The day as the bakehouse actually runs it: hours, plus what is left of each batch. */
 function ledger(items: MenuItem[], serviceOpen: boolean): MarqueeEntry[] {
   const batches = items
     .filter((item) => item.daily_stock !== null)

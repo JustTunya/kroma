@@ -40,8 +40,6 @@ export default function UpdatePasswordPage() {
 
     setPending(true);
 
-    // The recovery link already put a session in place, so this updates the
-    // signed-in user directly.
     const { error } = await createClient().auth.updateUser({ password });
 
     if (error) {

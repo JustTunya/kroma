@@ -5,19 +5,6 @@ import { getStripe } from "@/lib/stripe";
 
 export type RefundResult = { ok: boolean; error?: string };
 
-/**
- * Hands the money back for an order the database has already settled.
- *
- * Called only when the RPC says `refund_owed`, and deliberately AFTER it: the
- * `for update` inside advance_order() and cancel_order_by_token() is what makes
- * a double-tapped void impossible to turn into a double refund. The idempotency
- * key is the second belt — a retry of this function is a no-op at Stripe.
- *
- * Reads the payment intent with the service-role client because it is the one
- * column no projection carries: staff_order() and order_by_token() both leave
- * the stripe_* columns out on purpose, and this is the only caller that needs
- * one. That is why admin() is imported here rather than in the actions.
- */
 export async function refundOrder(orderId: string, amountEuros?: number): Promise<RefundResult> {
   const { data, error } = await admin()
     .from("orders")
@@ -30,7 +17,6 @@ export async function refundOrder(orderId: string, amountEuros?: number): Promis
     return { ok: false, error: "The payment could not be found — settle it in Stripe." };
   }
 
-  // Cash at the counter. The till is the refund; there is nothing to call.
   if (!data.stripe_payment_intent_id) return { ok: true };
 
   const cents =
@@ -42,8 +28,7 @@ export async function refundOrder(orderId: string, amountEuros?: number): Promis
         payment_intent: data.stripe_payment_intent_id,
         ...(cents !== undefined && { amount: cents }),
       },
-      // A partial refund and a later full one are two different refunds —
-      // reusing one idempotency key would silently make the second a no-op.
+
       { idempotencyKey: `refund_${orderId}_${cents ?? "all"}` },
     );
     return { ok: true };

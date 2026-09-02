@@ -19,10 +19,6 @@ import { useActiveOrder } from "@/lib/use-active-order";
 import { cn } from "@/lib/utils";
 import { Wordmark } from "@/components/Logo";
 
-// motion.create wraps the anchor itself — a motion.div wrapper here would add
-// its own tabIndex (Framer Motion makes tap-gesture elements keyboard
-// operable), giving "Sign in" two consecutive stops in the tab order for one
-// link.
 const MotionLink = motion.create(Link);
 
 type StorefrontHeaderProps = {
@@ -42,8 +38,6 @@ export function StorefrontHeader({
   const [onCanvas, setOnCanvas] = useState(false);
   const active = useActiveOrder(signedIn);
 
-  // The bar's own wording for the state, then the minutes left. A ready order
-  // has no minutes — it is waiting, and the compact pill says so on its own.
   const statusText = active ? ORDER_STATUS_LABELS[active.status].text : null;
   const countdown = active
     ? pickupCountdown(active.status, active.pickup_at)

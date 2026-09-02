@@ -12,7 +12,6 @@ export type ActionResult = { ok: boolean; message?: string };
 const SIGN_IN: ActionResult = { ok: false, message: "Sign in first." };
 const SAVED: ActionResult = { ok: true, message: "Saved." };
 
-/** Keeps the checked values to the vocabulary the menu uses. Junk is dropped, not rejected. */
 function pick(formData: FormData, field: string, allowed: readonly string[]): string[] {
   return formData
     .getAll(field)
@@ -32,7 +31,6 @@ export async function saveProfile(formData: FormData): Promise<ActionResult> {
   const { supabase, user } = await currentUser();
   if (!user) return SIGN_IN;
 
-  // Trust boundary. RLS scopes the write to this row; this pass keeps junk out.
   const name = String(formData.get("display_name") ?? "").trim().slice(0, 80);
   const barName = String(formData.get("bar_name") ?? "").trim().slice(0, 40);
   const phone = String(formData.get("phone") ?? "").trim().slice(0, 32);
@@ -53,7 +51,6 @@ export async function saveProfile(formData: FormData): Promise<ActionResult> {
     return { ok: false, message: "That did not save. Try again." };
   }
 
-  // The greeting on /account and the prefilled name at /checkout both read this.
   revalidatePath("/account", "layout");
   revalidatePath("/checkout");
   return SAVED;
@@ -74,7 +71,6 @@ export async function saveDiet(formData: FormData): Promise<ActionResult> {
     return { ok: false, message: "That did not save. Try again." };
   }
 
-  // Checkout reads these to decide what to flag, so it has to see the new set.
   revalidatePath("/account/settings");
   revalidatePath("/checkout");
   return SAVED;
@@ -98,7 +94,6 @@ export async function savePreferences(formData: FormData): Promise<ActionResult>
   return SAVED;
 }
 
-/** Ends every session on every device, this one included, and lands on the storefront. */
 export async function signOutEverywhere(): Promise<ActionResult> {
   const { supabase, user } = await currentUser();
   if (!user) return SIGN_IN;
@@ -112,14 +107,6 @@ export async function signOutEverywhere(): Promise<ActionResult> {
   redirect("/");
 }
 
-/**
- * Deletes the account for good. profiles, carts and favourites cascade;
- * orders.user_id is `on delete set null`, so the bakehouse keeps its records
- * and the customer is anonymised out of them.
- *
- * The service role is required — a user cannot delete themselves from auth via
- * the publishable key. This is its only use outside the Stripe webhook and the cron.
- */
 export async function deleteAccount(formData: FormData): Promise<ActionResult> {
   if (String(formData.get("confirm")) !== "DELETE") {
     return { ok: false, message: "Type DELETE to confirm." };

@@ -7,8 +7,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "The pass — KROMA",
-  // Unlinked from the storefront and out of every index. Surface reduction,
-  // not a security control: the boundary is RLS plus the proxy gate.
+
   robots: { index: false, follow: false },
 };
 
@@ -25,8 +24,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-dvh bg-kds-canvas text-kds-text-primary">
-      {/* The pill is in the header and the socket is in the page. This is what
-          lets the second tell the first what it is hearing. */}
+      {}
       <BoardStatusProvider>
         <StaffBar
           actorName={actor?.name ?? null}
@@ -35,8 +33,7 @@ export default async function DashboardLayout({
           canEditMenu={actor ? staffCan(actor.role, "menu.edit") : false}
           dayOpenedAt={day?.opened_at ?? null}
         />
-        {/* h-14, one line shorter than the storefront header: a bar screen owes
-            every pixel it can to the orders. */}
+        {}
         <main className="pt-14">{children}</main>
       </BoardStatusProvider>
     </div>

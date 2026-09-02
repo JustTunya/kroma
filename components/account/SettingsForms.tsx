@@ -10,12 +10,9 @@ import type { ActionResult } from "@/app/account/actions";
 
 type Action = (formData: FormData) => Promise<ActionResult>;
 
-/* ------------------------------------------------------------------ shared */
-
 const LABEL =
   "block font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase";
 
-/** The checkout's hairline underline, not a boxed input — the page has no cards. */
 const FIELD =
   "mt-2 h-11 w-full max-w-sm border-b border-hairline bg-transparent font-mono text-[15px] tracking-[0.02em] text-text-primary placeholder:text-text-tertiary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus";
 
@@ -28,11 +25,10 @@ function useAction(action: Action) {
   );
 }
 
-/** The one status line a form ever shows. Swaps on the number token so a second save reads. */
 function Result({ state }: { state: ActionResult | null }) {
   return (
     <span aria-live="polite" className="block min-h-5">
-      {/* wait, not popLayout: two different sentences overlapping mid-swap reads as a collision. */}
+      {}
       <AnimatePresence mode="wait" initial={false}>
         {state?.message && (
           <motion.span
@@ -65,7 +61,6 @@ function Save({ pending, children = "Save" }: { pending: boolean; children?: Rea
   );
 }
 
-/** Footer row every form shares: the button on the left, its verdict beside it. */
 function Commit({ pending, state, label }: { pending: boolean; state: ActionResult | null; label?: string }) {
   return (
     <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
@@ -75,11 +70,6 @@ function Commit({ pending, state, label }: { pending: boolean; state: ActionResu
   );
 }
 
-/**
- * CategoryNav's pill, wrapped around a real checkbox. The input stays in the
- * form so FormData does the collecting; `has-[:checked]` does the fill, so the
- * pill is right even before React hydrates.
- */
 function TogglePill({
   name,
   value,
@@ -110,8 +100,6 @@ function TogglePill({
   );
 }
 
-/* ----------------------------------------------------------------- profile */
-
 export function ProfileForm({
   action,
   displayName,
@@ -125,8 +113,6 @@ export function ProfileForm({
 }) {
   const [state, formAction, pending] = useAction(action);
 
-  // Controlled, because React resets an uncontrolled form once its action
-  // resolves — a rejected phone number would take the other two fields with it.
   const [fields, setFields] = useState({
     display_name: displayName,
     bar_name: barName,
@@ -188,9 +174,6 @@ export function ProfileForm({
   );
 }
 
-/* -------------------------------------------------------------------- diet */
-
-/** Toggling a set of strings, which is all both rails do. */
 function useTagSet(initial: string[]) {
   const [tags, setTags] = useState(() => new Set(initial));
   return {
@@ -258,7 +241,7 @@ export function DietForm({
         </div>
       </fieldset>
 
-      {/* Reads back what the pass will see, and updates before you save. */}
+      {}
       <p
         role="status"
         className="mt-10 flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-hairline py-5 font-mono text-[11px] font-medium tracking-[0.14em] uppercase"
@@ -288,12 +271,6 @@ export function DietForm({
   );
 }
 
-/* ------------------------------------------------------------- preferences */
-
-/**
- * One switch, so no Save button: the form submits itself on change. The status
- * line is the confirmation the button would have given.
- */
 export function PreferencesForm({
   action,
   marketingOptIn,
@@ -302,8 +279,7 @@ export function PreferencesForm({
   marketingOptIn: boolean;
 }) {
   const [state, formAction, pending] = useAction(action);
-  // Controlled for the same reason as ProfileForm: an uncontrolled box snaps
-  // back to its old state the moment the action resolves.
+
   const [on, setOn] = useState(marketingOptIn);
 
   return (
@@ -338,9 +314,6 @@ export function PreferencesForm({
   );
 }
 
-/* ---------------------------------------------------------------- security */
-
-/** The only action here with nothing to submit, so it takes no FormData. */
 export function SignOutEverywhereForm({ action }: { action: () => Promise<ActionResult> }) {
   const [state, formAction, pending] = useActionState<ActionResult | null, FormData>(
     () => action(),
@@ -368,8 +341,6 @@ export function SignOutEverywhereForm({ action }: { action: () => Promise<Action
     </form>
   );
 }
-
-/* ------------------------------------------------------------------ delete */
 
 export function DeleteAccountForm({ action }: { action: Action }) {
   const [state, formAction, pending] = useAction(action);

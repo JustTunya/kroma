@@ -6,12 +6,10 @@ import { conflicts, hasPrefs, passLine, type DietaryPrefs, type ItemDietary } fr
 import { glide } from "@/lib/reveal";
 import type { CartLine } from "@/lib/cart";
 
-/** Keyed by menu_items.id — what the kitchen says is in each thing on the menu. */
 export type DietaryIndex = Record<string, ItemDietary>;
 
 type Flagged = { id: string; name: string; reasons: string[] };
 
-/** Every line on the pass that breaks the customer's settings, with the why. */
 export function flaggedLines(
   lines: CartLine[],
   prefs: DietaryPrefs,
@@ -27,15 +25,6 @@ export function flaggedLines(
   });
 }
 
-/**
- * The notice at the top of checkout. It names what does not match and why, and
- * then gets out of the way — nothing here disables the Pay button. People buy
- * for other people, and a stored preference is not a good enough reason to
- * refuse someone's money.
- *
- * Peach band on `accent-subtle` between two hairlines: loud enough to read
- * before the name field, quiet enough not to look like a failed payment.
- */
 export function DietaryWarning({ flagged, prefs }: { flagged: Flagged[]; prefs: DietaryPrefs }) {
   const reduced = useReducedMotion();
 
@@ -50,14 +39,14 @@ export function DietaryWarning({ flagged, prefs }: { flagged: Flagged[]; prefs: 
       initial={reduced ? false : { opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={glide}
-      /* The band spans the viewport; main's gutters are given back inside it. */
+
       className="-mx-5 border-y border-hairline bg-accent-subtle px-5 py-8 sm:-mx-10 sm:px-10 lg:-mx-14 lg:px-14"
     >
       <p className="font-mono text-[10px] font-medium tracking-[0.18em] text-badge-alert uppercase">
         {count === 1 ? "One thing does not match" : `${count} things do not match`}
       </p>
 
-      {/* Name over its reasons, the same shape as a menu row's meta line. */}
+      {}
       <ul className="mt-6 divide-y divide-hairline border-y border-hairline">
         {flagged.map((line) => (
           <li key={line.id} className="py-4">

@@ -1,12 +1,4 @@
-/**
- * The TypeScript half of staff_can().
- *
- * Its ONLY job is hiding buttons a person cannot use. The authorization
- * decision is made in SQL, inside the security definer RPC, every single time —
- * advance_order() re-reads the role from the database and does not trust
- * anything the client sends. staff-permissions.test.ts and staff.test.sql
- * assert the same table, which is what keeps the two from drifting.
- */
+
 export const STAFF_ROLES = ["owner", "manager", "staff"] as const;
 export type StaffRole = (typeof STAFF_ROLES)[number];
 
@@ -39,14 +31,11 @@ export function staffCan(role: StaffRole, action: StaffAction): boolean {
     case "order.advance":
     case "order.note":
     case "order.claim":
-    // The person who finds the tray empty is the one holding it. Making them
-    // fetch a manager means the storefront keeps selling something that is gone.
+
     case "item.86":
-    // Nothing moves: the drink was made and the customer paid for it. Doing it
-    // EARLY is still a manager's call — advance_order() re-routes an abandon
-    // inside the half hour to order.void.
+
     case "order.abandon":
-    // The first person in opens the shop. Same reasoning as item.86.
+
     case "shop.open":
       return true;
     case "order.void":
@@ -56,19 +45,18 @@ export function staffCan(role: StaffRole, action: StaffAction): boolean {
     case "customer.contact":
     case "menu.edit":
     case "analytics.view":
-    // The drawer is money, not bread.
+
     case "shop.close":
       return MANAGER_UP.includes(role);
     case "staff.manage":
     case "shop.settings":
       return role === "owner";
     default:
-      // A typo denies rather than grants.
+
       return false;
   }
 }
 
-/** How a role is named on screen. "Bar" reads better over a pass than "Staff". */
 export const ROLE_LABELS: Record<StaffRole, string> = {
   owner: "Owner",
   manager: "Manager",

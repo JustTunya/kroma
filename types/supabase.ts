@@ -264,6 +264,7 @@ export type Database = {
           collected_at: string | null
           customer_name: string | null
           day_number: number | null
+          discount_reason: string | null
           discount_total: number
           expires_at: string | null
           id: string
@@ -273,6 +274,8 @@ export type Database = {
           pickup_at: string | null
           placed_at: string
           ready_at: string | null
+          receipt_email: string | null
+          receipt_sent_at: string | null
           service_day: string | null
           settled_as: string | null
           started_at: string | null
@@ -291,6 +294,7 @@ export type Database = {
           collected_at?: string | null
           customer_name?: string | null
           day_number?: number | null
+          discount_reason?: string | null
           discount_total?: number
           expires_at?: string | null
           id?: string
@@ -300,6 +304,8 @@ export type Database = {
           pickup_at?: string | null
           placed_at?: string
           ready_at?: string | null
+          receipt_email?: string | null
+          receipt_sent_at?: string | null
           service_day?: string | null
           settled_as?: string | null
           started_at?: string | null
@@ -318,6 +324,7 @@ export type Database = {
           collected_at?: string | null
           customer_name?: string | null
           day_number?: number | null
+          discount_reason?: string | null
           discount_total?: number
           expires_at?: string | null
           id?: string
@@ -327,6 +334,8 @@ export type Database = {
           pickup_at?: string | null
           placed_at?: string
           ready_at?: string | null
+          receipt_email?: string | null
+          receipt_sent_at?: string | null
           service_day?: string | null
           settled_as?: string | null
           started_at?: string | null
@@ -575,6 +584,7 @@ export type Database = {
           collected_at: string | null
           customer_name: string | null
           day_number: number | null
+          discount_reason: string | null
           discount_total: number
           expires_at: string | null
           id: string
@@ -584,6 +594,8 @@ export type Database = {
           pickup_at: string | null
           placed_at: string
           ready_at: string | null
+          receipt_email: string | null
+          receipt_sent_at: string | null
           service_day: string | null
           settled_as: string | null
           started_at: string | null
@@ -746,6 +758,7 @@ export type Database = {
         }
       }
       order_by_token: { Args: { p_token: string }; Returns: Json }
+      order_receipt: { Args: { p_token: string }; Returns: Json }
       order_lines: {
         Args: { p_items: Json; p_lock: boolean; p_redeem_item_id?: string }
         Returns: Json
@@ -767,6 +780,10 @@ export type Database = {
       }
       release_expired_orders: { Args: never; Returns: number }
       release_order: { Args: { p_order_id: string }; Returns: boolean }
+      set_receipt_email: {
+        Args: { p_email: string; p_token: string }
+        Returns: boolean
+      }
       service_report: {
         Args: { p_actor: string; p_day: string }
         Returns: Json

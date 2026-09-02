@@ -32,6 +32,7 @@ export default async function DashboardLayout({
           actorName={actor?.name ?? null}
           onShift={Boolean(shiftSince)}
           canSeeNumbers={actor ? staffCan(actor.role, "analytics.view") : false}
+          canEditMenu={actor ? staffCan(actor.role, "menu.edit") : false}
           dayOpenedAt={day?.opened_at ?? null}
         />
         {/* h-14, one line shorter than the storefront header: a bar screen owes

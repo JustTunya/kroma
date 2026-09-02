@@ -17,6 +17,12 @@ declare
   v_released boolean;
   v_count    integer;
 begin
+  -- create_order() now refuses a closed shop. Every fixture opens the day.
+  -- next_number is reset too so a stray real-world count doesn't leak into
+  -- this test's ticket numbers -- safe only because this whole file rolls back.
+  insert into service_days (day) values ((now() at time zone shop_tz())::date)
+  on conflict (day) do update set closed_at = null, next_number = 1;
+
   -------------------------------------------------- order_by_token round trip
   -- Two lines of the SAME item: proves the release aggregates instead of
   -- restoring only one of them.

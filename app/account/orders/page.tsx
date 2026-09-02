@@ -16,6 +16,7 @@ type OrderItem = {
   quantity: number;
   selected_modifiers: { group: string; option: string; priceOffset: number }[];
   menu_item_id: string | null;
+  vat_rate: number;
   menu_items: { daily_stock: number | null } | null;
 };
 
@@ -56,7 +57,7 @@ export default async function OrdersPage({
   const { data: orders, count } = await supabase
     .from("orders")
     .select(
-      "id, order_number, status, total, placed_at, order_items(item_name, base_price, quantity, selected_modifiers, menu_item_id, menu_items(daily_stock))",
+      "id, access_token, order_number, day_number, status, total, placed_at, order_items(item_name, base_price, quantity, selected_modifiers, menu_item_id, vat_rate, menu_items(daily_stock))",
       { count: "exact" },
     )
     .order("placed_at", { ascending: false })
@@ -74,8 +75,12 @@ export default async function OrdersPage({
 
     return {
       id: order.id,
+      token: order.access_token,
       month: month(order.placed_at),
-      orderNumber: order.order_number,
+      // The bar calls the day's ticket, not the all-time one. order_number stays
+      // as the permanent id behind the ledger; day_number is what a person says
+      // out loud.
+      orderNumber: order.day_number ?? order.order_number,
       date: day(order.placed_at),
       summary: summarize(items),
       status: order.status as OrderStatus,
@@ -91,6 +96,7 @@ export default async function OrdersPage({
         quantity: item.quantity,
         selectedModifiers: item.selected_modifiers,
         imageUrl: menuImage({ name: item.item_name, category: "", image_url: null }, index),
+        vatRate: item.vat_rate,
       })),
     };
   });
@@ -124,6 +130,7 @@ export default async function OrdersPage({
                 {group.rows.map((row) => (
                   <OrderRow
                     key={row.id}
+                    token={row.token}
                     orderNumber={row.orderNumber}
                     date={row.date}
                     summary={row.summary}

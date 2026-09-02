@@ -6,10 +6,11 @@ import { useState, useTransition } from "react";
 import { motion } from "framer-motion";
 
 import { advanceOrderAction, noteOrderAction } from "@/app/dashboard/actions";
+import { DiscountSheet } from "@/components/dashboard/DiscountSheet";
 import { pressSpring } from "@/lib/motion";
 import { isStale } from "@/lib/order-age";
 import { ORDER_STATUS_LABELS } from "@/lib/order-status";
-import { ADVANCE_LABELS, NEXT_STATUS, PREV_STATUS } from "@/lib/order-transitions";
+import { ADVANCE_LABELS, NEXT_STATUS, PREV_STATUS, TENDERS, TENDER_LABELS, type Tender } from "@/lib/order-transitions";
 import { staffCan } from "@/lib/staff-permissions";
 
 import type { OrderStatus } from "@/lib/order-status";
@@ -53,6 +54,8 @@ export function OrderDetail({
 
   const canVoid = role ? staffCan(role, "order.void") : false;
   const canRefund = role ? staffCan(role, "order.refund") : false;
+  const canDiscount = role ? staffCan(role, "order.discount") : false;
+  const [discounting, setDiscounting] = useState(false);
   // Half an hour on the bar is when the board stops calling it late and starts
   // calling it nobody's. Before that the button is still there but the RPC
   // charges it to order.void, so a barista gets "Not yours to do."
@@ -62,10 +65,10 @@ export function OrderDetail({
   const next = NEXT_STATUS[order.status];
   const previous = PREV_STATUS[order.status];
 
-  function move(to: OrderStatus) {
+  function move(to: OrderStatus, tender?: Tender) {
     setError(null);
     startTransition(async () => {
-      const result = await advanceOrderAction(order.id, to);
+      const result = await advanceOrderAction(order.id, to, tender);
       // Always refresh: a failed refund still moved the order, and the page
       // must not go on showing the old lane while the error says otherwise.
       router.refresh();
@@ -111,12 +114,14 @@ export function OrderDetail({
           {order.bar_name ?? order.customer_name ?? "Guest"}
         </h1>
         <span className="shrink-0 font-mono text-[28px] font-medium tabular-nums">
-          {order.order_number}
+          {order.day_number ?? order.order_number}
         </span>
       </div>
 
       <p className="mt-5 font-mono text-[11px] tracking-[0.14em] text-kds-text-secondary uppercase">
-        {order.payment_method === "online" ? "Paid online" : "Counter"}
+        {order.settled_as
+          ? { cash: "Cash", card: "Card at the bar", online: "Paid online" }[order.settled_as]
+          : "Not paid yet"}
         <Divider />
         <span className="tabular-nums text-kds-text-primary">
           €{order.total.toFixed(2)}
@@ -208,7 +213,23 @@ export function OrderDetail({
 
       {/* Actions, quietest to loudest: move it on, step it back, settle it. */}
       <div className="mt-10 flex flex-wrap items-center gap-3 border-t border-kds-border pt-8">
-        {next && (
+        {order.status === "pending" && order.payment_method === "counter" ? (
+          // Two taps become one, and the drawer becomes countable. The same
+          // press that says "paid" says how.
+          TENDERS.map((tender) => (
+            <motion.button
+              key={tender}
+              type="button"
+              onClick={() => move("paid", tender)}
+              disabled={pending || !role}
+              whileTap={{ scale: 0.98 }}
+              transition={pressSpring}
+              className="h-10 rounded-full bg-accent-primary px-5 font-mono text-[10px] font-medium tracking-[0.18em] text-surface-card uppercase transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary disabled:bg-kds-surface disabled:text-kds-text-secondary"
+            >
+              {TENDER_LABELS[tender]}
+            </motion.button>
+          ))
+        ) : next ? (
           <motion.button
             type="button"
             onClick={() => move(next)}
@@ -219,7 +240,7 @@ export function OrderDetail({
           >
             {ADVANCE_LABELS[order.status]}
           </motion.button>
-        )}
+        ) : null}
 
         {previous && (
           <motion.button
@@ -265,15 +286,34 @@ export function OrderDetail({
             disabled={pending || !role}
           />
         )}
+
+        {canDiscount && order.status !== "cancelled" && order.status !== "refunded" && (
+          <SettleButton
+            label="Discount"
+            onClick={() => setDiscounting(true)}
+            disabled={pending || !role}
+          />
+        )}
       </div>
 
+      {order.discount_total > 0 && (
+        <p className="mt-4 font-mono text-[11px] font-medium tracking-[0.14em] text-accent-primary uppercase">
+          {order.total === 0 ? "Comped" : `−€${order.discount_total.toFixed(2)}`}
+          <Divider />
+          {order.discount_reason}
+        </p>
+      )}
+
+      <DiscountSheet order={discounting ? order : null} onClose={() => setDiscounting(false)} />
+
       {!role && (
-        <p
+        <Link
+          href="/dashboard/unlock"
           role="status"
-          className="mt-4 font-mono text-[11px] tracking-[0.14em] text-accent-primary uppercase"
+          className="mt-4 inline-block font-mono text-[11px] tracking-[0.14em] text-accent-primary underline decoration-accent-primary/40 underline-offset-4 uppercase transition-colors hover:text-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary"
         >
           Unlock with your PIN to change anything.
-        </p>
+        </Link>
       )}
 
       {error && (

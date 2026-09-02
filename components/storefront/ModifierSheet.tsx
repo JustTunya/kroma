@@ -8,6 +8,7 @@ import { X } from "lucide-react";
 import { QtyStepper } from "@/components/storefront/QtyStepper";
 import { pressSpring, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+import { useEscapeClose } from "@/lib/use-escape-close";
 import type { CartLine } from "@/lib/cart";
 import type { MenuItem } from "@/types/menu";
 
@@ -31,6 +32,8 @@ export function ModifierSheet({ item, onClose, onAdd }: ModifierSheetProps) {
     setQuantity(1);
   }, [item]);
 
+  useEscapeClose(Boolean(item), onClose);
+
   if (!item) return null;
 
   const selectedModifiers = item.modifiers.map((group) => {
@@ -52,6 +55,7 @@ export function ModifierSheet({ item, onClose, onAdd }: ModifierSheetProps) {
       quantity,
       selectedModifiers,
       imageUrl: item.image_url,
+      vatRate: item.vat_rate,
     });
     onClose();
   }

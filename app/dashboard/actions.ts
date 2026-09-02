@@ -3,50 +3,18 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
+import { COOKIE_OPTIONS, fail, slide, type Result } from "@/lib/dashboard-actions";
+import { notifyReady } from "@/lib/push";
 import { refundOrder } from "@/lib/refund";
+import { sendReceipt } from "@/lib/send-receipt";
 import { createClient } from "@/lib/server";
 import { currentActor, currentStaff, requireActor } from "@/lib/staff";
-import {
-  ACTOR_COOKIE,
-  ACTOR_TTL_MS,
-  actorSecret,
-  signActor,
-} from "@/lib/staff-session";
+import { ACTOR_COOKIE, ACTOR_TTL_MS, actorSecret, signActor } from "@/lib/staff-session";
 
 import type { OrderStatus } from "@/lib/order-status";
 import type { StaffRole } from "@/lib/staff-permissions";
 
-export type Result = { ok: boolean; error?: string };
-
-/** Anything the RPC raises is already worded for a person. Pass it through. */
-function fail(error: unknown): Result {
-  const message =
-    error instanceof Error
-      ? error.message
-      : typeof error === "object" && error !== null && "message" in error
-        ? String((error as { message: unknown }).message)
-        : String(error);
-  return { ok: false, error: message };
-}
-
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax",
-  // Scoped to the dashboard: the storefront has no business carrying it.
-  path: "/dashboard",
-  maxAge: ACTOR_TTL_MS / 1000,
-} as const;
-
-/** Fifteen minutes from the last thing you did, not from when you unlocked. */
-async function slide(actor: { staffId: string; role: StaffRole; name: string }) {
-  const store = await cookies();
-  store.set(
-    ACTOR_COOKIE,
-    signActor({ ...actor, exp: Date.now() + ACTOR_TTL_MS }, actorSecret()),
-    COOKIE_OPTIONS,
-  );
-}
+export type { Result };
 
 /**
  * Roster pick plus PIN buys fifteen minutes of write access. The PIN is posted
@@ -158,6 +126,9 @@ async function markShift(open: boolean): Promise<Result> {
 export async function advanceOrderAction(
   orderId: string,
   to: OrderStatus,
+  // Required by advance_order() for a counter order's pending → paid, ignored
+  // everywhere else. The RPC is the enforcement; this only carries it.
+  tender?: "cash" | "card",
 ): Promise<Result> {
   try {
     // 'order.advance' is the floor. The RPC re-derives the real action from the
@@ -172,6 +143,7 @@ export async function advanceOrderAction(
       p_to: to,
       p_actor: actor.staffId,
       p_station: station?.id,
+      p_tender: tender,
     });
     if (error) return fail(error);
 
@@ -186,6 +158,12 @@ export async function advanceOrderAction(
       const refund = await refundOrder(orderId);
       if (!refund.ok) return { ok: false, error: refund.error };
     }
+
+    // The pass does not wait on a notification or a receipt. Fire and
+    // forget — a failed push is not a failed transition, and the order
+    // page's own poll still works.
+    if (to === "paid") void sendReceipt(orderId).catch(console.error);
+    if (to === "ready") void notifyReady(orderId).catch(console.error);
 
     return { ok: true };
   } catch (error) {
@@ -255,6 +233,106 @@ export async function noteOrderAction(
     await slide(actor);
     revalidatePath(`/dashboard/order/${orderId}`);
     revalidatePath("/dashboard/board");
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+/**
+ * discount_order() owns the arithmetic, the clamp and the refusal on a
+ * settled order — this only carries the actor and, when money already moved,
+ * hands the refund to the same caller advanceOrderAction uses for a void.
+ */
+export async function discountOrderAction(
+  orderId: string,
+  kind: "percent" | "amount" | "comp",
+  value: number,
+  reason: string,
+): Promise<Result> {
+  try {
+    const actor = await requireActor("order.discount");
+    const station = await currentStaff();
+    const supabase = await createClient();
+
+    const { data, error } = await supabase.rpc("discount_order", {
+      p_order_id: orderId,
+      p_actor: actor.staffId,
+      p_kind: kind,
+      p_value: value,
+      p_reason: reason,
+      p_station: station?.id,
+    });
+    if (error) return fail(error);
+
+    await slide(actor);
+    revalidatePath("/dashboard/board");
+    revalidatePath(`/dashboard/order/${orderId}`);
+
+    const owed = (data as { refund_owed?: number } | null)?.refund_owed ?? 0;
+    if (owed > 0) {
+      const refund = await refundOrder(orderId, owed);
+      if (!refund.ok) return { ok: false, error: refund.error };
+    }
+
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+/**
+ * Opens the day. No requireActor("shop.open") gate beyond holding a PIN cookie:
+ * open_service() re-reads the role from the table like every other RPC here,
+ * and the permission is granted to everyone on shift anyway.
+ */
+export async function openServiceAction(
+  counts: Record<string, number>,
+): Promise<Result> {
+  try {
+    const actor = await requireActor("shop.open");
+    const supabase = await createClient();
+
+    const { error } = await supabase.rpc("open_service", {
+      p_actor: actor.staffId,
+      p_stock: Object.keys(counts).length > 0 ? counts : undefined,
+    });
+    if (error) return fail(error);
+
+    await slide(actor);
+    revalidatePath("/dashboard", "layout");
+    // The storefront was refusing orders a second ago. It must not go on doing
+    // so for the thirty seconds app/page.tsx would otherwise cache.
+    revalidatePath("/", "page");
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+/**
+ * Shuts the day. close_service() owns every rule — the permission, the refusal
+ * over live orders, and freezing the report — so this only carries the count.
+ */
+export async function closeServiceAction(
+  counted: number,
+  detail: Record<string, number>,
+): Promise<Result> {
+  try {
+    const actor = await requireActor("shop.close");
+    const supabase = await createClient();
+
+    const { error } = await supabase.rpc("close_service", {
+      p_actor: actor.staffId,
+      p_counted: counted,
+      p_detail: detail,
+    });
+    if (error) return fail(error);
+
+    await slide(actor);
+    revalidatePath("/dashboard", "layout");
+    // The storefront must stop taking orders the moment the till is counted.
+    revalidatePath("/", "page");
     return { ok: true };
   } catch (error) {
     return fail(error);

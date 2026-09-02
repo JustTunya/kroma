@@ -4,7 +4,7 @@ import { Marquee, type MarqueeEntry } from "@/components/Marquee";
 import type { MenuItem } from "@/types/menu";
 
 /** The day as the bakehouse actually runs it: hours, plus what is left of each batch. */
-function ledger(items: MenuItem[]): MarqueeEntry[] {
+function ledger(items: MenuItem[], serviceOpen: boolean): MarqueeEntry[] {
   const batches = items
     .filter((item) => item.daily_stock !== null)
     .map<MarqueeEntry>((item) => {
@@ -16,6 +16,7 @@ function ledger(items: MenuItem[]): MarqueeEntry[] {
     });
 
   return [
+    ...(serviceOpen ? [] : [{ label: "CLOSED", alert: true }]),
     { label: "07:30 doors open" },
     { label: "08:00 first bake" },
     ...batches,
@@ -24,6 +25,6 @@ function ledger(items: MenuItem[]): MarqueeEntry[] {
   ];
 }
 
-export function DayLedger({ items }: { items: MenuItem[] }) {
-  return <Marquee label="Today at the bakehouse" entries={ledger(items)} />;
+export function DayLedger({ items, serviceOpen }: { items: MenuItem[]; serviceOpen: boolean }) {
+  return <Marquee label="Today at the bakehouse" entries={ledger(items, serviceOpen)} />;
 }

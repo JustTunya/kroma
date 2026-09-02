@@ -8,6 +8,7 @@ import type { OrderStatus } from "@/lib/order-status";
 export type BoardOrder = {
   id: string;
   order_number: number;
+  day_number: number | null;
   status: OrderStatus;
   customer_name: string | null;
   /** The name called over the pass, not the name on the account. */
@@ -18,6 +19,9 @@ export type BoardOrder = {
   notes: string | null;
   subtotal: number;
   total: number;
+  settled_as: "cash" | "card" | "online" | null;
+  discount_total: number;
+  discount_reason: string | null;
   payment_method: "online" | "counter";
   placed_at: string;
   pickup_at: string | null;

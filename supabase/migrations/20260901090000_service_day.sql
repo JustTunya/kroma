@@ -1,0 +1,448 @@
+-- The trading day.
+--
+-- Until now the schema modelled orders well and the day not at all: daily_stock
+-- carried yesterday's leftovers into this morning, and order_number came from a
+-- sequence that will be calling "482" by week three. Both are day-shaped facts
+-- with nowhere to live.
+--
+-- One row per day, keyed by the shop-local date. The row existing means opened;
+-- closed_at being null means still trading. No status column: two nullable
+-- timestamps say the same thing and cannot contradict each other.
+
+create table service_days (
+  day          date primary key,
+  opened_at    timestamptz not null default now(),
+  opened_by    uuid references staff(id) on delete set null,
+  closed_at    timestamptz,
+  closed_by    uuid references staff(id) on delete set null,
+  -- The next ticket the bar will call. Incremented under the row lock inside
+  -- create_order(), which is already the serialization point for stock.
+  next_number  integer not null default 1,
+  float_cash   numeric(8,2) not null default 0,
+  counted_cash numeric(8,2),
+  count_detail jsonb,
+  report       jsonb
+);
+
+-- What to bake to. Null means unlimited, exactly as daily_stock already does
+-- for espresso-bar drinks.
+alter table menu_items add column par_stock integer check (par_stock >= 0);
+
+-- Today's counts are the only estimate of intended par that exists yet.
+-- Leaving par_stock null on every batch-limited item would mean the first
+-- open_service() sets daily_stock = null on all of them — unlimited, batch
+-- control silently off — until someone hand-enters pars later.
+update menu_items
+   set par_stock = daily_stock
+ where is_active
+   and daily_stock is not null;
+
+alter table orders
+  add column service_day date references service_days(day),
+  add column day_number  integer;
+
+create index orders_service_day_idx on orders (service_day, day_number);
+
+-- ------------------------------------------------------------------ backfill
+-- Every historical order belongs to a day that really happened. Creating those
+-- rows closed, with next_number past their highest ticket, means the sequence
+-- is correct if one of them is ever reopened. Today is the one day that is not
+-- history: if this migration runs mid-morning against a database that already
+-- has orders today, closing "today" would leave open_service() finding it
+-- closed with no reopen path in this task, locking out the day that has not
+-- ended yet. So today's row, if orders already exist for it, is backfilled
+-- open (closed_at null) with next_number past its highest ticket so far.
+insert into service_days (day, opened_at, closed_at, next_number)
+select d.day,
+       d.first_at,
+       case when d.day < (now() at time zone shop_tz())::date then d.last_at end,
+       d.n + 1
+  from (select (placed_at at time zone shop_tz())::date as day,
+               min(placed_at) as first_at,
+               max(placed_at) as last_at,
+               count(*)::int  as n
+          from orders
+         group by 1) d
+on conflict (day) do nothing;
+
+update orders o
+   set service_day = s.day,
+       day_number  = s.n
+  from (select id,
+               (placed_at at time zone shop_tz())::date as day,
+               row_number() over (
+                 partition by (placed_at at time zone shop_tz())::date
+                 order by placed_at, id)::int as n
+          from orders) s
+ where o.id = s.id;
+
+-- Today, if it is open. Null is a closed shop, and every write path treats it
+-- as a refusal rather than as "pick a day".
+create function current_service_day()
+returns date
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select day from service_days
+   where day = (now() at time zone shop_tz())::date
+     and closed_at is null;
+$$;
+
+-- --------------------------------------------------------------- permissions
+create or replace function staff_can(p_role staff_role, p_action text)
+returns boolean
+language sql
+immutable
+as $$
+  select case p_action
+    when 'order.view'       then true
+    when 'order.advance'    then true
+    when 'order.note'       then true
+    when 'order.claim'      then true
+    when 'item.86'          then true
+    when 'order.abandon'    then true
+    -- The first person in opens the shop. Making them find a manager at 07:15
+    -- means the storefront sells against yesterday's stock, which is the exact
+    -- reasoning that already puts item.86 in every barista's hands.
+    when 'shop.open'        then true
+    when 'order.void'       then p_role in ('owner', 'manager')
+    when 'order.refund'     then p_role in ('owner', 'manager')
+    when 'order.discount'   then p_role in ('owner', 'manager')
+    when 'order.undo_late'  then p_role in ('owner', 'manager')
+    when 'customer.contact' then p_role in ('owner', 'manager')
+    when 'menu.edit'        then p_role in ('owner', 'manager')
+    when 'analytics.view'   then p_role in ('owner', 'manager')
+    -- The drawer is money, not bread.
+    when 'shop.close'       then p_role in ('owner', 'manager')
+    when 'staff.manage'     then p_role = 'owner'
+    when 'shop.settings'    then p_role = 'owner'
+    else false
+  end;
+$$;
+
+-- ------------------------------------------------------------------- opening
+create function open_service(p_actor uuid, p_stock jsonb default null)
+returns service_days
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_actor staff;
+  v_today date := (now() at time zone shop_tz())::date;
+  v_row   service_days;
+begin
+  select * into v_actor from staff where id = p_actor;
+  if v_actor.id is null or not v_actor.is_active or v_actor.kind <> 'person' then
+    raise exception 'Not on shift.' using errcode = 'P0001';
+  end if;
+
+  if not staff_can(v_actor.role, 'shop.open') then
+    raise exception 'Not yours to do.' using errcode = 'P0001';
+  end if;
+
+  -- Two iPads tapping Open must not produce two openings, and must not wipe a
+  -- morning's sales back to par. A plain select-then-insert has a gap under
+  -- read-committed: both callers can see no row before either commits. The
+  -- insert itself is the lock — on conflict, the loser gets nothing back
+  -- (not an error) and falls through to read the winner's row, same as
+  -- shift_mark() treats a repeated state as a no-op.
+  insert into service_days (day, opened_by) values (v_today, p_actor)
+  on conflict (day) do nothing
+  returning * into v_row;
+
+  if v_row.day is null then
+    select * into v_row from service_days where day = v_today;
+    if v_row.closed_at is not null then
+      raise exception 'The day is already closed.' using errcode = 'P0001';
+    end if;
+    return v_row;
+  end if;
+
+  update menu_items set daily_stock = par_stock where is_active;
+
+  if p_stock is not null then
+    update menu_items m
+       set daily_stock = (o.value #>> '{}')::integer
+      from jsonb_each(p_stock) o
+     where m.id = o.key::uuid;
+  end if;
+
+  insert into staff_events (staff_id, action, subject_id, detail)
+  values (p_actor, 'shop.open', null,
+          jsonb_build_object('day', v_today, 'stock', coalesce(p_stock, '{}'::jsonb)));
+
+  return v_row;
+end;
+$$;
+
+-- ----------------------------------------------------------------------- RLS
+alter table service_days enable row level security;
+
+-- Staff read the day: the board needs to know whether it is open, and the
+-- numbers page groups by it. Writes go through open_service/close_service only,
+-- which are security definer — no insert or update policy exists on purpose.
+create policy "service days staff read" on service_days
+  for select using (is_staff());
+
+revoke all on function open_service(uuid, jsonb) from public, anon;
+grant execute on function open_service(uuid, jsonb) to authenticated;
+grant execute on function current_service_day() to anon, authenticated;
+
+-- ------------------------------------------------------- orders join the day
+-- create_order() gains two jobs: refuse when the shop is shut, and take the
+-- next ticket number. The `update … returning` is the whole concurrency story —
+-- the row lock serialises two checkouts, inside the transaction that was
+-- already locking menu_items for stock.
+create or replace function create_order(
+  p_items                    jsonb,
+  p_customer_name            text,
+  p_notes                    text,
+  p_payment_method           text,
+  p_user_id                  uuid default null,
+  p_stripe_session_id        text default null,
+  p_stripe_payment_intent_id text default null,
+  p_redeem_item_id           uuid default null
+) returns orders
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_order         orders;
+  v_lines         jsonb;
+  v_subtotal      numeric(8,2);
+  v_user          uuid;
+  v_redeem        uuid := null;
+  v_redeemed_line jsonb;
+  v_day           date;
+  v_number        integer;
+begin
+  if p_payment_method not in ('online', 'counter') then
+    raise exception 'Unknown payment method.' using errcode = 'P0001';
+  end if;
+
+  -- Before anything is priced or locked: an order with nowhere to land is not
+  -- an order, and an online one would arrive with the money already taken.
+  v_day := current_service_day();
+  if v_day is null then
+    raise exception 'The bakehouse is closed.' using errcode = 'P0001';
+  end if;
+
+  if coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role', '')
+     = 'service_role' then
+    v_user := p_user_id;
+  elsif p_payment_method = 'online' then
+    raise exception 'Card orders are placed once the payment clears.'
+      using errcode = 'P0001';
+  else
+    v_user := auth.uid();
+  end if;
+
+  -- The burn. The advisory lock serializes this user's redemptions and releases
+  -- with the transaction; create_order is already the serialization point for
+  -- stock, so nothing new is being held open.
+  if p_redeem_item_id is not null then
+    if v_user is null then
+      raise exception 'The card belongs to an account.' using errcode = 'P0001';
+    end if;
+
+    perform pg_advisory_xact_lock(hashtext(v_user::text));
+
+    if card_punches(v_user) >= 12 then
+      v_redeem := p_redeem_item_id;
+    else
+      -- ponytail: accepted loss. Two concurrent checkouts on one full card both
+      -- reach here; the second finds it spent. We are holding their money, and
+      -- refunding a whole paid order over one drink is worse than absorbing it,
+      -- so the order stands at full price with no redemption row.
+      raise warning 'card already spent for % — order placed undiscounted', v_user;
+    end if;
+  end if;
+
+  v_lines    := order_lines(p_items, true, v_redeem);
+  v_subtotal := coalesce((select sum((l ->> 'line_total')::numeric)
+                            from jsonb_array_elements(v_lines) as t(l)), 0);
+
+  update menu_items m
+     set daily_stock = m.daily_stock - agg.qty
+    from (
+      select (l ->> 'menu_item_id')::uuid as id,
+             sum((l ->> 'quantity')::integer) as qty
+        from jsonb_array_elements(v_lines) as t(l)
+       group by 1
+    ) agg
+   where m.id = agg.id
+     and m.daily_stock is not null;
+
+  update service_days
+     set next_number = next_number + 1
+   where day = v_day
+  returning next_number - 1 into v_number;
+
+  insert into orders (user_id, status, customer_name, notes, subtotal, total,
+                      payment_method, pickup_at, stripe_session_id,
+                      stripe_payment_intent_id, service_day, day_number)
+  values (v_user,
+          case when p_payment_method = 'online' then 'paid' else 'pending' end::order_status,
+          nullif(btrim(left(coalesce(p_customer_name, ''), 80)), ''),
+          nullif(btrim(left(coalesce(p_notes, ''), 280)), ''),
+          v_subtotal,
+          v_subtotal,
+          p_payment_method,
+          now() + interval '10 minutes',
+          p_stripe_session_id,
+          p_stripe_payment_intent_id,
+          v_day,
+          v_number)
+  returning * into v_order;
+
+  insert into order_items (order_id, menu_item_id, item_name, base_price,
+                           quantity, selected_modifiers, line_total, earns_punch)
+  select v_order.id,
+         (l ->> 'menu_item_id')::uuid,
+         l ->> 'item_name',
+         (l ->> 'base_price')::numeric,
+         (l ->> 'quantity')::smallint,
+         l -> 'selected_modifiers',
+         (l ->> 'line_total')::numeric,
+         (l ->> 'earns_punch')::boolean
+    from jsonb_array_elements(v_lines) as t(l);
+
+  if v_redeem is not null then
+    select value into v_redeemed_line
+      from jsonb_array_elements(v_lines) as t(value)
+     where (value ->> 'menu_item_id')::uuid = v_redeem;
+
+    insert into card_redemptions (user_id, order_id, item_name)
+    values (v_user, v_order.id, v_redeemed_line ->> 'item_name');
+  end if;
+
+  return v_order;
+end;
+$$;
+
+-- The quote is what the checkout page prices a card order against, so it has to
+-- refuse first — otherwise the customer reaches Stripe and is refunded after.
+create or replace function quote_order(p_items jsonb, p_redeem_item_id uuid default null)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_lines jsonb;
+begin
+  if current_service_day() is null then
+    raise exception 'The bakehouse is closed.' using errcode = 'P0001';
+  end if;
+
+  if p_redeem_item_id is not null then
+    if auth.uid() is null or card_punches(auth.uid()) < 12 then
+      raise exception 'Your card is not full yet.' using errcode = 'P0001';
+    end if;
+  end if;
+
+  v_lines := order_lines(p_items, false, p_redeem_item_id);
+
+  return jsonb_build_object(
+    'lines',    v_lines,
+    'subtotal', coalesce((select sum((l ->> 'line_total')::numeric)
+                            from jsonb_array_elements(v_lines) as t(l)), 0)
+  );
+end;
+$$;
+
+-- ---------------------------------------------------- the ticket, projected
+-- The bar calls the day's ticket, not the all-time one. Both read RPCs gain
+-- day_number alongside order_number — verbatim otherwise, copied from
+-- 20260818142000_order_read_release.sql:5 and 20260822090200_order_board.sql:203.
+create or replace function order_by_token(p_token uuid)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select jsonb_build_object(
+    'id',             o.id,
+    'order_number',   o.order_number,
+    'day_number',     o.day_number,
+    'status',         o.status,
+    'customer_name',  o.customer_name,
+    'notes',          o.notes,
+    'subtotal',       o.subtotal,
+    'total',          o.total,
+    'payment_method', o.payment_method,
+    'placed_at',      o.placed_at,
+    'pickup_at',      o.pickup_at,
+    'items', coalesce((
+      select jsonb_agg(jsonb_build_object(
+               'item_name',          i.item_name,
+               'base_price',         i.base_price,
+               'quantity',           i.quantity,
+               'selected_modifiers', i.selected_modifiers,
+               'line_total',         i.line_total
+             ) order by i.created_at, i.id)
+        from order_items i
+       where i.order_id = o.id
+    ), '[]'::jsonb)
+  )
+  from orders o
+  where o.access_token = p_token;
+$$;
+
+create or replace function staff_order(p_order_id uuid)
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select case when not exists (
+      select 1 from staff s where s.user_id = auth.uid() and s.is_active
+    ) then null
+    else (
+      select jsonb_build_object(
+        'id',              o.id,
+        'order_number',    o.order_number,
+        'day_number',      o.day_number,
+        'status',          o.status,
+        'customer_name',   o.customer_name,
+        'notes',           o.notes,
+        'subtotal',        o.subtotal,
+        'total',           o.total,
+        'payment_method',  o.payment_method,
+        'placed_at',       o.placed_at,
+        'pickup_at',       o.pickup_at,
+        'started_at',      o.started_at,
+        'ready_at',        o.ready_at,
+        'collected_at',    o.collected_at,
+        'claimed_by',      (select display_name from staff where id = o.claimed_by),
+        'bar_name',        p.bar_name,
+        'avoid_allergens', coalesce(p.avoid_allergens, '{}'),
+        'is_regular',      coalesce((select count(*) from orders o2
+                                      where o2.user_id = o.user_id
+                                        and o2.status = 'collected'), 0),
+        'items', coalesce((
+          select jsonb_agg(jsonb_build_object(
+                   'item_name',          i.item_name,
+                   'menu_item_id',       i.menu_item_id,
+                   'quantity',           i.quantity,
+                   'selected_modifiers', i.selected_modifiers,
+                   'line_total',         i.line_total,
+                   'gone',               coalesce(m.daily_stock = 0, false)
+                 ) order by i.created_at, i.id)
+            from order_items i
+            left join menu_items m on m.id = i.menu_item_id
+           where i.order_id = o.id
+        ), '[]'::jsonb)
+      )
+      from orders o
+      left join profiles p on p.id = o.user_id
+      where o.id = p_order_id
+    )
+  end;
+$$;

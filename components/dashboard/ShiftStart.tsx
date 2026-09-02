@@ -1,11 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
+import { motion } from "framer-motion";
+import { pressSpring } from "@/lib/motion";
 
 /**
  * The one deliberate tap that opens a shift. It is not a splash screen: it
  * only appears to someone who has already entered their PIN and has no shift
  * running, and the tap is what gets stamped in staff_events.
+ *
+ * An explicit button, not a "tap anywhere" surface — a workstation should not
+ * ask someone to discover that a whole blank screen is a button.
  */
 export function ShiftStart({
   onStart,
@@ -14,34 +18,30 @@ export function ShiftStart({
   onStart: () => void;
   error?: string | null;
 }) {
-  useEffect(() => {
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previous;
-    };
-  }, []);
-
   return (
-    <div className="fixed inset-0 z-50 bg-kds-canvas">
-      <button
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-kds-canvas px-5">
+      <p className="font-mono text-[11px] font-medium tracking-[0.18em] text-kds-text-secondary uppercase">
+        No shift open
+      </p>
+
+      <motion.button
         type="button"
         onClick={onStart}
-        className="flex size-full flex-col items-start justify-end px-5 pb-16 text-left focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-kds-text-primary sm:px-10 lg:px-14"
+        whileTap={{ scale: 0.98 }}
+        transition={pressSpring}
+        className="flex h-12 items-center rounded-full bg-accent-primary px-8 font-mono text-[11px] font-medium tracking-[0.18em] text-surface-card uppercase transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-kds-text-primary"
       >
-        <span className="max-w-[16ch] font-serif text-[clamp(56px,10vw,148px)] leading-[0.92] tracking-[-0.03em]">
-          Tap to start <em className="text-accent-primary">the shift</em>
-        </span>
+        Start shift
+      </motion.button>
 
-        {error && (
-          <span
-            role="status"
-            className="mt-6 font-mono text-[11px] tracking-[0.14em] text-badge-alert uppercase"
-          >
-            {error}
-          </span>
-        )}
-      </button>
+      {error && (
+        <p
+          role="status"
+          className="font-mono text-[11px] tracking-[0.14em] text-badge-alert uppercase"
+        >
+          {error}
+        </p>
+      )}
     </div>
   );
 }

@@ -86,6 +86,10 @@ export default async function AccountOverviewPage() {
             quantity: 1,
             selectedModifiers: usual.selected_modifiers,
             imageUrl: menuImage({ name: usual.name, category: "", image_url: usual.image_url }, 0),
+            // ponytail: my_usual() doesn't project vat_rate — the value is
+            // display-only here (order_lines() recomputes it at checkout from
+            // the category), so the standard rate is a safe placeholder.
+            vatRate: 0.11,
           },
         ]
       : [];

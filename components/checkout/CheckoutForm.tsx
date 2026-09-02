@@ -48,7 +48,7 @@ const NOTICES: Record<Notice, string> = {
  * Safe to read while initialising state: the form only ever renders after the
  * cart has hydrated, so this never runs on the server or during hydration.
  */
-function savedDetails(): { name?: string; notes?: string } | null {
+function savedDetails(): { name?: string; notes?: string; email?: string } | null {
   if (typeof window === "undefined") return null;
   try {
     return JSON.parse(window.sessionStorage.getItem(DETAILS_KEY) ?? "null");
@@ -64,12 +64,14 @@ export function CheckoutForm({
   signedIn,
   defaultName,
   paymentNotice,
+  serviceOpen,
   dietaryPrefs = NO_PREFS,
   dietaryIndex = {},
 }: {
   signedIn: boolean;
   defaultName: string;
   paymentNotice?: Notice;
+  serviceOpen: boolean;
   /** From the signed-in customer's profile. Guests have none, so nothing is flagged. */
   dietaryPrefs?: DietaryPrefs;
   dietaryIndex?: DietaryIndex;
@@ -78,6 +80,7 @@ export function CheckoutForm({
   const cart = useCart(signedIn);
   const [name, setName] = useState(() => savedDetails()?.name || defaultName);
   const [notes, setNotes] = useState(() => savedDetails()?.notes ?? "");
+  const [email, setEmail] = useState(() => savedDetails()?.email ?? "");
   const [method, setMethod] = useState<Method>(paymentNotice ? "online" : "counter");
   const [error, setError] = useState<{ message: string; menuItemId?: string } | null>(
     paymentNotice ? { message: NOTICES[paymentNotice] } : null,
@@ -94,6 +97,7 @@ export function CheckoutForm({
         customerName: name,
         notes,
         paymentMethod: method,
+        receiptEmail: signedIn ? undefined : email,
       });
 
       if (!result.ok) {
@@ -109,7 +113,7 @@ export function CheckoutForm({
         // Off to Stripe. The cart stays put until the confirmation page proves
         // the card cleared — a cancelled payment must come back to a full cart.
         try {
-          window.sessionStorage.setItem(DETAILS_KEY, JSON.stringify({ name, notes }));
+          window.sessionStorage.setItem(DETAILS_KEY, JSON.stringify({ name, notes, email }));
         } catch {
           // Not worth blocking a payment over.
         }
@@ -124,6 +128,14 @@ export function CheckoutForm({
 
   if (cart.lines.length === 0) {
     return <p className={NOTE}>Nothing on the pass yet.</p>;
+  }
+
+  if (!serviceOpen) {
+    return (
+      <p className={NOTE}>
+        The bakehouse is closed. Orders reopen at 07:30 — your cart is still here.
+      </p>
+    );
   }
 
   if (!isOrderable(cart.lines)) {
@@ -156,6 +168,23 @@ export function CheckoutForm({
             className={FIELD}
           />
         </label>
+
+        {!signedIn && (
+          <label className="mt-10 block">
+            <span className={LABEL}>Email for the receipt</span>
+            <input
+              type="email"
+              maxLength={160}
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="Optional"
+              className={FIELD}
+            />
+            <span className="mt-3 block font-mono text-[11px] font-medium tracking-[0.14em] text-text-tertiary uppercase">
+              Optional — for the receipt and a ping when it&rsquo;s ready.
+            </span>
+          </label>
+        )}
 
         <label className="mt-10 block">
           <span className={LABEL}>Notes</span>

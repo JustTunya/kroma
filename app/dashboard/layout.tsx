@@ -1,6 +1,6 @@
 import { BoardStatusProvider } from "@/components/dashboard/BoardStatus";
 import { StaffBar } from "@/components/dashboard/StaffBar";
-import { currentActor, currentShift } from "@/lib/staff";
+import { currentActor, currentDay, currentShift } from "@/lib/staff";
 import { staffCan } from "@/lib/staff-permissions";
 
 import type { Metadata } from "next";
@@ -17,7 +17,11 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [actor, shiftSince] = await Promise.all([currentActor(), currentShift()]);
+  const [actor, shiftSince, day] = await Promise.all([
+    currentActor(),
+    currentShift(),
+    currentDay(),
+  ]);
 
   return (
     <div className="min-h-dvh bg-kds-canvas text-kds-text-primary">
@@ -28,6 +32,8 @@ export default async function DashboardLayout({
           actorName={actor?.name ?? null}
           onShift={Boolean(shiftSince)}
           canSeeNumbers={actor ? staffCan(actor.role, "analytics.view") : false}
+          canEditMenu={actor ? staffCan(actor.role, "menu.edit") : false}
+          dayOpenedAt={day?.opened_at ?? null}
         />
         {/* h-14, one line shorter than the storefront header: a bar screen owes
             every pixel it can to the orders. */}

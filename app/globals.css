@@ -133,3 +133,17 @@
     @apply font-sans;
   }
 }
+
+/* The receipt is a document, not a page. 58mm is the common thermal roll. */
+@media print {
+  @page {
+    size: 58mm auto;
+    margin: 4mm;
+  }
+  body {
+    background: #fff;
+  }
+  .print\:hidden {
+    display: none !important;
+  }
+}

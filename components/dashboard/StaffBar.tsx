@@ -4,10 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ChartNoAxesColumn } from "lucide-react";
+import { ChartNoAxesColumn, ClipboardList } from "lucide-react";
 
 import { endShiftAction, lockAction } from "@/app/dashboard/actions";
 import { ConnectionPill } from "@/components/dashboard/ConnectionPill";
+import { DayPill } from "@/components/dashboard/DayPill";
 import { pressSpring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
@@ -20,12 +21,18 @@ export function StaffBar({
   actorName,
   onShift,
   canSeeNumbers,
+  canEditMenu,
+  dayOpenedAt,
 }: {
   actorName: string | null;
   /** Whether this person has an open shift — the only state End can end. */
   onShift: boolean;
   /** Manager and owner only. The page redirects too; this hides the door. */
   canSeeNumbers: boolean;
+  /** Manager and owner only. The page redirects too; this hides the door. */
+  canEditMenu: boolean;
+  /** null when the shop has not opened today — the pill reads Closed. */
+  dayOpenedAt: string | null;
 }) {
   const [error, setError] = useState<string | null>(null);
   const pathname = usePathname();
@@ -53,6 +60,10 @@ export function StaffBar({
 
         <div className="shrink-0">
           <ConnectionPill />
+        </div>
+
+        <div className="shrink-0">
+          <DayPill openedAt={dayOpenedAt} />
         </div>
 
         {actorName && onShift && (
@@ -119,6 +130,25 @@ export function StaffBar({
               )}
             >
               <ChartNoAxesColumn aria-hidden className="size-4" strokeWidth={1.75} />
+            </Link>
+          </motion.div>
+        )}
+
+        {canEditMenu && (
+          <motion.div className="shrink-0" whileTap={{ scale: 0.98 }} transition={pressSpring}>
+            <Link
+              href="/dashboard/menu"
+              aria-label="Menu — items, prices and categories"
+              aria-current={pathname === "/dashboard/menu" ? "page" : undefined}
+              className={cn(
+                "flex size-9 items-center justify-center rounded-full border transition-colors",
+                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary",
+                pathname === "/dashboard/menu"
+                  ? "border-kds-text-primary bg-kds-text-primary text-kds-canvas"
+                  : "border-kds-border text-kds-text-secondary hover:border-kds-text-secondary hover:text-kds-text-primary",
+              )}
+            >
+              <ClipboardList aria-hidden className="size-4" strokeWidth={1.75} />
             </Link>
           </motion.div>
         )}

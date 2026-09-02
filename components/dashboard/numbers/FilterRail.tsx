@@ -14,6 +14,7 @@ import {
 } from "@/lib/manage";
 import { pressSpring, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+import { useEscapeClose } from "@/lib/use-escape-close";
 
 /**
  * Every filter on the page, in the URL.
@@ -276,6 +277,8 @@ function FilterSheet({
   // when the URL is already outside the three presets, so reopening the
   // sheet mid-custom-range doesn't hide the dates that are actually active.
   const [activeTab, setActiveTab] = useState<string>(range.preset ?? "custom");
+
+  useEscapeClose(open, onClose);
 
   // Portalled to <body>: a sticky ancestor up the tree carries
   // backdrop-blur-xl, which — like `filter` and `transform` — makes that

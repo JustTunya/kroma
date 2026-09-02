@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 
 import { ReorderButton } from "@/components/account/ReorderButton";
@@ -17,6 +18,7 @@ import type { CartLine } from "@/lib/cart";
  * Wrap the number in a Link to that route when it lands.
  */
 export function OrderRow({
+  token,
   orderNumber,
   date,
   summary,
@@ -25,6 +27,7 @@ export function OrderRow({
   lines,
   unavailable,
 }: {
+  token: string;
   orderNumber: number;
   date: string;
   summary: string;
@@ -78,6 +81,15 @@ export function OrderRow({
             </span>
           </span>
         )}
+
+        <span className="flex items-center gap-3 opacity-100 transition-opacity duration-300 lg:opacity-0 lg:group-focus-within:opacity-100 lg:group-hover:opacity-100">
+          <span aria-hidden className="text-hairline">
+            /
+          </span>
+          <Link href={`/order/${token}/receipt`} className="hover:text-text-primary">
+            Receipt
+          </Link>
+        </span>
 
         {lines.length > 0 && (
           /* Plain CSS for the reveal: paint, not structure. Always shown where

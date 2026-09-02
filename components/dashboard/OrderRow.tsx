@@ -6,7 +6,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { AgeSpine } from "@/components/dashboard/AgeSpine";
 import { pressSpring, spring } from "@/lib/motion";
 import { AGE_TONES, ageTier, elapsedLabel, isStale } from "@/lib/order-age";
-import { ADVANCE_LABELS, NEXT_STATUS } from "@/lib/order-transitions";
+import { ADVANCE_LABELS, NEXT_STATUS, TENDERS, TENDER_LABELS } from "@/lib/order-transitions";
 import { cn } from "@/lib/utils";
 
 import type { BoardOrder } from "@/types/board";
@@ -36,7 +36,7 @@ export function OrderRow({
 }: {
   order: BoardOrder;
   now: Date;
-  onAdvance: (order: BoardOrder) => void;
+  onAdvance: (order: BoardOrder, tender?: "cash" | "card") => void;
   /** Offline, or nobody has unlocked the terminal. */
   disabled: boolean;
 }) {
@@ -84,7 +84,7 @@ export function OrderRow({
       <div className="min-w-0 flex-1 py-5">
         <div className="flex items-baseline justify-between gap-4">
           <span className="font-mono text-[28px] leading-none font-medium tabular-nums">
-            {order.order_number}
+            {order.day_number ?? order.order_number}
           </span>
           <span
             className={cn(
@@ -122,6 +122,14 @@ export function OrderRow({
           ))}
         </ul>
 
+        {order.discount_total > 0 && (
+          <p className="mt-2 font-mono text-[10px] font-medium tracking-[0.18em] text-accent-primary uppercase">
+            {order.total === 0 ? "Comped" : `−€${order.discount_total.toFixed(2)}`}
+            <span aria-hidden className="mx-3 text-kds-border">/</span>
+            {order.discount_reason}
+          </p>
+        )}
+
         {flags.length > 0 && (
           <p className="mt-4 font-mono text-[10px] font-medium tracking-[0.18em] uppercase">
             {flags.map((flag, i) => (
@@ -138,19 +146,34 @@ export function OrderRow({
         )}
 
         <div className="mt-5 flex items-center gap-5">
-          {next && (
+          {order.status === "pending" && order.payment_method === "counter" ? (
+            TENDERS.map((tender) => (
+              <motion.button
+                key={tender}
+                type="button"
+                disabled={disabled}
+                onClick={() => onAdvance(order, tender)}
+                whileTap={disabled ? undefined : { scale: 0.98 }}
+                transition={pressSpring}
+                aria-label={`${TENDER_LABELS[tender]} — order ${order.day_number ?? order.order_number}, ${name}`}
+                className="h-9 shrink-0 rounded-full bg-accent-primary px-5 font-mono text-[10px] font-medium tracking-[0.18em] text-surface-card uppercase transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary disabled:bg-kds-surface disabled:text-kds-text-secondary"
+              >
+                {TENDER_LABELS[tender]}
+              </motion.button>
+            ))
+          ) : next ? (
             <motion.button
               type="button"
               disabled={disabled}
               onClick={() => onAdvance(order)}
               whileTap={disabled ? undefined : { scale: 0.98 }}
               transition={pressSpring}
-              aria-label={`${ADVANCE_LABELS[order.status]} — order ${order.order_number}, ${name}`}
+              aria-label={`${ADVANCE_LABELS[order.status]} — order ${order.day_number ?? order.order_number}, ${name}`}
               className="h-10 shrink-0 rounded-full bg-accent-primary px-5 font-mono text-[10px] font-medium tracking-[0.18em] text-surface-card uppercase transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary disabled:bg-kds-surface disabled:text-kds-text-secondary"
             >
               {ADVANCE_LABELS[order.status]}
             </motion.button>
-          )}
+          ) : null}
 
           <Link
             href={`/dashboard/order/${order.id}`}

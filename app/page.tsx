@@ -14,7 +14,7 @@ async function fetchMenu(): Promise<RawMenuItem[]> {
   const { data, error } = await supabase
     .from("menu_items")
     .select(
-      "id, name, description, base_price, daily_stock, dietary_tags, modifiers, image_url, sort_order, menu_categories!inner (name, sort_order)",
+      "id, name, description, base_price, daily_stock, dietary_tags, modifiers, image_url, sort_order, menu_categories!inner (name, sort_order, vat_rate)",
     )
     .eq("is_active", true);
 
@@ -30,6 +30,7 @@ async function fetchMenu(): Promise<RawMenuItem[]> {
       dietary_tags: item.dietaryTags,
       image_url: null,
       category: item.category,
+      vat_rate: 0.11,
       origin: item.origin,
       process: item.process,
       roast: item.roast,
@@ -52,6 +53,7 @@ async function fetchMenu(): Promise<RawMenuItem[]> {
       dietary_tags: item.dietary_tags,
       image_url: item.image_url,
       category: item.menu_categories.name,
+      vat_rate: item.menu_categories.vat_rate,
       origin: null,
       process: null,
       roast: null,
@@ -61,9 +63,12 @@ async function fetchMenu(): Promise<RawMenuItem[]> {
 
 export default async function Home() {
   const supabase = await createClient();
-  const [{ data: claims }, rawItems] = await Promise.all([
+  const [{ data: claims }, rawItems, { data: openDay }] = await Promise.all([
     supabase.auth.getClaims(),
     fetchMenu(),
+    // Anonymous read: current_service_day() is granted to anon precisely so the
+    // storefront can say "closed" instead of taking an order nobody will make.
+    supabase.rpc("current_service_day"),
   ]);
 
   const items: MenuItem[] = rawItems.map((item, index) => ({
@@ -71,5 +76,11 @@ export default async function Home() {
     image_url: menuImage(item, index),
   }));
 
-  return <Storefront items={items} signedIn={Boolean(claims?.claims)} />;
+  return (
+    <Storefront
+      items={items}
+      signedIn={Boolean(claims?.claims)}
+      serviceOpen={Boolean(openDay)}
+    />
+  );
 }

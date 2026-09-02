@@ -58,3 +58,43 @@ export async function cancelOwnOrderAction(token: string): Promise<CancelResult>
 
   return { ok: true, status: "cancelled" };
 }
+
+export type Result = { ok: boolean; error?: string };
+
+/**
+ * subscribe_order_push() owns the rule — only a live order (pending/paid/
+ * preparing) accepts a subscription. The token is the credential, as it is
+ * for every other guest-facing action on this order.
+ */
+export async function subscribeToOrderAction(
+  token: string,
+  subscription: { endpoint: string; keys: { p256dh: string; auth: string } },
+): Promise<Result> {
+  if (!UUID.test(token)) return { ok: false, error: "That order is not ours." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("subscribe_order_push", {
+    p_token: token,
+    p_endpoint: subscription.endpoint,
+    p_p256dh: subscription.keys.p256dh,
+    p_auth: subscription.keys.auth,
+  });
+
+  if (error) return { ok: false, error: error.message };
+  if (!data) return { ok: false, error: "That order can no longer be notified." };
+  return { ok: true };
+}
+
+export async function setReceiptEmailAction(token: string, email: string): Promise<Result> {
+  if (!UUID.test(token)) return { ok: false, error: "That order is not ours." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("set_receipt_email", {
+    p_token: token,
+    p_email: email,
+  });
+
+  if (error) return { ok: false, error: error.message };
+  if (!data) return { ok: false, error: "That order was not found." };
+  return { ok: true };
+}

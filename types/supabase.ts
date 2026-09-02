@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -105,6 +105,7 @@ export type Database = {
           name: string
           slug: string
           sort_order: number
+          vat_rate: number
         }
         Insert: {
           created_at?: string
@@ -114,6 +115,7 @@ export type Database = {
           name: string
           slug: string
           sort_order?: number
+          vat_rate?: number
         }
         Update: {
           created_at?: string
@@ -123,6 +125,7 @@ export type Database = {
           name?: string
           slug?: string
           sort_order?: number
+          vat_rate?: number
         }
         Relationships: []
       }
@@ -141,6 +144,7 @@ export type Database = {
           is_featured: boolean
           modifiers: Json
           name: string
+          par_stock: number | null
           slug: string
           sort_order: number
           unsplash_query: string | null
@@ -160,6 +164,7 @@ export type Database = {
           is_featured?: boolean
           modifiers?: Json
           name: string
+          par_stock?: number | null
           slug: string
           sort_order?: number
           unsplash_query?: string | null
@@ -179,6 +184,7 @@ export type Database = {
           is_featured?: boolean
           modifiers?: Json
           name?: string
+          par_stock?: number | null
           slug?: string
           sort_order?: number
           unsplash_query?: string | null
@@ -206,6 +212,7 @@ export type Database = {
           order_id: string
           quantity: number
           selected_modifiers: Json
+          vat_rate: number
         }
         Insert: {
           base_price: number
@@ -218,6 +225,7 @@ export type Database = {
           order_id: string
           quantity?: number
           selected_modifiers?: Json
+          vat_rate?: number
         }
         Update: {
           base_price?: number
@@ -230,6 +238,7 @@ export type Database = {
           order_id?: string
           quantity?: number
           selected_modifiers?: Json
+          vat_rate?: number
         }
         Relationships: [
           {
@@ -248,12 +257,50 @@ export type Database = {
           },
         ]
       }
+      order_push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          order_id: string
+          p256dh: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          order_id: string
+          p256dh: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          order_id?: string
+          p256dh?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_push_subscriptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           access_token: string
           claimed_by: string | null
           collected_at: string | null
           customer_name: string | null
+          day_number: number | null
+          discount_reason: string | null
+          discount_total: number
           expires_at: string | null
           id: string
           notes: string | null
@@ -262,11 +309,16 @@ export type Database = {
           pickup_at: string | null
           placed_at: string
           ready_at: string | null
+          receipt_email: string | null
+          receipt_sent_at: string | null
+          service_day: string | null
+          settled_as: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["order_status"]
           stripe_payment_intent_id: string | null
           stripe_session_id: string | null
           subtotal: number
+          tax_total: number
           total: number
           updated_at: string
           user_id: string | null
@@ -276,6 +328,9 @@ export type Database = {
           claimed_by?: string | null
           collected_at?: string | null
           customer_name?: string | null
+          day_number?: number | null
+          discount_reason?: string | null
+          discount_total?: number
           expires_at?: string | null
           id?: string
           notes?: string | null
@@ -284,11 +339,16 @@ export type Database = {
           pickup_at?: string | null
           placed_at?: string
           ready_at?: string | null
+          receipt_email?: string | null
+          receipt_sent_at?: string | null
+          service_day?: string | null
+          settled_as?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
           subtotal?: number
+          tax_total?: number
           total?: number
           updated_at?: string
           user_id?: string | null
@@ -298,6 +358,9 @@ export type Database = {
           claimed_by?: string | null
           collected_at?: string | null
           customer_name?: string | null
+          day_number?: number | null
+          discount_reason?: string | null
+          discount_total?: number
           expires_at?: string | null
           id?: string
           notes?: string | null
@@ -306,11 +369,16 @@ export type Database = {
           pickup_at?: string | null
           placed_at?: string
           ready_at?: string | null
+          receipt_email?: string | null
+          receipt_sent_at?: string | null
+          service_day?: string | null
+          settled_as?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
           subtotal?: number
+          tax_total?: number
           total?: number
           updated_at?: string
           user_id?: string | null
@@ -322,6 +390,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "staff"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_service_day_fkey"
+            columns: ["service_day"]
+            isOneToOne: false
+            referencedRelation: "service_days"
+            referencedColumns: ["day"]
           },
         ]
       }
@@ -360,6 +435,60 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      service_days: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          count_detail: Json | null
+          counted_cash: number | null
+          day: string
+          float_cash: number
+          next_number: number
+          opened_at: string
+          opened_by: string | null
+          report: Json | null
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          count_detail?: Json | null
+          counted_cash?: number | null
+          day: string
+          float_cash?: number
+          next_number?: number
+          opened_at?: string
+          opened_by?: string | null
+          report?: Json | null
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          count_detail?: Json | null
+          counted_cash?: number | null
+          day?: string
+          float_cash?: number
+          next_number?: number
+          opened_at?: string
+          opened_by?: string | null
+          report?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_days_closed_by_fkey"
+            columns: ["closed_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_days_opened_by_fkey"
+            columns: ["opened_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       staff: {
         Row: {
@@ -456,42 +585,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      manage_bar: {
-        Args: { p_actor: string; p_from: string; p_to: string }
-        Returns: Json
-      }
-      manage_earnings: {
-        Args: { p_actor: string; p_from: string; p_to: string }
-        Returns: Json
-      }
-      manage_ledger: {
-        Args: {
-          p_actions?: string[]
-          p_actor: string
-          p_from: string
-          p_limit?: number
-          p_offset?: number
-          p_staff?: string
-          p_to: string
-        }
-        Returns: {
-          action: string
-          created_at: string
-          detail: Json
-          id: number
-          item_name: string | null
-          order_number: number | null
-          staff_id: string | null
-          staff_name: string | null
-          station_name: string | null
-          subject_id: string | null
-        }[]
-      }
       advance_order: {
         Args: {
           p_actor: string
           p_order_id: string
           p_station?: string
+          p_tender?: string
           p_to: Database["public"]["Enums"]["order_status"]
         }
         Returns: Json
@@ -499,12 +598,17 @@ export type Database = {
       cancel_order_by_token: { Args: { p_token: string }; Returns: Json }
       card_punches: { Args: { p_user: string }; Returns: number }
       claim_owner: { Args: { p_display_name: string }; Returns: string }
+      close_service: {
+        Args: { p_actor: string; p_counted: number; p_detail?: Json }
+        Returns: Json
+      }
       create_order: {
         Args: {
           p_customer_name: string
           p_items: Json
           p_notes: string
           p_payment_method: string
+          p_receipt_email?: string
           p_redeem_item_id?: string
           p_stripe_payment_intent_id?: string
           p_stripe_session_id?: string
@@ -515,6 +619,9 @@ export type Database = {
           claimed_by: string | null
           collected_at: string | null
           customer_name: string | null
+          day_number: number | null
+          discount_reason: string | null
+          discount_total: number
           expires_at: string | null
           id: string
           notes: string | null
@@ -523,11 +630,16 @@ export type Database = {
           pickup_at: string | null
           placed_at: string
           ready_at: string | null
+          receipt_email: string | null
+          receipt_sent_at: string | null
+          service_day: string | null
+          settled_as: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["order_status"]
           stripe_payment_intent_id: string | null
           stripe_session_id: string | null
           subtotal: number
+          tax_total: number
           total: number
           updated_at: string
           user_id: string | null
@@ -539,6 +651,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      current_service_day: { Args: never; Returns: string }
       current_staff: {
         Args: never
         Returns: {
@@ -562,6 +675,107 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      discount_order: {
+        Args: {
+          p_actor: string
+          p_kind: string
+          p_order_id: string
+          p_reason: string
+          p_station?: string
+          p_value: number
+        }
+        Returns: Json
+      }
+      is_staff: { Args: never; Returns: boolean }
+      manage_bar: {
+        Args: { p_actor: string; p_from: string; p_to: string }
+        Returns: Json
+      }
+      manage_earnings: {
+        Args: { p_actor: string; p_from: string; p_to: string }
+        Returns: Json
+      }
+      manage_guard: { Args: { p_actor: string }; Returns: undefined }
+      manage_ledger: {
+        Args: {
+          p_actions?: string[]
+          p_actor: string
+          p_from: string
+          p_limit?: number
+          p_offset?: number
+          p_staff?: string
+          p_to: string
+        }
+        Returns: {
+          action: string
+          created_at: string
+          detail: Json
+          id: number
+          item_name: string
+          order_number: number
+          staff_id: string
+          staff_name: string
+          station_name: string
+          subject_id: string
+        }[]
+      }
+      menu_category_upsert: {
+        Args: { p_actor: string; p_category: Json }
+        Returns: {
+          created_at: string
+          earns_punch: boolean
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          sort_order: number
+          vat_rate: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "menu_categories"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      menu_item_delete: {
+        Args: { p_actor: string; p_id: string }
+        Returns: undefined
+      }
+      menu_reorder: {
+        Args: { p_actor: string; p_ids: string[] }
+        Returns: number
+      }
+      menu_slug: { Args: { p_name: string }; Returns: string }
+      menu_upsert: {
+        Args: { p_actor: string; p_item: Json }
+        Returns: {
+          allergens: string[]
+          base_price: number
+          category_id: string
+          created_at: string
+          daily_stock: number | null
+          description: string | null
+          dietary_tags: string[]
+          id: string
+          image_url: string | null
+          is_active: boolean
+          is_featured: boolean
+          modifiers: Json
+          name: string
+          par_stock: number | null
+          slug: string
+          sort_order: number
+          unsplash_query: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "menu_items"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       my_card: { Args: never; Returns: Json }
       my_usual: { Args: never; Returns: Json }
       note_order: {
@@ -573,11 +787,33 @@ export type Database = {
         }
         Returns: string
       }
+      open_service: {
+        Args: { p_actor: string; p_stock?: Json }
+        Returns: {
+          closed_at: string | null
+          closed_by: string | null
+          count_detail: Json | null
+          counted_cash: number | null
+          day: string
+          float_cash: number
+          next_number: number
+          opened_at: string
+          opened_by: string | null
+          report: Json | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_days"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       order_by_token: { Args: { p_token: string }; Returns: Json }
       order_lines: {
         Args: { p_items: Json; p_lock: boolean; p_redeem_item_id?: string }
         Returns: Json
       }
+      order_receipt: { Args: { p_token: string }; Returns: Json }
       order_transition_action: {
         Args: {
           p_from: Database["public"]["Enums"]["order_status"]
@@ -585,12 +821,20 @@ export type Database = {
         }
         Returns: string
       }
+      order_was_paid: {
+        Args: { p_status: Database["public"]["Enums"]["order_status"] }
+        Returns: boolean
+      }
       quote_order: {
         Args: { p_items: Json; p_redeem_item_id?: string }
         Returns: Json
       }
       release_expired_orders: { Args: never; Returns: number }
       release_order: { Args: { p_order_id: string }; Returns: boolean }
+      service_report: {
+        Args: { p_actor: string; p_day: string }
+        Returns: Json
+      }
       set_item_stock: {
         Args: {
           p_actor: string
@@ -600,10 +844,15 @@ export type Database = {
         }
         Returns: number
       }
+      set_receipt_email: {
+        Args: { p_email: string; p_token: string }
+        Returns: boolean
+      }
       shift_mark: {
         Args: { p_open: boolean; p_staff_id: string; p_station?: string }
-        Returns: string | null
+        Returns: string
       }
+      shop_tz: { Args: never; Returns: string }
       staff_board: { Args: never; Returns: Json }
       staff_can: {
         Args: {
@@ -613,11 +862,26 @@ export type Database = {
         Returns: boolean
       }
       staff_order: { Args: { p_order_id: string }; Returns: Json }
-      staff_shift: { Args: { p_staff_id: string }; Returns: string | null }
+      staff_role_now: {
+        Args: never
+        Returns: Database["public"]["Enums"]["staff_role"]
+      }
+      staff_shift: { Args: { p_staff_id: string }; Returns: string }
       staff_unlock: {
         Args: { p_pin: string; p_staff_id: string }
         Returns: Json
       }
+      subscribe_order_push: {
+        Args: {
+          p_auth: string
+          p_endpoint: string
+          p_p256dh: string
+          p_token: string
+        }
+        Returns: boolean
+      }
+      valid_modifiers: { Args: { p_modifiers: Json }; Returns: boolean }
+      vat_of: { Args: { p_gross: number; p_rate: number }; Returns: number }
     }
     Enums: {
       order_status:
@@ -645,12 +909,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -674,11 +938,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -699,11 +963,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -724,11 +988,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -741,11 +1005,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

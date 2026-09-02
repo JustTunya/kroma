@@ -1,0 +1,108 @@
+-- Run against the hosted database. Everything is inside begin/rollback:
+-- real schema, zero persistence.
+begin;
+
+do $$
+declare
+  v_owner   uuid;
+  v_barista uuid;
+  v_day     service_days;
+  v_item    uuid;
+begin
+  insert into staff (display_name, role, pin_hash)
+  values ('Test Owner', 'owner', extensions.crypt('1111', extensions.gen_salt('bf', 4)))
+  returning id into v_owner;
+
+  insert into staff (display_name, role, pin_hash)
+  values ('Test Barista', 'staff', extensions.crypt('2222', extensions.gen_salt('bf', 4)))
+  returning id into v_barista;
+
+  -- permissions ---------------------------------------------------------------
+  assert staff_can('staff', 'shop.open'),        'anyone on shift opens the day';
+  assert not staff_can('staff', 'shop.close'),   'a barista does not count the drawer';
+  assert staff_can('manager', 'shop.close'),     'a manager counts the drawer';
+
+  -- no day yet ----------------------------------------------------------------
+  delete from service_days where day = (now() at time zone shop_tz())::date;
+  assert current_service_day() is null, 'no open day before anyone opens one';
+
+  -- a batch item to reset -----------------------------------------------------
+  insert into menu_items (category_id, slug, name, base_price, par_stock, daily_stock)
+  values ((select id from menu_categories order by sort_order limit 1),
+          'test-bun', 'Test Bun', 4.00, 12, 0)
+  returning id into v_item;
+
+  -- opening -------------------------------------------------------------------
+  v_day := open_service(v_barista);
+  assert v_day.day = (now() at time zone shop_tz())::date, 'opens the shop-local day';
+  assert v_day.next_number = 1,                            'tickets start at one';
+  assert current_service_day() = v_day.day,                'the day is now open';
+  assert (select daily_stock from menu_items where id = v_item) = 12,
+         'opening resets daily_stock to par';
+  assert (select par_stock from menu_items where id = v_item) = 12,
+         'opening reads par_stock but never rewrites it';
+
+  -- idempotent ------------------------------------------------------------
+  -- Also the on-conflict path: open_service's insert races an existing row
+  -- on the real primary key, so this second call goes through the exact
+  -- "someone already opened today" branch a second concurrent iPad would hit.
+  update menu_items set daily_stock = 3 where id = v_item;
+  v_day := open_service(v_barista);
+  assert (select daily_stock from menu_items where id = v_item) = 3,
+         'a second open writes nothing';
+  assert (select par_stock from menu_items where id = v_item) = 12,
+         'par_stock still survives a second open';
+  assert (select count(*) from staff_events where action = 'shop.open') = 1,
+         'and audits nothing';
+
+  -- overrides -----------------------------------------------------------------
+  delete from service_days where day = (now() at time zone shop_tz())::date;
+  v_day := open_service(v_barista, jsonb_build_object(v_item::text, 5));
+  assert (select daily_stock from menu_items where id = v_item) = 5,
+         'the opening screen count beats par';
+
+  -- numbering -----------------------------------------------------------------
+  declare
+    v_a orders;
+    v_b orders;
+    v_items jsonb;
+  begin
+    v_items := jsonb_build_array(jsonb_build_object(
+      'menu_item_id', v_item, 'quantity', 1, 'modifiers', '[]'::jsonb));
+
+    v_a := create_order(v_items, 'A', '', 'counter');
+    v_b := create_order(v_items, 'B', '', 'counter');
+
+    assert v_a.day_number = 1,                 'the first ticket of the day is 1';
+    assert v_b.day_number = 2,                 'the second is 2';
+    assert v_a.service_day = current_service_day(), 'the order joins the open day';
+    assert v_a.order_number <> v_b.order_number,    'the global id still differs';
+  end;
+
+  -- a closed shop refuses -----------------------------------------------------
+  -- The shop day, not the session day: the session's TimeZone is UTC while
+  -- shop_tz() is Europe/Bucharest, so current_date/now()::date drifts from the
+  -- actual open row for the ~3h between Bucharest midnight and UTC midnight.
+  update service_days set closed_at = now()
+   where day = (now() at time zone shop_tz())::date;
+  begin
+    perform create_order(jsonb_build_array(jsonb_build_object(
+      'menu_item_id', v_item, 'quantity', 1, 'modifiers', '[]'::jsonb)),
+      'C', '', 'counter');
+    assert false, 'a closed shop must refuse an order';
+  exception when sqlstate 'P0001' then
+    assert sqlerrm = 'The bakehouse is closed.', 'and say so plainly';
+  end;
+
+  begin
+    perform quote_order(jsonb_build_array(jsonb_build_object(
+      'menu_item_id', v_item, 'quantity', 1, 'modifiers', '[]'::jsonb)));
+    assert false, 'a closed shop must refuse a quote too';
+  exception when sqlstate 'P0001' then
+    assert sqlerrm = 'The bakehouse is closed.', 'and say so plainly';
+  end;
+
+  raise notice 'service_day: all assertions passed';
+end $$;
+
+rollback;

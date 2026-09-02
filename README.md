@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# KROMA Coffee & Bakehouse
 
-## Getting Started
+A full order-ahead storefront and back-of-house system for a fictional
+specialty coffee shop, built as a portfolio piece. Minimalist Nordic-Japanese
+storefront on the front end, a real Kitchen Display / order board / stock /
+close-of-day system on the back end — see `CLAUDE.md` for the full brand and
+system spec.
 
-First, run the development server:
+**This is a demo project.** No real business, no real payments in production
+(Stripe runs in test mode), no real delivery. It exists to show a complete
+ordering flow end to end: browse → customize → pay → track → a barista
+actually preparing and calling the order.
+
+## Stack
+
+Next.js 16 (App Router) · React 19 · Tailwind v4 · Supabase (Postgres, Auth,
+RLS) · Stripe Checkout · Web Push · Framer Motion.
+
+## Trying it live
+
+The storefront opens itself automatically every day (a cron job calls the
+same `open_service` RPC a barista would tap on the iPad — see
+`app/api/cron/release-holds/route.ts`), so there is always a live menu to
+order from. Card payments run through Stripe **test mode** — use
+[`4242 4242 4242 4242`](https://docs.stripe.com/testing), any future
+expiry, any CVC.
+
+`/dashboard` is the staff side (order board, kitchen display, stock, close of
+day) and is gated behind a real account plus a 4-digit PIN. That PIN isn't
+published — it's a real write-access credential against live demo data, not
+a toy. To see the dashboard, run the project locally instead (below); the
+local seed ships with its own throwaway PIN.
+
+## Running locally
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+supabase start        # local Postgres + Auth, seeded from supabase/seed.sql
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Copy `.env.local.example` → `.env.local` (or ask for one) and fill in:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Variable | Where it comes from |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | `supabase start` prints these for local dev |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Stripe dashboard, test mode; `stripe listen` for the webhook secret |
+| `CRON_SECRET` | any string — only checked against the `Authorization` header on `/api/cron/*` |
+| `STAFF_SESSION_SECRET` | any string — signs the staff PIN-unlock cookie |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `VAPID_SUBJECT` | `npx web-push generate-vapid-keys`, for order-ready push notifications |
+| `NEXT_PUBLIC_IMAGEKIT_ID` | optional — falls back to the Unsplash pool in `lib/menu-images.ts` |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+`supabase db reset` re-runs every migration plus `supabase/seed.sql`, which
+seeds the menu **and** a local-only staff row with a known PIN (**`1234`**,
+owner role). `/dashboard` is gated on a real Supabase Auth session first, so
+the seed can't get you all the way in by itself — one-time setup:
 
-## Learn More
+1. Sign up at `/auth/sign-up` with any email, confirm it via the local
+   Inbucket mail UI (`supabase status` prints its URL, usually
+   `http://localhost:54324`).
+2. Link that account to the seeded staff row:
+   ```sql
+   update staff set user_id = (select id from auth.users where email = 'you@example.com')
+    where display_name = 'Demo Owner';
+   ```
+3. Sign in, open `/dashboard`, PIN `1234`.
 
-To learn more about Next.js, take a look at the following resources:
+The shop still has to be opened once per session — `/dashboard` walks you
+through it (par-stock counts, then Open) the same way a real morning would.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Layout of the codebase
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `app/page.tsx` + `components/storefront/*` — the storefront, the reference
+  implementation for every visual pattern (see `CLAUDE.md`)
+- `app/checkout`, `app/order/[token]` — cart → Stripe → order tracking
+- `app/dashboard` — order board, kitchen display, stock, numbers, close of day
+- `supabase/migrations` — schema, RPCs, and RLS policies (the actual business
+  logic lives here, not in the app layer)
 
-## Deploy on Vercel
+## What's simulated
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Payments: Stripe test mode, no real charges.
+- Push notifications: real Web Push, but there's no phone number/SMS path.
+- "Roasting" and sourcing copy on the storefront is flavor text, not a real
+  supply chain.

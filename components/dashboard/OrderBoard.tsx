@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { LayoutGroup } from "framer-motion";
 
@@ -9,6 +10,7 @@ import { LaneRail } from "@/components/dashboard/LaneRail";
 import { OrderLane } from "@/components/dashboard/OrderLane";
 import { ageSince } from "@/components/dashboard/OrderRow";
 import { ScheduledDrawer } from "@/components/dashboard/ScheduledDrawer";
+import { ServiceClosed } from "@/components/dashboard/ServiceClosed";
 import { ShiftStart } from "@/components/dashboard/ShiftStart";
 import { NEXT_STATUS } from "@/lib/order-transitions";
 import { useBoard, useBoardPoll } from "@/lib/use-board";
@@ -16,6 +18,7 @@ import { useChime } from "@/lib/use-chime";
 
 import type { BoardOrder } from "@/types/board";
 import type { OrderStatus } from "@/lib/order-status";
+import type { ParItem } from "@/lib/service-day";
 
 /**
  * Four lanes, in the order the work happens. `pending` sits beside `paid`
@@ -44,11 +47,17 @@ export function OrderBoard({
   initial,
   unlocked,
   shiftSince,
+  dayOpen,
+  par,
 }: {
   initial: BoardOrder[];
   unlocked: boolean;
   /** ISO timestamp of this person's open shift, or null if they are off. */
   shiftSince: string | null;
+  /** Whether a service_days row is open right now. */
+  dayOpen: boolean;
+  /** Batch items to prefill on the opening screen. */
+  par: ParItem[];
 }) {
   const { orders, refetch } = useBoard(initial);
   const { connection, freshAt } = useBoardStatus();
@@ -121,12 +130,14 @@ export function OrderBoard({
     return { live, scheduled };
   }, [orders, now]);
 
-  async function advance(order: BoardOrder) {
-    const next = NEXT_STATUS[order.status];
-    if (!next) return;
+  async function advance(order: BoardOrder, tender?: "cash" | "card") {
+    const to = order.status === "pending" && order.payment_method === "counter" && tender
+      ? "paid"
+      : NEXT_STATUS[order.status];
+    if (!to) return;
 
     setError(null);
-    const result = await advanceOrderAction(order.id, next);
+    const result = await advanceOrderAction(order.id, to, tender);
     if (!result.ok) setError(result.error ?? "That did not go through.");
     void refetch();
   }
@@ -140,6 +151,10 @@ export function OrderBoard({
     title: entry.title,
     count: live.filter((order) => entry.statuses.includes(order.status)).length,
   }));
+
+  // Order matters. A shift cannot start inside a day that has not opened, and
+  // asking for a PIN-holder's shift over a closed shop is the wrong question.
+  if (!dayOpen) return <ServiceClosed items={par} unlocked={unlocked} />;
 
   return (
     <>
@@ -179,9 +194,12 @@ export function OrderBoard({
                 . Print the pass list and work from paper.
               </span>
             ) : (
-              <span className="text-accent-primary">
+              <Link
+                href="/dashboard/unlock"
+                className="text-accent-primary underline decoration-accent-primary/40 underline-offset-4 transition-colors hover:text-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary"
+              >
                 Unlock with your PIN to move an order.
-              </span>
+              </Link>
             )}
           </p>
         )}

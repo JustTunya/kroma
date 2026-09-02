@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 
 import { cancelOwnOrderAction } from "@/app/order/actions";
+import { NotifyButton } from "@/components/checkout/NotifyButton";
 import { rememberOrderToken } from "@/lib/active-order";
 import { clearGuestCart } from "@/lib/cart";
 import { readServerCart, writeServerCart } from "@/lib/cart-sync";
@@ -18,16 +20,19 @@ export type OrderDocItem = {
   quantity: number;
   selected_modifiers: { group: string; option: string; priceOffset: number }[];
   line_total: number;
+  vat_rate: number;
 };
 
 export type OrderDoc = {
   id: string;
   order_number: number;
+  day_number: number | null;
   status: OrderStatus;
   customer_name: string | null;
   notes: string | null;
   subtotal: number;
   total: number;
+  tax_total: number;
   payment_method: "online" | "counter";
   placed_at: string;
   pickup_at: string | null;
@@ -118,35 +123,48 @@ export function OrderStatus({ token, initial }: { token: string; initial: OrderD
         )}
       </p>
 
-      {cancellable && (
-        <motion.button
-          type="button"
-          // No blur reset: React dispatches blur before click, so disarming
-          // there makes the second press a no-op. An armed button says
-          // "Yes — cancel it" on its face, which is warning enough.
-          onClick={() => (confirming ? cancel() : setConfirming(true))}
-          disabled={pending}
-          whileTap={{ scale: 0.98 }}
-          transition={pressSpring}
-          aria-label={
-            confirming
-              ? `Confirm cancelling order ${order.order_number}`
-              : `Cancel order ${order.order_number}, €${order.total.toFixed(2)}`
-          }
-          className={`mt-5 h-9 rounded-full border px-4 font-mono text-[10px] font-medium tracking-[0.18em] uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:opacity-50 ${
-            confirming
-              ? "border-badge-alert text-badge-alert"
-              : "border-hairline text-text-tertiary hover:border-badge-alert hover:text-badge-alert"
-          }`}
+      {(order.status === "pending" ||
+        order.status === "paid" ||
+        order.status === "preparing") && <NotifyButton token={token} />}
+
+      {order.status !== "pending" && order.status !== "cancelled" && (
+        <Link
+          href={`/order/${token}/receipt`}
+          className="mt-5 inline-block font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
         >
-          {confirming ? "Yes — cancel it" : "Cancel this order"}
-        </motion.button>
+          Receipt
+        </Link>
       )}
 
       {cancellable && (
-        <p className="mt-3 max-w-md font-mono text-[10px] tracking-[0.14em] text-text-tertiary uppercase">
-          Only until the bar starts it
-        </p>
+        <div className="mt-8 max-w-md border-t border-hairline pt-6">
+          <motion.button
+            type="button"
+            // No blur reset: React dispatches blur before click, so disarming
+            // there makes the second press a no-op. An armed button says
+            // "Yes — cancel it" on its face, which is warning enough.
+            onClick={() => (confirming ? cancel() : setConfirming(true))}
+            disabled={pending}
+            whileTap={{ scale: 0.98 }}
+            transition={pressSpring}
+            aria-label={
+              confirming
+                ? `Confirm cancelling order ${order.day_number ?? order.order_number}`
+                : `Cancel order ${order.day_number ?? order.order_number}, €${order.total.toFixed(2)}`
+            }
+            className={`h-9 rounded-full border px-4 font-mono text-[10px] font-medium tracking-[0.18em] uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus disabled:opacity-50 ${
+              confirming
+                ? "border-badge-alert text-badge-alert"
+                : "border-hairline text-text-tertiary hover:border-badge-alert hover:text-badge-alert"
+            }`}
+          >
+            {confirming ? "Yes — cancel it" : "Cancel this order"}
+          </motion.button>
+
+          <p className="mt-3 font-mono text-[10px] tracking-[0.14em] text-text-tertiary uppercase">
+            Only until the bar starts it
+          </p>
+        </div>
       )}
 
       {error && (

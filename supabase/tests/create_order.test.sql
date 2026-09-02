@@ -25,6 +25,12 @@ declare
   v_quote  jsonb;
   v_failed boolean;
 begin
+  -- create_order() now refuses a closed shop. Every fixture opens the day.
+  -- next_number is reset too so a stray real-world count doesn't leak into
+  -- this test's ticket numbers -- safe only because this whole file rolls back.
+  insert into service_days (day) values ((now() at time zone shop_tz())::date)
+  on conflict (day) do update set closed_at = null, next_number = 1;
+
   ---------------------------------------------------------------- 1. prices
   -- The client lies about the price. The database ignores it entirely.
   v_order := create_order(

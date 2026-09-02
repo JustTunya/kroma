@@ -1,7 +1,7 @@
 import type Stripe from "stripe";
 
 import { placeOrderFromSession } from "@/lib/payment";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 
 /**
  * Where a paid session becomes an order — normally first, but /checkout/confirm
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(
+    event = getStripe().webhooks.constructEvent(
       raw,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!,

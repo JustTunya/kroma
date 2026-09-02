@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { placeOrderFromSession } from "@/lib/payment";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +19,7 @@ export default async function ConfirmPage({
   const { session_id: sessionId } = await searchParams;
   if (!sessionId) redirect("/checkout");
 
-  const session = await stripe.checkout.sessions.retrieve(sessionId).catch((error) => {
+  const session = await getStripe().checkout.sessions.retrieve(sessionId).catch((error) => {
     console.error("stripe session retrieve failed:", error);
     return null;
   });

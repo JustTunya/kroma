@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 
 import { createClient } from "@/lib/server";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { packItems, type OrderPayloadLine } from "@/lib/checkout";
 
 export type PlaceOrderResult =
@@ -121,7 +121,7 @@ export async function placeOrder(input: {
   const origin = (await headers()).get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL;
 
   try {
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
       // Stripe's floor is 30 minutes. Nothing is held meanwhile, so this is the

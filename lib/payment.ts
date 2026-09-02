@@ -4,7 +4,7 @@ import type Stripe from "stripe";
 import { admin } from "@/lib/admin";
 import { unpackItems } from "@/lib/checkout";
 import { sendReceipt } from "@/lib/send-receipt";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 
 export type SessionOutcome =
   | { status: "placed"; token: string }
@@ -92,7 +92,7 @@ async function refund(
 
   try {
     // Keyed on the session so a webhook retry cannot refund twice.
-    await stripe.refunds.create(
+    await getStripe().refunds.create(
       { payment_intent: intent },
       { idempotencyKey: `refund_${session.id}` },
     );

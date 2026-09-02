@@ -1,7 +1,7 @@
 import "server-only";
 
 import { admin } from "@/lib/admin";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 
 export type RefundResult = { ok: boolean; error?: string };
 
@@ -37,7 +37,7 @@ export async function refundOrder(orderId: string, amountEuros?: number): Promis
     amountEuros !== undefined ? Math.round(amountEuros * 100) : undefined;
 
   try {
-    await stripe.refunds.create(
+    await getStripe().refunds.create(
       {
         payment_intent: data.stripe_payment_intent_id,
         ...(cents !== undefined && { amount: cents }),

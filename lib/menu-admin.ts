@@ -13,6 +13,7 @@ export type DraftItem = {
   id: string | null;
   categoryId: string;
   name: string;
+  slug: string;
   description: string;
   basePrice: number;
   dailyStock: number | null;

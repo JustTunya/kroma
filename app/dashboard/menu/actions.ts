@@ -26,6 +26,7 @@ export async function saveItemAction(draft: DraftItem): Promise<Result> {
         id: draft.id,
         category_id: draft.categoryId,
         name: draft.name,
+        slug: draft.slug,
         description: draft.description,
         base_price: draft.basePrice,
         daily_stock: draft.dailyStock,

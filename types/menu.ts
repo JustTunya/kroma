@@ -3,7 +3,7 @@ import type { Database } from "@/types/supabase";
 type MenuItemRow = Database["public"]["Tables"]["menu_items"]["Row"];
 
 export type ModifierOption = { name: string; priceOffset: number };
-export type ModifierGroup = { name: string; options: ModifierOption[] };
+export type ModifierGroup = { name: string; required?: boolean; options: ModifierOption[] };
 
 /**
  * A storefront-facing menu item: the row fields the UI needs, its category name,

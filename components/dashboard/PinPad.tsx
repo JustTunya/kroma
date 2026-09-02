@@ -136,18 +136,17 @@ export function PinPad({ roster }: { roster: RosterEntry[] }) {
         {picked.display_name}
       </p>
 
-      {/* The punchcard's glyphs, borrowed: filled is what you have entered. */}
-      <p aria-hidden className="mt-7 flex gap-3 text-[28px] leading-none">
+      <p aria-hidden className="mt-7 flex gap-3">
         {Array.from({ length: PIN_LENGTH }, (_, i) => (
           <span
             key={i}
             className={cn(
-              "transition-colors duration-150",
-              i < pin.length ? "text-accent-primary" : "text-kds-border",
+              "size-3.5 rounded-full border transition-colors duration-150",
+              i < pin.length
+                ? "border-accent-primary bg-accent-primary"
+                : "border-kds-border bg-transparent",
             )}
-          >
-            {i < pin.length ? "●" : "○"}
-          </span>
+          />
         ))}
       </p>
 

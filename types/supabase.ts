@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -105,6 +105,7 @@ export type Database = {
           name: string
           slug: string
           sort_order: number
+          vat_rate: number
         }
         Insert: {
           created_at?: string
@@ -114,6 +115,7 @@ export type Database = {
           name: string
           slug: string
           sort_order?: number
+          vat_rate?: number
         }
         Update: {
           created_at?: string
@@ -123,6 +125,7 @@ export type Database = {
           name?: string
           slug?: string
           sort_order?: number
+          vat_rate?: number
         }
         Relationships: []
       }
@@ -209,6 +212,7 @@ export type Database = {
           order_id: string
           quantity: number
           selected_modifiers: Json
+          vat_rate: number
         }
         Insert: {
           base_price: number
@@ -221,6 +225,7 @@ export type Database = {
           order_id: string
           quantity?: number
           selected_modifiers?: Json
+          vat_rate?: number
         }
         Update: {
           base_price?: number
@@ -233,6 +238,7 @@ export type Database = {
           order_id?: string
           quantity?: number
           selected_modifiers?: Json
+          vat_rate?: number
         }
         Relationships: [
           {
@@ -272,6 +278,7 @@ export type Database = {
           stripe_payment_intent_id: string | null
           stripe_session_id: string | null
           subtotal: number
+          tax_total: number
           total: number
           updated_at: string
           user_id: string | null
@@ -296,6 +303,7 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
           subtotal?: number
+          tax_total?: number
           total?: number
           updated_at?: string
           user_id?: string | null
@@ -320,6 +328,7 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
           subtotal?: number
+          tax_total?: number
           total?: number
           updated_at?: string
           user_id?: string | null
@@ -569,6 +578,7 @@ export type Database = {
           stripe_payment_intent_id: string | null
           stripe_session_id: string | null
           subtotal: number
+          tax_total: number
           total: number
           updated_at: string
           user_id: string | null
@@ -629,12 +639,12 @@ export type Database = {
           created_at: string
           detail: Json
           id: number
-          item_name: string | null
-          order_number: number | null
-          staff_id: string | null
-          staff_name: string | null
-          station_name: string | null
-          subject_id: string | null
+          item_name: string
+          order_number: number
+          staff_id: string
+          staff_name: string
+          station_name: string
+          subject_id: string
         }[]
       }
       my_card: { Args: never; Returns: Json }
@@ -702,7 +712,7 @@ export type Database = {
       }
       shift_mark: {
         Args: { p_open: boolean; p_staff_id: string; p_station?: string }
-        Returns: string | null
+        Returns: string
       }
       shop_tz: { Args: never; Returns: string }
       staff_board: { Args: never; Returns: Json }
@@ -718,11 +728,12 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["staff_role"]
       }
-      staff_shift: { Args: { p_staff_id: string }; Returns: string | null }
+      staff_shift: { Args: { p_staff_id: string }; Returns: string }
       staff_unlock: {
         Args: { p_pin: string; p_staff_id: string }
         Returns: Json
       }
+      vat_of: { Args: { p_gross: number; p_rate: number }; Returns: number }
     }
     Enums: {
       order_status:

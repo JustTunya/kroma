@@ -48,6 +48,25 @@ export async function saveItemAction(draft: DraftItem): Promise<Result> {
   }
 }
 
+export async function deleteItemAction(id: string): Promise<Result> {
+  try {
+    const actor = await requireActor("menu.edit");
+    const supabase = await createClient();
+
+    const { error } = await supabase.rpc("menu_item_delete", {
+      p_actor: actor.staffId,
+      p_id: id,
+    });
+    if (error) return fail(error);
+
+    await slide(actor);
+    afterMenuWrite();
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
 export async function reorderItemsAction(ids: string[]): Promise<Result> {
   try {
     const actor = await requireActor("menu.edit");

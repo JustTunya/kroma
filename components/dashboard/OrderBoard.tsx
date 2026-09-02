@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { LayoutGroup } from "framer-motion";
 
@@ -193,9 +194,12 @@ export function OrderBoard({
                 . Print the pass list and work from paper.
               </span>
             ) : (
-              <span className="text-accent-primary">
+              <Link
+                href="/dashboard/unlock"
+                className="text-accent-primary underline decoration-accent-primary/40 underline-offset-4 transition-colors hover:text-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary"
+              >
                 Unlock with your PIN to move an order.
-              </span>
+              </Link>
             )}
           </p>
         )}

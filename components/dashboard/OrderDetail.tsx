@@ -307,12 +307,13 @@ export function OrderDetail({
       <DiscountSheet order={discounting ? order : null} onClose={() => setDiscounting(false)} />
 
       {!role && (
-        <p
+        <Link
+          href="/dashboard/unlock"
           role="status"
-          className="mt-4 font-mono text-[11px] tracking-[0.14em] text-accent-primary uppercase"
+          className="mt-4 inline-block font-mono text-[11px] tracking-[0.14em] text-accent-primary underline decoration-accent-primary/40 underline-offset-4 uppercase transition-colors hover:text-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary"
         >
           Unlock with your PIN to change anything.
-        </p>
+        </Link>
       )}
 
       {error && (

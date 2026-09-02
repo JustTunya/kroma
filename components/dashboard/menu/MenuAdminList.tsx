@@ -204,6 +204,10 @@ export function MenuAdminList({
           setDraft(null);
           router.refresh();
         }}
+        onDeleted={() => {
+          setDraft(null);
+          router.refresh();
+        }}
       />
     </>
   );

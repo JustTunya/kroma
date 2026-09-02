@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 
-import { saveItemAction } from "@/app/dashboard/menu/actions";
+import { deleteItemAction, saveItemAction } from "@/app/dashboard/menu/actions";
 import { ALLERGENS, DIETS } from "@/lib/dietary";
 import { slugify, validModifiers, type DraftItem } from "@/lib/menu-admin";
 import { pressSpring, spring } from "@/lib/motion";
@@ -24,11 +24,13 @@ export function MenuItemSheet({
   categories,
   onClose,
   onSaved,
+  onDeleted,
 }: {
   draft: DraftItem | null;
   categories: Category[];
   onClose: () => void;
   onSaved: () => void;
+  onDeleted: () => void;
 }) {
   // No effect to reset these when `initial` changes: the parent remounts
   // this component with a fresh key per item (see MenuAdminList), which
@@ -39,7 +41,7 @@ export function MenuItemSheet({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  if (!draft) return null;
+  if (!initial || !draft) return null;
 
   const nameValid = draft.name.trim().length > 0;
   const modifiersValid = validModifiers(draft.modifiers);
@@ -60,6 +62,22 @@ export function MenuItemSheet({
       const result = await saveItemAction(draft);
       if (result.ok) {
         onSaved();
+      } else {
+        setError(result.error ?? "That did not go through.");
+      }
+    });
+  }
+
+  function remove() {
+    if (!draft?.id) return;
+    if (!window.confirm(`Remove ${draft.name || "this item"} from the menu? This can't be undone.`)) {
+      return;
+    }
+    setError(null);
+    startTransition(async () => {
+      const result = await deleteItemAction(draft.id!);
+      if (result.ok) {
+        onDeleted();
       } else {
         setError(result.error ?? "That did not go through.");
       }
@@ -256,6 +274,17 @@ export function MenuItemSheet({
             >
               {draft.isActive ? "On the menu" : "Off the menu"}
             </button>
+
+            {draft.id && (
+              <button
+                type="button"
+                onClick={remove}
+                disabled={pending}
+                className="flex h-10 w-full items-center justify-center rounded-full border border-badge-alert font-mono text-[10px] font-medium tracking-[0.18em] text-badge-alert uppercase transition-colors hover:bg-badge-alert hover:text-kds-canvas focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary disabled:opacity-40"
+              >
+                Remove item
+              </button>
+            )}
           </div>
 
           <div className="border-t border-kds-border p-6">

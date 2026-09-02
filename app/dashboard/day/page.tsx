@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { DayReport } from "@/components/dashboard/day/DayReport";
+import { MetaLine } from "@/components/dashboard/numbers/MetaLine";
 import { dayLabel } from "@/lib/service-day";
 import { createClient } from "@/lib/server";
 import { currentActor, currentDay } from "@/lib/staff";
@@ -70,64 +70,80 @@ export default async function DayPage() {
       </header>
 
       {day ? (
-        <section className="px-5 pb-16 sm:px-10 lg:px-14 lg:pb-24">
-          <p className="max-w-lg text-[15px] leading-[1.6] text-kds-text-secondary">
-            Opened {clock(day.opened_at)}
-            {openedByName ? ` by ${openedByName}` : ""}.
-          </p>
-
-          <p className="mt-10 font-serif text-[clamp(48px,8vw,96px)] leading-[0.95] tracking-[-0.03em] tabular-nums">
-            {orders.count ?? 0}
-          </p>
-          <p className="mt-3 font-mono text-[11px] font-medium tracking-[0.14em] text-kds-text-secondary uppercase">
-            {orders.count === 1 ? "Order today" : "Orders today"}
-          </p>
-
-          <div className="mt-10 border-t border-kds-border pt-8">
-            <h2 className="font-mono text-[10px] font-medium tracking-[0.18em] text-kds-text-secondary uppercase">
-              On the counter
+        <>
+          <section
+            aria-label="Since open"
+            className="px-5 py-16 sm:px-10 lg:px-14 lg:py-24"
+          >
+            <p className="font-mono text-[10px] font-medium tracking-[0.18em] text-accent-primary uppercase">
+              Since open
+            </p>
+            <h2 className="mt-4 max-w-[14ch] font-serif text-[clamp(28px,3.4vw,44px)] leading-[1.05] tracking-[-0.02em]">
+              What&rsquo;s moved today
             </h2>
-            {onCounter.data && onCounter.data.length > 0 ? (
-              <p className="mt-4 font-mono text-[11px] tracking-[0.14em] uppercase">
-                {onCounter.data.map((item, i) => (
-                  <span key={item.name}>
-                    {i > 0 && (
-                      <span aria-hidden className="mx-3 text-kds-border">
-                        /
+
+            <p className="mt-10 font-serif text-[clamp(48px,8vw,96px)] leading-[0.95] tracking-[-0.03em] tabular-nums">
+              {orders.count ?? 0}
+            </p>
+            <MetaLine
+              className="mt-6 text-kds-text-secondary"
+              parts={[
+                { text: orders.count === 1 ? "Order today" : "Orders today" },
+                { text: `Opened ${clock(day.opened_at)}${openedByName ? ` by ${openedByName}` : ""}` },
+              ]}
+            />
+
+            <div className="mt-10 border-t border-kds-border pt-8">
+              <h3 className="font-mono text-[10px] font-medium tracking-[0.18em] text-kds-text-secondary uppercase">
+                On the counter
+              </h3>
+              {onCounter.data && onCounter.data.length > 0 ? (
+                <ul className="mt-6 divide-y divide-kds-border border-y border-kds-border">
+                  {onCounter.data.map((item) => (
+                    <li
+                      key={item.name}
+                      className="flex items-baseline justify-between gap-6 py-4"
+                    >
+                      <span className="font-serif text-[20px] leading-[1.2] tracking-[-0.02em]">
+                        {item.name}
                       </span>
-                    )}
-                    {item.name}
-                  </span>
-                ))}
-              </p>
-            ) : (
-              <p className="mt-4 font-mono text-[11px] tracking-[0.14em] text-kds-text-secondary uppercase">
-                Nothing on the counter.
-              </p>
-            )}
-          </div>
+                      <span
+                        className={
+                          (item.daily_stock ?? 0) <= 5
+                            ? "shrink-0 font-mono text-[11px] tracking-[0.14em] text-badge-alert uppercase tabular-nums"
+                            : "shrink-0 font-mono text-[11px] tracking-[0.14em] text-kds-text-secondary uppercase tabular-nums"
+                        }
+                      >
+                        {item.daily_stock} left
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-6 border-y border-kds-border py-10 font-mono text-[11px] tracking-[0.14em] text-kds-text-secondary uppercase">
+                  Nothing on the counter.
+                </p>
+              )}
+            </div>
+          </section>
 
           {reportBroken ? (
-            <p
-              role="status"
-              className="mt-10 max-w-lg border-y border-kds-border py-6 font-mono text-[11px] leading-[1.7] tracking-[0.14em] text-badge-alert uppercase"
+            <section
+              aria-label="The till"
+              className="border-t border-kds-border px-5 py-16 sm:px-10 lg:px-14 lg:py-24"
             >
-              The takings could not be read. Nothing is lost — the till is
-              unaffected.
-            </p>
+              <p
+                role="status"
+                className="max-w-lg border-y border-kds-border py-6 font-mono text-[11px] leading-[1.7] tracking-[0.14em] text-badge-alert uppercase"
+              >
+                The takings could not be read. Nothing is lost — the till is
+                unaffected.
+              </p>
+            </section>
           ) : (
-            report.data && <DayReport report={report.data as Report} />
+            report.data && <DayReport report={report.data as Report} canClose={canClose} />
           )}
-
-          {canClose && (
-            <Link
-              href="/dashboard/day/close"
-              className="mt-10 inline-flex h-10 items-center rounded-full bg-accent-primary px-5 font-mono text-[10px] font-medium tracking-[0.18em] text-surface-card uppercase transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary"
-            >
-              Count the drawer
-            </Link>
-          )}
-        </section>
+        </>
       ) : (
         <p className="mx-5 border-y border-kds-border py-10 font-mono text-[13px] tracking-[0.02em] text-kds-text-secondary sm:mx-10 lg:mx-14">
           The shop has not opened today.

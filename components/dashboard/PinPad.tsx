@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Delete } from "lucide-react";
 
@@ -67,6 +67,20 @@ export function PinPad({ roster }: { roster: RosterEntry[] }) {
     setPin("");
     setError(null);
   }
+
+  // The physical keypad is the primary input, but a terminal is still a
+  // browser: a keyboard should type digits and Backspace/Escape should do
+  // what they do everywhere else.
+  useEffect(() => {
+    if (!picked) return;
+    function onKey(event: KeyboardEvent) {
+      if (event.key >= "0" && event.key <= "9") press(event.key);
+      else if (event.key === "Backspace") press("del");
+      else if (event.key === "Escape") back();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
 
   if (!picked) {
     return (

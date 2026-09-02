@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
+import { notifyReady } from "@/lib/push";
 import { refundOrder } from "@/lib/refund";
 import { sendReceipt } from "@/lib/send-receipt";
 import { createClient } from "@/lib/server";
@@ -192,8 +193,11 @@ export async function advanceOrderAction(
       if (!refund.ok) return { ok: false, error: refund.error };
     }
 
-    // A receipt must never block the pass.
+    // The pass does not wait on a notification or a receipt. Fire and
+    // forget — a failed push is not a failed transition, and the order
+    // page's own poll still works.
     if (to === "paid") void sendReceipt(orderId).catch(console.error);
+    if (to === "ready") void notifyReady(orderId).catch(console.error);
 
     return { ok: true };
   } catch (error) {

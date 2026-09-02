@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 
 import { cancelOwnOrderAction } from "@/app/order/actions";
+import { NotifyButton } from "@/components/checkout/NotifyButton";
 import { rememberOrderToken } from "@/lib/active-order";
 import { clearGuestCart } from "@/lib/cart";
 import { readServerCart, writeServerCart } from "@/lib/cart-sync";
@@ -121,6 +122,10 @@ export function OrderStatus({ token, initial }: { token: string; initial: OrderD
           </>
         )}
       </p>
+
+      {(order.status === "pending" ||
+        order.status === "paid" ||
+        order.status === "preparing") && <NotifyButton token={token} />}
 
       {order.status !== "pending" && order.status !== "cancelled" && (
         <Link

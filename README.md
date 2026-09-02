@@ -51,11 +51,22 @@ Copy `.env.local.example` → `.env.local` (or ask for one) and fill in:
 | `NEXT_PUBLIC_IMAGEKIT_ID` | optional — falls back to the Unsplash pool in `lib/menu-images.ts` |
 
 `supabase db reset` re-runs every migration plus `supabase/seed.sql`, which
-seeds the menu **and** a local-only staff account:
+seeds the menu **and** a local-only staff row with a known PIN (**`1234`**,
+owner role). `/dashboard` is gated on a real Supabase Auth session first, so
+the seed can't get you all the way in by itself — one-time setup:
 
-- Dashboard PIN: **`1234`** (owner role — every screen unlocked)
-- The shop still has to be opened once per session: `/dashboard` walks you
-  through it (par-stock counts, then Open) the same way a real morning would.
+1. Sign up at `/auth/sign-up` with any email, confirm it via the local
+   Inbucket mail UI (`supabase status` prints its URL, usually
+   `http://localhost:54324`).
+2. Link that account to the seeded staff row:
+   ```sql
+   update staff set user_id = (select id from auth.users where email = 'you@example.com')
+    where display_name = 'Demo Owner';
+   ```
+3. Sign in, open `/dashboard`, PIN `1234`.
+
+The shop still has to be opened once per session — `/dashboard` walks you
+through it (par-stock counts, then Open) the same way a real morning would.
 
 ## Layout of the codebase
 

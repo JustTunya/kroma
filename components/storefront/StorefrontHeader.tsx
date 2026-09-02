@@ -19,6 +19,12 @@ import { useActiveOrder } from "@/lib/use-active-order";
 import { cn } from "@/lib/utils";
 import { Wordmark } from "@/components/Logo";
 
+// motion.create wraps the anchor itself — a motion.div wrapper here would add
+// its own tabIndex (Framer Motion makes tap-gesture elements keyboard
+// operable), giving "Sign in" two consecutive stops in the tab order for one
+// link.
+const MotionLink = motion.create(Link);
+
 type StorefrontHeaderProps = {
   cartCount: number;
   signedIn: boolean;
@@ -131,25 +137,25 @@ export function StorefrontHeader({
         </AnimatePresence>
 
         <div className="flex items-center gap-2">
-          <motion.div whileTap={{ scale: 0.98 }} transition={pressSpring}>
-            <Link
-              href={signedIn ? "/account" : "/auth/login"}
-              aria-label={signedIn ? "Your account" : "Sign in to your account"}
-              className={cn(
-                "flex h-10 min-w-10 items-center justify-center gap-2 rounded-full px-3.5 transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus",
-                onCanvas
-                  ? "bg-surface-muted text-text-primary"
-                  : "bg-surface-canvas/15 text-surface-canvas backdrop-blur-sm",
-              )}
-            >
-              <UserRound className="size-4.5" strokeWidth={1.5} aria-hidden />
-              {!signedIn && (
-                <span className="hidden font-mono text-[10px] font-medium tracking-[0.18em] uppercase sm:inline">
-                  Sign in
-                </span>
-              )}
-            </Link>
-          </motion.div>
+          <MotionLink
+            href={signedIn ? "/account" : "/auth/login"}
+            aria-label={signedIn ? "Your account" : "Sign in to your account"}
+            whileTap={{ scale: 0.98 }}
+            transition={pressSpring}
+            className={cn(
+              "flex h-10 min-w-10 items-center justify-center gap-2 rounded-full px-3.5 transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus",
+              onCanvas
+                ? "bg-surface-muted text-text-primary"
+                : "bg-surface-canvas/15 text-surface-canvas backdrop-blur-sm",
+            )}
+          >
+            <UserRound className="size-4.5" strokeWidth={1.5} aria-hidden />
+            {!signedIn && (
+              <span className="hidden font-mono text-[10px] font-medium tracking-[0.18em] uppercase sm:inline">
+                Sign in
+              </span>
+            )}
+          </MotionLink>
 
           <motion.button
             type="button"

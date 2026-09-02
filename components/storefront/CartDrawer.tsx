@@ -9,6 +9,7 @@ import { QtyStepper } from "@/components/storefront/QtyStepper";
 import { cartTotal, lineTotal, type CartLine } from "@/lib/cart";
 import { pressSpring, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+import { useEscapeClose } from "@/lib/use-escape-close";
 
 type CartDrawerProps = {
   open: boolean;
@@ -21,6 +22,8 @@ type CartDrawerProps = {
 
 export function CartDrawer({ open, lines, onClose, onQuantityChange, onRemove, serviceOpen }: CartDrawerProps) {
   const total = cartTotal(lines);
+
+  useEscapeClose(open, onClose);
 
   return (
     <AnimatePresence>

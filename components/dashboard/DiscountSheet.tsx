@@ -9,6 +9,7 @@ import { discountOrderAction } from "@/app/dashboard/actions";
 import { previewDiscount, type DiscountKind } from "@/lib/discount";
 import { numberTransition, pressSpring, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+import { useEscapeClose } from "@/lib/use-escape-close";
 import type { BoardOrder } from "@/types/board";
 
 const PRESETS: { label: string; kind: DiscountKind; value: number }[] = [
@@ -32,6 +33,8 @@ export function DiscountSheet({
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  useEscapeClose(Boolean(order), onClose);
 
   if (!order) return null;
 

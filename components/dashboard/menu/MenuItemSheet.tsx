@@ -9,6 +9,7 @@ import { ALLERGENS, DIETS } from "@/lib/dietary";
 import { slugify, validModifiers, type DraftItem } from "@/lib/menu-admin";
 import { pressSpring, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+import { useEscapeClose } from "@/lib/use-escape-close";
 import { ModifierEditor } from "@/components/dashboard/menu/ModifierEditor";
 
 const LABEL =
@@ -40,6 +41,8 @@ export function MenuItemSheet({
   const [slugTouched, setSlugTouched] = useState(Boolean(initial?.id));
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  useEscapeClose(Boolean(initial && draft), onClose);
 
   if (!initial || !draft) return null;
 

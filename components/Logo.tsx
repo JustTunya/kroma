@@ -49,7 +49,7 @@ export function LogoOSvg(props: {
 
 export function Wordmark({ className }: { className?: string }) {
   return (
-    <span className={className}>
+    <span className={className} aria-label="KROMA">
       KR
       <LogoO />
       MA

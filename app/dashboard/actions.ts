@@ -19,7 +19,7 @@ import type { StaffRole } from "@/lib/staff-permissions";
 export type Result = { ok: boolean; error?: string };
 
 /** Anything the RPC raises is already worded for a person. Pass it through. */
-function fail(error: unknown): Result {
+export function fail(error: unknown): Result {
   const message =
     error instanceof Error
       ? error.message
@@ -39,7 +39,7 @@ const COOKIE_OPTIONS = {
 } as const;
 
 /** Fifteen minutes from the last thing you did, not from when you unlocked. */
-async function slide(actor: { staffId: string; role: StaffRole; name: string }) {
+export async function slide(actor: { staffId: string; role: StaffRole; name: string }) {
   const store = await cookies();
   store.set(
     ACTOR_COOKIE,

@@ -38,6 +38,8 @@ export async function placeOrder(input: {
   customerName: string;
   notes: string;
   paymentMethod: "online" | "counter";
+  /** Guests only — a signed-in customer's own email is used instead. */
+  receiptEmail?: string;
 }): Promise<PlaceOrderResult> {
   // Trust boundary. The SQL validates all of this again; this pass exists so
   // obvious junk never reaches the database.
@@ -65,6 +67,7 @@ export async function placeOrder(input: {
   }
 
   const notes = input.notes.trim().slice(0, 280);
+  const receiptEmail = input.receiptEmail?.trim().slice(0, 160) || undefined;
   const supabase = await createClient();
 
   if (input.paymentMethod === "counter") {
@@ -74,6 +77,7 @@ export async function placeOrder(input: {
       p_customer_name: name,
       p_notes: notes,
       p_payment_method: "counter",
+      p_receipt_email: receiptEmail,
     });
 
     if (error || !data) {
@@ -127,6 +131,7 @@ export async function placeOrder(input: {
         ...packed,
         customer_name: name,
         notes,
+        ...(receiptEmail && { receipt_email: receiptEmail }),
         ...(user && { user_id: user.id }),
       },
       // Both ends come back to us: /checkout/confirm writes the order, and a

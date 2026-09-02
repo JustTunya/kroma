@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
 import { refundOrder } from "@/lib/refund";
+import { sendReceipt } from "@/lib/send-receipt";
 import { createClient } from "@/lib/server";
 import { currentActor, currentStaff, requireActor } from "@/lib/staff";
 import {
@@ -190,6 +191,9 @@ export async function advanceOrderAction(
       const refund = await refundOrder(orderId);
       if (!refund.ok) return { ok: false, error: refund.error };
     }
+
+    // A receipt must never block the pass.
+    if (to === "paid") void sendReceipt(orderId).catch(console.error);
 
     return { ok: true };
   } catch (error) {

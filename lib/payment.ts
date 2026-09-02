@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 
 import { admin } from "@/lib/admin";
 import { unpackItems } from "@/lib/checkout";
+import { sendReceipt } from "@/lib/send-receipt";
 import { stripe } from "@/lib/stripe";
 
 export type SessionOutcome =
@@ -48,9 +49,14 @@ export async function placeOrderFromSession(
     p_stripe_session_id: session.id,
     p_stripe_payment_intent_id:
       typeof session.payment_intent === "string" ? session.payment_intent : undefined,
+    p_receipt_email: session.metadata?.receipt_email || undefined,
   });
 
-  if (!error && data) return { status: "placed", token: data.access_token };
+  if (!error && data) {
+    // Fire-and-forget: a receipt must never block the pass.
+    void sendReceipt(data.id).catch(console.error);
+    return { status: "placed", token: data.access_token };
+  }
 
   // The other caller got there first between the read above and this insert.
   if (error?.code === "23505") {

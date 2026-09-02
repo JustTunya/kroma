@@ -573,6 +573,7 @@ export type Database = {
           p_items: Json
           p_notes: string
           p_payment_method: string
+          p_receipt_email?: string
           p_redeem_item_id?: string
           p_stripe_payment_intent_id?: string
           p_stripe_session_id?: string

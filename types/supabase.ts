@@ -264,6 +264,7 @@ export type Database = {
           collected_at: string | null
           customer_name: string | null
           day_number: number | null
+          discount_total: number
           expires_at: string | null
           id: string
           notes: string | null
@@ -273,6 +274,7 @@ export type Database = {
           placed_at: string
           ready_at: string | null
           service_day: string | null
+          settled_as: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["order_status"]
           stripe_payment_intent_id: string | null
@@ -289,6 +291,7 @@ export type Database = {
           collected_at?: string | null
           customer_name?: string | null
           day_number?: number | null
+          discount_total?: number
           expires_at?: string | null
           id?: string
           notes?: string | null
@@ -298,6 +301,7 @@ export type Database = {
           placed_at?: string
           ready_at?: string | null
           service_day?: string | null
+          settled_as?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           stripe_payment_intent_id?: string | null
@@ -314,6 +318,7 @@ export type Database = {
           collected_at?: string | null
           customer_name?: string | null
           day_number?: number | null
+          discount_total?: number
           expires_at?: string | null
           id?: string
           notes?: string | null
@@ -323,6 +328,7 @@ export type Database = {
           placed_at?: string
           ready_at?: string | null
           service_day?: string | null
+          settled_as?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["order_status"]
           stripe_payment_intent_id?: string | null
@@ -540,6 +546,7 @@ export type Database = {
           p_actor: string
           p_order_id: string
           p_station?: string
+          p_tender?: string
           p_to: Database["public"]["Enums"]["order_status"]
         }
         Returns: Json
@@ -547,6 +554,10 @@ export type Database = {
       cancel_order_by_token: { Args: { p_token: string }; Returns: Json }
       card_punches: { Args: { p_user: string }; Returns: number }
       claim_owner: { Args: { p_display_name: string }; Returns: string }
+      close_service: {
+        Args: { p_actor: string; p_counted: number; p_detail?: Json }
+        Returns: Json
+      }
       create_order: {
         Args: {
           p_customer_name: string
@@ -564,6 +575,7 @@ export type Database = {
           collected_at: string | null
           customer_name: string | null
           day_number: number | null
+          discount_total: number
           expires_at: string | null
           id: string
           notes: string | null
@@ -573,6 +585,7 @@ export type Database = {
           placed_at: string
           ready_at: string | null
           service_day: string | null
+          settled_as: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["order_status"]
           stripe_payment_intent_id: string | null
@@ -701,6 +714,10 @@ export type Database = {
       }
       release_expired_orders: { Args: never; Returns: number }
       release_order: { Args: { p_order_id: string }; Returns: boolean }
+      service_report: {
+        Args: { p_actor: string; p_day: string }
+        Returns: Json
+      }
       set_item_stock: {
         Args: {
           p_actor: string

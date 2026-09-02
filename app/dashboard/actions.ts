@@ -293,3 +293,32 @@ export async function openServiceAction(
     return fail(error);
   }
 }
+
+/**
+ * Shuts the day. close_service() owns every rule — the permission, the refusal
+ * over live orders, and freezing the report — so this only carries the count.
+ */
+export async function closeServiceAction(
+  counted: number,
+  detail: Record<string, number>,
+): Promise<Result> {
+  try {
+    const actor = await requireActor("shop.close");
+    const supabase = await createClient();
+
+    const { error } = await supabase.rpc("close_service", {
+      p_actor: actor.staffId,
+      p_counted: counted,
+      p_detail: detail,
+    });
+    if (error) return fail(error);
+
+    await slide(actor);
+    revalidatePath("/dashboard", "layout");
+    // The storefront must stop taking orders the moment the till is counted.
+    revalidatePath("/", "page");
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}

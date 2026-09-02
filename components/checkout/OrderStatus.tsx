@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 
 import { cancelOwnOrderAction } from "@/app/order/actions";
@@ -120,6 +121,15 @@ export function OrderStatus({ token, initial }: { token: string; initial: OrderD
           </>
         )}
       </p>
+
+      {order.status !== "pending" && order.status !== "cancelled" && (
+        <Link
+          href={`/order/${token}/receipt`}
+          className="mt-5 inline-block font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
+        >
+          Receipt
+        </Link>
+      )}
 
       {cancellable && (
         <motion.button

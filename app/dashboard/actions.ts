@@ -270,6 +270,48 @@ export async function noteOrderAction(
 }
 
 /**
+ * discount_order() owns the arithmetic, the clamp and the refusal on a
+ * settled order — this only carries the actor and, when money already moved,
+ * hands the refund to the same caller advanceOrderAction uses for a void.
+ */
+export async function discountOrderAction(
+  orderId: string,
+  kind: "percent" | "amount" | "comp",
+  value: number,
+  reason: string,
+): Promise<Result> {
+  try {
+    const actor = await requireActor("order.discount");
+    const station = await currentStaff();
+    const supabase = await createClient();
+
+    const { data, error } = await supabase.rpc("discount_order", {
+      p_order_id: orderId,
+      p_actor: actor.staffId,
+      p_kind: kind,
+      p_value: value,
+      p_reason: reason,
+      p_station: station?.id,
+    });
+    if (error) return fail(error);
+
+    await slide(actor);
+    revalidatePath("/dashboard/board");
+    revalidatePath(`/dashboard/order/${orderId}`);
+
+    const owed = (data as { refund_owed?: number } | null)?.refund_owed ?? 0;
+    if (owed > 0) {
+      const refund = await refundOrder(orderId, owed);
+      if (!refund.ok) return { ok: false, error: refund.error };
+    }
+
+    return { ok: true };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+/**
  * Opens the day. No requireActor("shop.open") gate beyond holding a PIN cookie:
  * open_service() re-reads the role from the table like every other RPC here,
  * and the permission is granted to everyone on shift anyway.

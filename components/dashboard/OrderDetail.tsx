@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { motion } from "framer-motion";
 
 import { advanceOrderAction, noteOrderAction } from "@/app/dashboard/actions";
+import { DiscountSheet } from "@/components/dashboard/DiscountSheet";
 import { pressSpring } from "@/lib/motion";
 import { isStale } from "@/lib/order-age";
 import { ORDER_STATUS_LABELS } from "@/lib/order-status";
@@ -53,6 +54,8 @@ export function OrderDetail({
 
   const canVoid = role ? staffCan(role, "order.void") : false;
   const canRefund = role ? staffCan(role, "order.refund") : false;
+  const canDiscount = role ? staffCan(role, "order.discount") : false;
+  const [discounting, setDiscounting] = useState(false);
   // Half an hour on the bar is when the board stops calling it late and starts
   // calling it nobody's. Before that the button is still there but the RPC
   // charges it to order.void, so a barista gets "Not yours to do."
@@ -283,7 +286,25 @@ export function OrderDetail({
             disabled={pending || !role}
           />
         )}
+
+        {canDiscount && order.status !== "cancelled" && order.status !== "refunded" && (
+          <SettleButton
+            label="Discount"
+            onClick={() => setDiscounting(true)}
+            disabled={pending || !role}
+          />
+        )}
       </div>
+
+      {order.discount_total > 0 && (
+        <p className="mt-4 font-mono text-[11px] font-medium tracking-[0.14em] text-accent-primary uppercase">
+          {order.total === 0 ? "Comped" : `−€${order.discount_total.toFixed(2)}`}
+          <Divider />
+          {order.discount_reason}
+        </p>
+      )}
+
+      <DiscountSheet order={discounting ? order : null} onClose={() => setDiscounting(false)} />
 
       {!role && (
         <p

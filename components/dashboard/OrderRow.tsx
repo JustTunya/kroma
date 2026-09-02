@@ -122,6 +122,14 @@ export function OrderRow({
           ))}
         </ul>
 
+        {order.discount_total > 0 && (
+          <p className="mt-2 font-mono text-[10px] font-medium tracking-[0.18em] text-accent-primary uppercase">
+            {order.total === 0 ? "Comped" : `−€${order.discount_total.toFixed(2)}`}
+            <span aria-hidden className="mx-3 text-kds-border">/</span>
+            {order.discount_reason}
+          </p>
+        )}
+
         {flags.length > 0 && (
           <p className="mt-4 font-mono text-[10px] font-medium tracking-[0.18em] uppercase">
             {flags.map((flag, i) => (

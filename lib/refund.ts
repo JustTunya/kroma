@@ -18,7 +18,7 @@ export type RefundResult = { ok: boolean; error?: string };
  * the stripe_* columns out on purpose, and this is the only caller that needs
  * one. That is why admin() is imported here rather than in the actions.
  */
-export async function refundOrder(orderId: string): Promise<RefundResult> {
+export async function refundOrder(orderId: string, amountEuros?: number): Promise<RefundResult> {
   const { data, error } = await admin()
     .from("orders")
     .select("stripe_payment_intent_id")
@@ -33,10 +33,18 @@ export async function refundOrder(orderId: string): Promise<RefundResult> {
   // Cash at the counter. The till is the refund; there is nothing to call.
   if (!data.stripe_payment_intent_id) return { ok: true };
 
+  const cents =
+    amountEuros !== undefined ? Math.round(amountEuros * 100) : undefined;
+
   try {
     await stripe.refunds.create(
-      { payment_intent: data.stripe_payment_intent_id },
-      { idempotencyKey: `refund_${orderId}` },
+      {
+        payment_intent: data.stripe_payment_intent_id,
+        ...(cents !== undefined && { amount: cents }),
+      },
+      // A partial refund and a later full one are two different refunds —
+      // reusing one idempotency key would silently make the second a no-op.
+      { idempotencyKey: `refund_${orderId}_${cents ?? "all"}` },
     );
     return { ok: true };
   } catch (stripeError) {

@@ -567,6 +567,17 @@ export type Database = {
         Args: { p_actor: string; p_counted: number; p_detail?: Json }
         Returns: Json
       }
+      discount_order: {
+        Args: {
+          p_actor: string
+          p_kind: string
+          p_order_id: string
+          p_reason: string
+          p_station?: string
+          p_value: number
+        }
+        Returns: Json
+      }
       create_order: {
         Args: {
           p_customer_name: string

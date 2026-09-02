@@ -79,6 +79,10 @@ $$;
 grant execute on function order_receipt(uuid) to anon, authenticated;
 grant execute on function set_receipt_email(uuid, text) to anon, authenticated;
 
+-- The 9th parameter is a new overload, not a replacement — same trap as
+-- advance_order's p_tender addition. Drop the 8-arg signature first.
+drop function if exists create_order(jsonb, text, text, text, uuid, text, text, uuid);
+
 -- create_order() gains the guest's receipt address, last — Postgres requires
 -- every defaulted parameter to follow every non-defaulted one, and every
 -- earlier parameter here already has a default. Copied from

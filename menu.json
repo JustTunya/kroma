@@ -3,7 +3,7 @@
     "category": "Coffee Bar",
     "name": "Espresso",
     "description": "Double shot of our seasonal house blend.",
-    "basePrice": 2.5,
+    "basePrice": 2.3,
     "dailyStock": null,
     "dietaryTags": [
       "Vegan",
@@ -34,7 +34,7 @@
     "category": "Coffee Bar",
     "name": "Flat White",
     "description": "Double ristretto shot with textured microfoam.",
-    "basePrice": 4.2,
+    "basePrice": 3.6,
     "dailyStock": null,
     "dietaryTags": [
       "Vegetarian",
@@ -71,7 +71,7 @@
     "category": "Coffee Bar",
     "name": "Cappuccino",
     "description": "Double shot with steamed milk and a thick cap of foam.",
-    "basePrice": 4,
+    "basePrice": 3.2,
     "dailyStock": null,
     "dietaryTags": [
       "Vegetarian",
@@ -108,7 +108,7 @@
     "category": "Coffee Bar",
     "name": "Iced Oat Cortado",
     "description": "Equal parts espresso and oat milk over ice.",
-    "basePrice": 4.5,
+    "basePrice": 3.8,
     "dailyStock": null,
     "dietaryTags": [
       "Vegan",
@@ -152,7 +152,7 @@
     "category": "Coffee Bar",
     "name": "Batch Brew Filter",
     "description": "Rotating single-origin filter coffee (Kenya AA Nyeri).",
-    "basePrice": 3.8,
+    "basePrice": 3.0,
     "dailyStock": null,
     "dietaryTags": [
       "Vegan",
@@ -183,7 +183,7 @@
     "category": "Coffee Bar",
     "name": "Cold Drip Reserve",
     "description": "Slow-dripped for 14 hours. Served chilled.",
-    "basePrice": 5.2,
+    "basePrice": 4.2,
     "dailyStock": 15,
     "dietaryTags": [
       "Vegan",
@@ -214,7 +214,7 @@
     "category": "Tea & Alternatives",
     "name": "Ceremonial Matcha Latte",
     "description": "First-harvest Uji matcha whisked with steamed milk.",
-    "basePrice": 5,
+    "basePrice": 4.5,
     "dailyStock": null,
     "dietaryTags": [
       "Vegetarian",
@@ -264,7 +264,7 @@
     "category": "Tea & Alternatives",
     "name": "Sencha Steep",
     "description": "Loose-leaf sencha, steeped short and light.",
-    "basePrice": 3.5,
+    "basePrice": 2.6,
     "dailyStock": null,
     "dietaryTags": ["Vegan", "Gluten-Free"],
     "allergens": [],
@@ -278,7 +278,7 @@
     "category": "Tea & Alternatives",
     "name": "Bergamot Earl Grey",
     "description": "Ceylon black leaf scented with Calabrian bergamot.",
-    "basePrice": 3.5,
+    "basePrice": 2.6,
     "dailyStock": null,
     "dietaryTags": ["Vegan", "Gluten-Free"],
     "allergens": [],
@@ -292,7 +292,7 @@
     "category": "Tea & Alternatives",
     "name": "Peppermint Tisane",
     "description": "Whole dried peppermint leaf. Caffeine-free.",
-    "basePrice": 3.3,
+    "basePrice": 2.5,
     "dailyStock": null,
     "dietaryTags": ["Vegan", "Gluten-Free"],
     "allergens": [],
@@ -306,7 +306,7 @@
     "category": "Tea & Alternatives",
     "name": "Whole-Spice Chai",
     "description": "Assam black tea steeped with cardamom, clove, cinnamon, and ginger.",
-    "basePrice": 4.2,
+    "basePrice": 3.8,
     "dailyStock": null,
     "dietaryTags": ["Vegetarian", "Gluten-Free"],
     "allergens": ["Dairy"],
@@ -329,7 +329,7 @@
     "category": "Bakehouse",
     "name": "Cardamom Sugar Bun",
     "description": "Traditional Swedish knot pastry with freshly ground cardamom.",
-    "basePrice": 3.9,
+    "basePrice": 3.5,
     "dailyStock": 12,
     "dietaryTags": [
       "Vegetarian"
@@ -363,7 +363,7 @@
     "category": "Bakehouse",
     "name": "Twice-Baked Almond Croissant",
     "description": "Sourdough croissant filled with frangipane and topped with toasted almonds.",
-    "basePrice": 4.5,
+    "basePrice": 4.0,
     "dailyStock": 8,
     "dietaryTags": [
       "Vegetarian"
@@ -398,7 +398,7 @@
     "category": "Bakehouse",
     "name": "Spiced Banana Bread",
     "description": "Thick slice of banana bread with walnuts and cinnamon.",
-    "basePrice": 4,
+    "basePrice": 3.5,
     "dailyStock": 10,
     "dietaryTags": [
       "Vegan"
@@ -431,7 +431,7 @@
     "category": "Kitchen",
     "name": "Whipped Ricotta & Fig Toast",
     "description": "Fresh ricotta, black figs, hot honey, and sea salt on thick sourdough.",
-    "basePrice": 7.8,
+    "basePrice": 6.5,
     "dailyStock": 15,
     "dietaryTags": [
       "Vegetarian"
@@ -464,7 +464,7 @@
     "category": "Kitchen",
     "name": "Mortadella & Pistachio Focaccia",
     "description": "House-baked focaccia loaded with mortadella, stracciatella, and crushed pistachios.",
-    "basePrice": 8.5,
+    "basePrice": 7.5,
     "dailyStock": 10,
     "dietaryTags": [],
     "allergens": [
@@ -496,7 +496,7 @@
     "category": "Kitchen",
     "name": "Smoked Salmon & Dill Bagel",
     "description": "Cold-smoked salmon, chive cream cheese, capers, and dill on a toasted sesame bagel.",
-    "basePrice": 9.2,
+    "basePrice": 8.5,
     "dailyStock": 12,
     "dietaryTags": [
       "Pescatarian"

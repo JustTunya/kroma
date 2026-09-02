@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { DayReport } from "@/components/dashboard/day/DayReport";
 import { dayLabel } from "@/lib/service-day";
 import { createClient } from "@/lib/server";
 import { currentActor, currentDay } from "@/lib/staff";
 import { staffCan } from "@/lib/staff-permissions";
+import type { DayReport as Report } from "@/types/day";
 
 export const metadata = {
   title: "The day — KROMA",
@@ -20,8 +22,9 @@ export default async function DayPage() {
 
   const day = await currentDay();
   const supabase = await createClient();
+  const canClose = staffCan(actor.role, "shop.close");
 
-  const [orders, staff, onCounter] = await Promise.all([
+  const [orders, staff, onCounter, report] = await Promise.all([
     day
       ? supabase
           .from("orders")
@@ -36,9 +39,16 @@ export default async function DayPage() {
       .select("name, daily_stock")
       .gt("daily_stock", 0)
       .order("name"),
+    // A barista sees the day's state and the leftover stock, never the
+    // takings — matching how /dashboard/numbers is already gated.
+    day && canClose
+      ? supabase.rpc("service_report", { p_actor: actor.staffId, p_day: day.day })
+      : Promise.resolve({ data: null, error: null }),
   ]);
 
   const openedByName = staff.data?.display_name ?? null;
+  // A read error must not render as €0.00 — see app/dashboard/numbers/page.tsx.
+  const reportBroken = day && canClose && report.error;
   const clock = (iso: string) =>
     new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
 
@@ -97,9 +107,19 @@ export default async function DayPage() {
             )}
           </div>
 
-          {/* Task 12: <DayReport /> */}
+          {reportBroken ? (
+            <p
+              role="status"
+              className="mt-10 max-w-lg border-y border-kds-border py-6 font-mono text-[11px] leading-[1.7] tracking-[0.14em] text-badge-alert uppercase"
+            >
+              The takings could not be read. Nothing is lost — the till is
+              unaffected.
+            </p>
+          ) : (
+            report.data && <DayReport report={report.data as Report} />
+          )}
 
-          {staffCan(actor.role, "shop.close") && (
+          {canClose && (
             <Link
               href="/dashboard/day/close"
               className="mt-10 inline-flex h-10 items-center rounded-full bg-accent-primary px-5 font-mono text-[10px] font-medium tracking-[0.18em] text-surface-card uppercase transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary"

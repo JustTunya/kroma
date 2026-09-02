@@ -1,5 +1,12 @@
 -- KROMA seed data — mirrors menu.json
 
+-- Local dev only (this file never runs against the deployed project — Supabase
+-- applies it on `supabase db reset` / `db start`, not on `db push`). A staff
+-- row with a known PIN so /dashboard is reachable without provisioning a real
+-- account. PIN: 1234.
+insert into staff (display_name, role, kind, pin_hash, is_active)
+values ('Demo Owner', 'owner', 'person', extensions.crypt('1234', extensions.gen_salt('bf')), true);
+
 insert into menu_categories (slug, name, sort_order) values
   ('espresso-bar',       'Coffee Bar',         1),
   ('tea-alternatives',   'Tea & Alternatives', 2),

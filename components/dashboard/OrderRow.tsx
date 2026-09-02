@@ -6,7 +6,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { AgeSpine } from "@/components/dashboard/AgeSpine";
 import { pressSpring, spring } from "@/lib/motion";
 import { AGE_TONES, ageTier, elapsedLabel, isStale } from "@/lib/order-age";
-import { ADVANCE_LABELS, NEXT_STATUS } from "@/lib/order-transitions";
+import { ADVANCE_LABELS, NEXT_STATUS, TENDERS, TENDER_LABELS } from "@/lib/order-transitions";
 import { cn } from "@/lib/utils";
 
 import type { BoardOrder } from "@/types/board";
@@ -36,7 +36,7 @@ export function OrderRow({
 }: {
   order: BoardOrder;
   now: Date;
-  onAdvance: (order: BoardOrder) => void;
+  onAdvance: (order: BoardOrder, tender?: "cash" | "card") => void;
   /** Offline, or nobody has unlocked the terminal. */
   disabled: boolean;
 }) {
@@ -138,7 +138,22 @@ export function OrderRow({
         )}
 
         <div className="mt-5 flex items-center gap-5">
-          {next && (
+          {order.status === "pending" && order.payment_method === "counter" ? (
+            TENDERS.map((tender) => (
+              <motion.button
+                key={tender}
+                type="button"
+                disabled={disabled}
+                onClick={() => onAdvance(order, tender)}
+                whileTap={disabled ? undefined : { scale: 0.98 }}
+                transition={pressSpring}
+                aria-label={`${TENDER_LABELS[tender]} — order ${order.day_number ?? order.order_number}, ${name}`}
+                className="h-9 shrink-0 rounded-full bg-accent-primary px-5 font-mono text-[10px] font-medium tracking-[0.18em] text-surface-card uppercase transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary disabled:bg-kds-surface disabled:text-kds-text-secondary"
+              >
+                {TENDER_LABELS[tender]}
+              </motion.button>
+            ))
+          ) : next ? (
             <motion.button
               type="button"
               disabled={disabled}
@@ -150,7 +165,7 @@ export function OrderRow({
             >
               {ADVANCE_LABELS[order.status]}
             </motion.button>
-          )}
+          ) : null}
 
           <Link
             href={`/dashboard/order/${order.id}`}

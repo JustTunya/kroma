@@ -73,3 +73,9 @@ export const ADVANCE_LABELS: Partial<Record<OrderStatus, string>> = {
   preparing: "On the bar",
   ready: "Collected",
 };
+
+/** The two ways money arrives at the counter. Online settles itself. */
+export const TENDERS = ["cash", "card"] as const;
+export type Tender = (typeof TENDERS)[number];
+
+export const TENDER_LABELS: Record<Tender, string> = { cash: "Cash", card: "Card" };

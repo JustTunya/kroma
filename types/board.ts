@@ -19,6 +19,7 @@ export type BoardOrder = {
   notes: string | null;
   subtotal: number;
   total: number;
+  settled_as: "cash" | "card" | "online" | null;
   payment_method: "online" | "counter";
   placed_at: string;
   pickup_at: string | null;

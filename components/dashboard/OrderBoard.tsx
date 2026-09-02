@@ -129,12 +129,14 @@ export function OrderBoard({
     return { live, scheduled };
   }, [orders, now]);
 
-  async function advance(order: BoardOrder) {
-    const next = NEXT_STATUS[order.status];
-    if (!next) return;
+  async function advance(order: BoardOrder, tender?: "cash" | "card") {
+    const to = order.status === "pending" && order.payment_method === "counter" && tender
+      ? "paid"
+      : NEXT_STATUS[order.status];
+    if (!to) return;
 
     setError(null);
-    const result = await advanceOrderAction(order.id, next);
+    const result = await advanceOrderAction(order.id, to, tender);
     if (!result.ok) setError(result.error ?? "That did not go through.");
     void refetch();
   }

@@ -9,7 +9,7 @@ import { advanceOrderAction, noteOrderAction } from "@/app/dashboard/actions";
 import { pressSpring } from "@/lib/motion";
 import { isStale } from "@/lib/order-age";
 import { ORDER_STATUS_LABELS } from "@/lib/order-status";
-import { ADVANCE_LABELS, NEXT_STATUS, PREV_STATUS } from "@/lib/order-transitions";
+import { ADVANCE_LABELS, NEXT_STATUS, PREV_STATUS, TENDERS, TENDER_LABELS, type Tender } from "@/lib/order-transitions";
 import { staffCan } from "@/lib/staff-permissions";
 
 import type { OrderStatus } from "@/lib/order-status";
@@ -62,10 +62,10 @@ export function OrderDetail({
   const next = NEXT_STATUS[order.status];
   const previous = PREV_STATUS[order.status];
 
-  function move(to: OrderStatus) {
+  function move(to: OrderStatus, tender?: Tender) {
     setError(null);
     startTransition(async () => {
-      const result = await advanceOrderAction(order.id, to);
+      const result = await advanceOrderAction(order.id, to, tender);
       // Always refresh: a failed refund still moved the order, and the page
       // must not go on showing the old lane while the error says otherwise.
       router.refresh();
@@ -116,7 +116,9 @@ export function OrderDetail({
       </div>
 
       <p className="mt-5 font-mono text-[11px] tracking-[0.14em] text-kds-text-secondary uppercase">
-        {order.payment_method === "online" ? "Paid online" : "Counter"}
+        {order.settled_as
+          ? { cash: "Cash", card: "Card at the bar", online: "Paid online" }[order.settled_as]
+          : "Not paid yet"}
         <Divider />
         <span className="tabular-nums text-kds-text-primary">
           €{order.total.toFixed(2)}
@@ -208,7 +210,23 @@ export function OrderDetail({
 
       {/* Actions, quietest to loudest: move it on, step it back, settle it. */}
       <div className="mt-10 flex flex-wrap items-center gap-3 border-t border-kds-border pt-8">
-        {next && (
+        {order.status === "pending" && order.payment_method === "counter" ? (
+          // Two taps become one, and the drawer becomes countable. The same
+          // press that says "paid" says how.
+          TENDERS.map((tender) => (
+            <motion.button
+              key={tender}
+              type="button"
+              onClick={() => move("paid", tender)}
+              disabled={pending || !role}
+              whileTap={{ scale: 0.98 }}
+              transition={pressSpring}
+              className="h-10 rounded-full bg-accent-primary px-5 font-mono text-[10px] font-medium tracking-[0.18em] text-surface-card uppercase transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary disabled:bg-kds-surface disabled:text-kds-text-secondary"
+            >
+              {TENDER_LABELS[tender]}
+            </motion.button>
+          ))
+        ) : next ? (
           <motion.button
             type="button"
             onClick={() => move(next)}
@@ -219,7 +237,7 @@ export function OrderDetail({
           >
             {ADVANCE_LABELS[order.status]}
           </motion.button>
-        )}
+        ) : null}
 
         {previous && (
           <motion.button

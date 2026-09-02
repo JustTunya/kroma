@@ -158,6 +158,9 @@ async function markShift(open: boolean): Promise<Result> {
 export async function advanceOrderAction(
   orderId: string,
   to: OrderStatus,
+  // Required by advance_order() for a counter order's pending → paid, ignored
+  // everywhere else. The RPC is the enforcement; this only carries it.
+  tender?: "cash" | "card",
 ): Promise<Result> {
   try {
     // 'order.advance' is the floor. The RPC re-derives the real action from the
@@ -172,6 +175,7 @@ export async function advanceOrderAction(
       p_to: to,
       p_actor: actor.staffId,
       p_station: station?.id,
+      p_tender: tender,
     });
     if (error) return fail(error);
 

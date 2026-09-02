@@ -257,6 +257,41 @@ export type Database = {
           },
         ]
       }
+      order_push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          order_id: string
+          p256dh: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          order_id: string
+          p256dh: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          order_id?: string
+          p256dh?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_push_subscriptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           access_token: string
@@ -831,6 +866,15 @@ export type Database = {
       staff_unlock: {
         Args: { p_pin: string; p_staff_id: string }
         Returns: Json
+      }
+      subscribe_order_push: {
+        Args: {
+          p_auth: string
+          p_endpoint: string
+          p_p256dh: string
+          p_token: string
+        }
+        Returns: boolean
       }
       valid_modifiers: { Args: { p_modifiers: Json }; Returns: boolean }
       vat_of: { Args: { p_gross: number; p_rate: number }; Returns: number }

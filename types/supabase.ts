@@ -660,6 +660,59 @@ export type Database = {
           subject_id: string
         }[]
       }
+      menu_category_upsert: {
+        Args: { p_actor: string; p_category: Json }
+        Returns: {
+          created_at: string
+          earns_punch: boolean
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          sort_order: number
+          vat_rate: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "menu_categories"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      menu_reorder: {
+        Args: { p_actor: string; p_ids: string[] }
+        Returns: number
+      }
+      menu_slug: { Args: { p_name: string }; Returns: string }
+      menu_upsert: {
+        Args: { p_actor: string; p_item: Json }
+        Returns: {
+          allergens: string[]
+          base_price: number
+          category_id: string
+          created_at: string
+          daily_stock: number | null
+          description: string | null
+          dietary_tags: string[]
+          id: string
+          image_url: string | null
+          is_active: boolean
+          is_featured: boolean
+          modifiers: Json
+          name: string
+          par_stock: number | null
+          slug: string
+          sort_order: number
+          unsplash_query: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "menu_items"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       my_card: { Args: never; Returns: Json }
       my_usual: { Args: never; Returns: Json }
       note_order: {
@@ -750,6 +803,7 @@ export type Database = {
         Args: { p_pin: string; p_staff_id: string }
         Returns: Json
       }
+      valid_modifiers: { Args: { p_modifiers: Json }; Returns: boolean }
       vat_of: { Args: { p_gross: number; p_rate: number }; Returns: number }
     }
     Enums: {

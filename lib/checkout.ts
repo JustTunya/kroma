@@ -23,6 +23,17 @@ export function isOrderable(lines: CartLine[]): boolean {
   return lines.length > 0 && lines.every((line) => UUID.test(line.menuItemId));
 }
 
+// One unit's price on the redeemed line, or 0 — mirrors order_lines()'s "one
+// unit free, never the whole line" rule so the checkout preview matches what
+// the DB actually charges.
+export function rewardAmount(lines: CartLine[], redeemItemId: string | undefined): number {
+  const line = lines.find((l) => l.menuItemId === redeemItemId);
+  if (!line) return 0;
+  return (
+    line.basePrice + line.selectedModifiers.reduce((sum, modifier) => sum + modifier.priceOffset, 0)
+  );
+}
+
 const CHUNK = 500;
 const ITEMS_KEY = "items_";
 

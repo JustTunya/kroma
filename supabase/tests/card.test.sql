@@ -128,7 +128,7 @@ begin
   perform create_order(
     '[{"menu_item_id":"66666666-6666-6666-6666-666666666666","quantity":10,"modifiers":[]}]'::jsonb,
     'C', null, 'counter', v_user);
-  assert card_punches(v_user) >= 12,
+  assert card_punches(v_user) >= 10,
     format('card should be full, got %s', card_punches(v_user));
 
   -- Quantity 3, one of them free: 4.20 * 3 - 4.20 = 8.40.
@@ -140,21 +140,20 @@ begin
     format('one free unit off a line of 3 leaves 8.40, got %s', v_order.total);
   assert (select count(*) from card_redemptions where order_id = v_order.id) = 1,
     'a redemption row must be written';
-  assert (select punches_spent from card_redemptions where order_id = v_order.id) = 12,
-    'a redemption burns exactly 12';
+  assert (select punches_spent from card_redemptions where order_id = v_order.id) = 10,
+    'a redemption burns exactly 10';
 
   ------------------------------------------ 9. redeeming something not in the cart
-  -- Block 8's redemption spent the card back down below 12 (it earns back only
-  -- 3 of the 12 it spends, per the "one paid cup short of the next free one"
-  -- economics in card.sql -- card is 8 here). create_order silently drops an
-  -- out-of-range redeem attempt instead of raising (assertion 7's asymmetry),
-  -- so without topping the card back up here this block would exercise that
-  -- silent-drop path instead of the "item not in cart" validation it's meant
-  -- to test. Top up first so the redeem attempt actually reaches order_lines.
+  -- Block 8's redemption earns back the 3 units of that same order and spends
+  -- 10, leaving the card at exactly 10 -- ready, but sitting right on the
+  -- threshold. Top it up so this block's redeem attempt isn't exercising that
+  -- exact-equality edge, and so it reliably reaches the "item not in cart"
+  -- validation in order_lines rather than create_order's silent-drop path
+  -- (assertion 7's asymmetry) for a card that isn't ready.
   perform create_order(
     '[{"menu_item_id":"66666666-6666-6666-6666-666666666666","quantity":4,"modifiers":[]}]'::jsonb,
     'C', null, 'counter', v_user);
-  assert card_punches(v_user) >= 12,
+  assert card_punches(v_user) >= 10,
     format('card should be full again after topping up, got %s', card_punches(v_user));
 
   v_failed2 := false;
@@ -200,7 +199,7 @@ begin
   perform create_order(
     '[{"menu_item_id":"66666666-6666-6666-6666-666666666666","quantity":10,"modifiers":[]}]'::jsonb,
     'C', null, 'counter', v_user);
-  assert card_punches(v_user) >= 12,
+  assert card_punches(v_user) >= 10,
     format('card should be full before the two-line redemption, got %s', card_punches(v_user));
 
   v_order := create_order(
@@ -223,7 +222,7 @@ begin
     '[{"menu_item_id":"88888888-8888-8888-8888-888888888888","quantity":10,
        "modifiers":[{"group":"Milk Choice","option":"Whole Milk"}]}]'::jsonb,
     'C', null, 'counter', v_user);
-  assert card_punches(v_user) >= 12,
+  assert card_punches(v_user) >= 10,
     format('card should be full before the modifier-shaped redemption, got %s', card_punches(v_user));
 
   v_order := create_order(

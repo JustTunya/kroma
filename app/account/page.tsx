@@ -66,7 +66,7 @@ export default async function AccountOverviewPage() {
   const balance = card as { punches?: number; redeemed_count?: number } | null;
   const punches = balance?.punches ?? 0;
   const redeemed = balance?.redeemed_count ?? 0;
-  const left = Math.max(0, 12 - punches);
+  const left = Math.max(0, 10 - punches);
   const usual = usualRaw as unknown as Usual | null;
   const placed = count ?? 0;
 
@@ -163,7 +163,7 @@ export default async function AccountOverviewPage() {
             one at checkout.
           </p>
           <ul className="mt-10 flex flex-wrap gap-x-3 gap-y-2 font-mono text-[11px] font-medium tracking-[0.14em] text-text-tertiary uppercase">
-            {["12 punches", "1 per drink", "No expiry"].map((stat, index) => (
+            {["10 punches", "1 per drink", "No expiry"].map((stat, index) => (
               <li key={stat} className="flex items-center gap-3">
                 {index > 0 && (
                   <span aria-hidden className="text-hairline">

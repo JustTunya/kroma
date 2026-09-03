@@ -27,13 +27,27 @@ export default async function CheckoutPage({
     { data: openDay },
   ] = await Promise.all([supabase.auth.getUser(), supabase.rpc("current_service_day")]);
 
-  const { data: profile } = user
+  const [{ data: profile }, { data: card }] = await Promise.all([
+    user
+      ? supabase
+          .from("profiles")
+          .select("display_name, bar_name, dietary_tags, avoid_allergens")
+          .eq("id", user.id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    user ? supabase.rpc("my_card") : Promise.resolve({ data: null }),
+  ]);
+
+  const cardReady = Boolean((card as { ready?: boolean } | null)?.ready);
+
+  const { data: eligibleDrinks } = cardReady
     ? await supabase
-        .from("profiles")
-        .select("display_name, bar_name, dietary_tags, avoid_allergens")
-        .eq("id", user.id)
-        .maybeSingle()
+        .from("menu_items")
+        .select("id, menu_categories!inner(earns_punch)")
+        .eq("menu_categories.earns_punch", true)
     : { data: null };
+
+  const eligibleDrinkIds = (eligibleDrinks ?? []).map((item) => item.id);
 
   const defaultName =
     profile?.bar_name?.trim() ||
@@ -92,6 +106,8 @@ export default async function CheckoutPage({
             defaultName={defaultName}
             paymentNotice={payment === "unfinished" || payment === "refunded" ? payment : undefined}
             serviceOpen={Boolean(openDay)}
+            cardReady={cardReady}
+            eligibleDrinkIds={eligibleDrinkIds}
             dietaryPrefs={dietaryPrefs}
             dietaryIndex={dietaryIndex}
           />

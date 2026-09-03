@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
 import { ReorderButton } from "@/components/account/ReorderButton";
@@ -28,9 +29,20 @@ export function OrderRow({
   unavailable: string[];
 }) {
   const label = ORDER_STATUS_LABELS[status];
+  const router = useRouter();
 
   return (
-    <motion.li whileHover="hover" className="group py-7 sm:py-9">
+    <motion.li
+      whileHover="hover"
+      onClick={() => router.push(`/order/${token}`)}
+      className="group cursor-pointer py-7 sm:py-9 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-border-focus"
+      tabIndex={0}
+      role="link"
+      aria-label={`Order #${String(orderNumber).padStart(3, "0")}, ${date}, €${total.toFixed(2)}`}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") router.push(`/order/${token}`);
+      }}
+    >
       <div className="flex items-baseline justify-between gap-5">
         <motion.span
           variants={{ hover: { x: 10 } }}
@@ -77,14 +89,21 @@ export function OrderRow({
           <span aria-hidden className="text-hairline">
             /
           </span>
-          <Link href={`/order/${token}/receipt`} className="hover:text-text-primary">
+          <Link
+            href={`/order/${token}/receipt`}
+            onClick={(event) => event.stopPropagation()}
+            className="hover:text-text-primary"
+          >
             Receipt
           </Link>
         </span>
 
         {lines.length > 0 && (
 
-          <span className="flex items-center gap-3 opacity-100 transition-opacity duration-300 lg:opacity-0 lg:group-focus-within:opacity-100 lg:group-hover:opacity-100">
+          <span
+            onClick={(event) => event.stopPropagation()}
+            className="flex items-center gap-3 opacity-100 transition-opacity duration-300 lg:opacity-0 lg:group-focus-within:opacity-100 lg:group-hover:opacity-100"
+          >
             <span aria-hidden className="text-hairline">
               /
             </span>

@@ -1,6 +1,10 @@
 <div align="center">
 
-<img src="public/logo.svg" alt="KROMA" width="280" />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/logo@white.png">
+  <source media="(prefers-color-scheme: light)" srcset="public/logo@black.png">
+  <img src="public/logo@black.png" alt="KROMA" width="280">
+</picture>
 
 ### Specialty Roastery &amp; Micro-Bakehouse
 

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { PrintButton } from "@/components/checkout/PrintButton";
-import { receiptText, type Receipt } from "@/lib/receipt";
+import { type Receipt } from "@/lib/receipt";
 import { createClient } from "@/lib/server";
 
 export const dynamic = "force-dynamic";
@@ -97,9 +97,9 @@ export default async function ReceiptPage({
   const barcode = code39Bars(barcodeValue);
 
   return (
-    <main className="h-dvh overflow-hidden bg-surface-canvas print:block print:h-auto print:overflow-visible">
-      <div className="flex h-full flex-col items-center justify-center px-4 py-4 print:hidden sm:px-5 sm:py-6">
-        <div className="flex w-full max-w-[380px] shrink-0 items-center justify-between pb-3">
+    <main className="h-dvh overflow-hidden bg-surface-canvas print:h-auto print:overflow-visible">
+      <div className="flex h-full flex-col items-center justify-center px-4 py-4 sm:px-5 sm:py-6 print:h-auto print:justify-start print:py-0">
+        <div className="flex w-full max-w-[380px] shrink-0 items-center justify-between pb-3 print:hidden">
           <Link
             href={`/order/${token}`}
             className="font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
@@ -110,8 +110,8 @@ export default async function ReceiptPage({
         </div>
 
         <div
-          className="flex min-h-0 w-full max-w-[380px] max-h-full flex-col bg-surface-card px-7 pt-9 pb-6 shadow-float"
-          style={{ clipPath: PAPER_EDGE }}
+          className="flex min-h-0 w-full max-w-[380px] max-h-full flex-col bg-surface-card px-7 pt-9 pb-6 shadow-float [clip-path:var(--paper-edge)] print:max-h-none print:shadow-none print:[clip-path:none]"
+          style={{ "--paper-edge": PAPER_EDGE } as React.CSSProperties}
         >
           <header className="shrink-0 text-center">
             <p className="font-serif text-[24px] leading-none text-text-primary italic">
@@ -144,8 +144,8 @@ export default async function ReceiptPage({
           </div>
 
           <ul
-            className="scrollbar-hide mt-5 shrink-0 divide-y divide-hairline overflow-y-auto border-y border-dashed border-hairline"
-            style={{ maxHeight: "calc(100dvh - 37.5rem)" }}
+            className="scrollbar-hide mt-5 shrink-0 divide-y divide-hairline overflow-y-auto border-y border-dashed border-hairline [max-height:var(--items-max-h)] print:max-h-none print:overflow-visible"
+            style={{ "--items-max-h": "calc(100dvh - 37.5rem)" } as React.CSSProperties}
           >
             {receipt.items.map((item, i) => (
               <li key={i} className="py-3">
@@ -237,11 +237,6 @@ export default async function ReceiptPage({
           </footer>
         </div>
       </div>
-
-      {/* Printed on a thermal roll — plain fixed-width text, no layout. */}
-      <pre className="hidden font-mono text-[12px] leading-[1.7] whitespace-pre text-text-primary print:block">
-        {receiptText(receipt)}
-      </pre>
     </main>
   );
 }

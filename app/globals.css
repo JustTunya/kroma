@@ -135,8 +135,7 @@
 
 @media print {
   @page {
-    size: 58mm auto;
-    margin: 4mm;
+    margin: 12mm;
   }
   body {
     background: #fff;

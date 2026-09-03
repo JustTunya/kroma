@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { isOrderable, packItems, toOrderPayload, unpackItems } from "./checkout.ts";
+import { isOrderable, packItems, rewardAmount, toOrderPayload, unpackItems } from "./checkout.ts";
 import type { CartLine } from "./cart.ts";
 
 const latte: CartLine = {
@@ -66,6 +66,15 @@ test("packItems/unpackItems survive a cart bigger than one metadata value", () =
   assert.ok(Object.keys(packed).length <= 50, "would not fit in Stripe metadata");
 
   assert.deepEqual(unpackItems(packed), items);
+});
+
+test("rewardAmount is the redeemed line's per-unit price, modifiers included", () => {
+  assert.equal(rewardAmount([latte], latte.menuItemId), 4.6);
+});
+
+test("rewardAmount is 0 when nothing is redeemed or the target isn't in the cart", () => {
+  assert.equal(rewardAmount([latte], undefined), 0);
+  assert.equal(rewardAmount([latte], "33333333-3333-3333-3333-333333333333"), 0);
 });
 
 test("unpackItems refuses anything it cannot trust", () => {

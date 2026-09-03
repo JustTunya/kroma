@@ -38,6 +38,7 @@ export async function placeOrder(input: {
   paymentMethod: "online" | "counter";
 
   receiptEmail?: string;
+  redeemItemId?: string;
 }): Promise<PlaceOrderResult> {
 
   if (!Array.isArray(input.items) || input.items.length === 0) {
@@ -57,6 +58,9 @@ export async function placeOrder(input: {
       return { ok: false, message: "Quantity out of range." };
     }
   }
+  if (input.redeemItemId && !UUID.test(input.redeemItemId)) {
+    return { ok: false, message: "The menu is unavailable right now." };
+  }
 
   const name = input.customerName.trim().slice(0, 80);
   if (name.length < 2) {
@@ -75,6 +79,7 @@ export async function placeOrder(input: {
       p_notes: notes,
       p_payment_method: "counter",
       p_receipt_email: receiptEmail,
+      p_redeem_item_id: input.redeemItemId,
     });
 
     if (error || !data) {
@@ -91,6 +96,7 @@ export async function placeOrder(input: {
 
   const { data: quote, error: quoteError } = await supabase.rpc("quote_order", {
     p_items: input.items,
+    p_redeem_item_id: input.redeemItemId,
   });
 
   if (quoteError || !quote) {
@@ -126,6 +132,7 @@ export async function placeOrder(input: {
         notes,
         ...(receiptEmail && { receipt_email: receiptEmail }),
         ...(user && { user_id: user.id }),
+        ...(input.redeemItemId && { redeem_item_id: input.redeemItemId }),
       },
 
       success_url: `${origin}/checkout/confirm?session_id={CHECKOUT_SESSION_ID}`,

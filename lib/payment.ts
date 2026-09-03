@@ -41,6 +41,7 @@ export async function placeOrderFromSession(
     p_stripe_payment_intent_id:
       typeof session.payment_intent === "string" ? session.payment_intent : undefined,
     p_receipt_email: session.metadata?.receipt_email || undefined,
+    p_redeem_item_id: session.metadata?.redeem_item_id || undefined,
   });
 
   if (!error && data) {

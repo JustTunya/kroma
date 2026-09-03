@@ -10,6 +10,7 @@ import {
   flaggedLines,
   type DietaryIndex,
 } from "@/components/checkout/DietaryWarning";
+import { RedeemPicker } from "@/components/checkout/RedeemPicker";
 import { placeOrder } from "@/app/checkout/actions";
 import { isOrderable, toOrderPayload } from "@/lib/checkout";
 import type { DietaryPrefs } from "@/lib/dietary";
@@ -59,6 +60,8 @@ export function CheckoutForm({
   defaultName,
   paymentNotice,
   serviceOpen,
+  cardReady = false,
+  eligibleDrinkIds = [],
   dietaryPrefs = NO_PREFS,
   dietaryIndex = {},
 }: {
@@ -67,6 +70,8 @@ export function CheckoutForm({
   paymentNotice?: Notice;
   serviceOpen: boolean;
 
+  cardReady?: boolean;
+  eligibleDrinkIds?: string[];
   dietaryPrefs?: DietaryPrefs;
   dietaryIndex?: DietaryIndex;
 }) {
@@ -79,7 +84,21 @@ export function CheckoutForm({
   const [error, setError] = useState<{ message: string; menuItemId?: string } | null>(
     paymentNotice ? { message: NOTICES[paymentNotice] } : null,
   );
+  const [redeemPick, setRedeemPick] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  const eligibleLines = cardReady
+    ? cart.lines.filter((line, index, all) => {
+        if (!eligibleDrinkIds.includes(line.menuItemId)) return false;
+        return all.findIndex((other) => other.menuItemId === line.menuItemId) === index;
+      })
+    : [];
+
+  // Falls back to null on its own once the picked item leaves the cart —
+  // no effect needed, this is just a render-time clamp of stored state.
+  const redeemItemId = eligibleLines.some((line) => line.menuItemId === redeemPick)
+    ? redeemPick
+    : null;
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -92,6 +111,7 @@ export function CheckoutForm({
         notes,
         paymentMethod: method,
         receiptEmail: signedIn ? undefined : email,
+        redeemItemId: redeemItemId ?? undefined,
       });
 
       if (!result.ok) {
@@ -145,9 +165,22 @@ export function CheckoutForm({
     <>
       <DietaryWarning flagged={flagged} prefs={dietaryPrefs} />
 
+      {eligibleLines.length > 0 && (
+        <div className={cn(flagged.length > 0 && "mt-12")}>
+          <RedeemPicker
+            options={eligibleLines.map((line) => ({ menuItemId: line.menuItemId, name: line.name }))}
+            value={redeemItemId}
+            onChange={setRedeemPick}
+          />
+        </div>
+      )}
+
       <form
         onSubmit={submit}
-        className={cn("grid gap-12 md:grid-cols-2 md:gap-0", flagged.length > 0 && "mt-12")}
+        className={cn(
+          "grid gap-12 md:grid-cols-2 md:gap-0",
+          (flagged.length > 0 || eligibleLines.length > 0) && "mt-12",
+        )}
       >
       <div className="md:pr-14">
         <label className="block">
@@ -232,6 +265,7 @@ export function CheckoutForm({
           lines={cart.lines}
           errorItemId={error?.menuItemId}
           errorMessage={error?.message}
+          redeemItemId={redeemItemId ?? undefined}
         />
 
         {error && !error.menuItemId && (

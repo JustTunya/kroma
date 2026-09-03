@@ -1,6 +1,7 @@
 "use client";
 
 import { cartTotal, lineTotal, type CartLine } from "@/lib/cart";
+import { rewardAmount } from "@/lib/checkout";
 import { cn } from "@/lib/utils";
 import { groupByRate, vatLabel } from "@/lib/vat";
 
@@ -8,11 +9,18 @@ export function OrderSummary({
   lines,
   errorItemId,
   errorMessage,
+  redeemItemId,
 }: {
   lines: CartLine[];
   errorItemId?: string;
   errorMessage?: string;
+  redeemItemId?: string;
 }) {
+  const redeemedLine = redeemItemId
+    ? lines.find((line) => line.menuItemId === redeemItemId)
+    : undefined;
+  const reward = rewardAmount(lines, redeemItemId);
+
   return (
     <div>
       <p className="font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase">
@@ -22,6 +30,7 @@ export function OrderSummary({
       <ul className="mt-6 divide-y divide-hairline border-y border-hairline">
         {lines.map((line) => {
           const flagged = errorItemId === line.menuItemId;
+          const redeemed = redeemedLine?.id === line.id;
           return (
             <li key={line.id} className="py-5">
               <div className="flex items-baseline justify-between gap-4">
@@ -34,7 +43,7 @@ export function OrderSummary({
                   {line.name}
                 </span>
                 <span className="font-mono text-[15px] font-medium tracking-[0.02em] tabular-nums text-text-primary">
-                  €{lineTotal(line).toFixed(2)}
+                  €{(lineTotal(line) - (redeemed ? reward : 0)).toFixed(2)}
                 </span>
               </div>
 
@@ -48,6 +57,14 @@ export function OrderSummary({
                     {modifier.option}
                   </span>
                 ))}
+                {redeemed && (
+                  <span className="flex items-center gap-3 text-accent-primary">
+                    <span aria-hidden className="text-hairline">
+                      /
+                    </span>
+                    1 free
+                  </span>
+                )}
               </p>
 
               {flagged && errorMessage && (
@@ -63,17 +80,31 @@ export function OrderSummary({
         })}
       </ul>
 
-      <div className="mt-6 flex items-baseline justify-between">
+      {reward > 0 && (
+        <div className="mt-6 flex items-baseline justify-between">
+          <span className="font-mono text-[10px] font-medium tracking-[0.18em] text-accent-primary uppercase">
+            Reward
+          </span>
+          <span className="font-mono text-[15px] font-medium tracking-[0.02em] tabular-nums text-accent-primary">
+            −€{reward.toFixed(2)}
+          </span>
+        </div>
+      )}
+
+      <div className={cn("flex items-baseline justify-between", reward > 0 ? "mt-2" : "mt-6")}>
         <span className="font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase">
           Total
         </span>
         <span className="font-mono text-[15px] font-medium tracking-[0.02em] tabular-nums text-text-primary">
-          €{cartTotal(lines).toFixed(2)}
+          €{(cartTotal(lines) - reward).toFixed(2)}
         </span>
       </div>
 
       {groupByRate(
-        lines.map((line) => ({ line_total: lineTotal(line), vat_rate: line.vatRate })),
+        lines.map((line) => ({
+          line_total: lineTotal(line) - (redeemedLine?.id === line.id ? reward : 0),
+          vat_rate: line.vatRate,
+        })),
       ).map(({ rate, vat }) => (
         <p
           key={rate}

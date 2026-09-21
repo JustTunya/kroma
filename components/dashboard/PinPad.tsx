@@ -71,32 +71,35 @@ export function PinPad({ roster }: { roster: RosterEntry[] }) {
     return () => window.removeEventListener("keydown", onKey);
   });
 
+  const shell =
+    "mx-auto flex min-h-[calc(100dvh-3.5rem)] w-full max-w-sm flex-col items-center justify-center px-5 py-10 text-center";
+  const eyebrow =
+    "font-mono text-[10px] font-medium tracking-[0.18em] text-kds-text-secondary uppercase";
+
   if (!picked) {
     return (
-      <section aria-label="Who is on" className="px-5 pb-16 sm:px-10 lg:px-14">
-        <p className="pt-10 font-mono text-[10px] font-medium tracking-[0.18em] text-kds-text-secondary uppercase">
-          Who is on
-        </p>
+      <section aria-label="Who is on" className={shell}>
+        <p className={eyebrow}>Who is on</p>
 
         {roster.length === 0 ? (
-          <p className="mt-6 border-y border-kds-border py-10 font-mono text-[11px] tracking-[0.14em] text-kds-text-secondary uppercase">
+          <p className="mt-8 font-mono text-[11px] tracking-[0.14em] text-kds-text-secondary uppercase">
             Nobody on the roster yet.
           </p>
         ) : (
-          <ul className="mt-6 divide-y divide-kds-border border-y border-kds-border">
+          <ul className="mt-8 w-full divide-y divide-kds-border border-y border-kds-border">
             {roster.map((person) => (
               <li key={person.id}>
                 <motion.button
                   type="button"
                   onClick={() => setPicked(person)}
-                  whileTap={{ scale: 0.995 }}
+                  whileTap={{ scale: 0.99 }}
                   transition={pressSpring}
-                  className="flex w-full items-baseline justify-between gap-6 py-7 text-left transition-colors hover:text-accent-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-kds-text-primary sm:py-9"
+                  className="flex w-full items-baseline justify-between gap-6 py-5 text-left transition-colors hover:text-accent-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-kds-text-primary"
                 >
-                  <span className="font-serif text-[clamp(28px,3.2vw,44px)] leading-[1.05] tracking-[-0.02em]">
+                  <span className="font-serif text-[28px] leading-[1.05] tracking-[-0.02em]">
                     {person.display_name}
                   </span>
-                  <span className="shrink-0 font-mono text-[10px] font-medium tracking-[0.18em] text-kds-text-secondary uppercase">
+                  <span className={cn(eyebrow, "shrink-0")}>
                     {ROLE_LABELS[person.role]}
                   </span>
                 </motion.button>
@@ -109,28 +112,18 @@ export function PinPad({ roster }: { roster: RosterEntry[] }) {
   }
 
   return (
-    <section
-      aria-label={`PIN for ${picked.display_name}`}
-      className="px-5 pb-16 sm:px-10 lg:px-14"
-    >
-      <button
-        type="button"
-        onClick={back}
-        className="pt-10 font-mono text-[10px] font-medium tracking-[0.18em] text-kds-text-secondary uppercase transition-colors hover:text-kds-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary"
-      >
-        <span aria-hidden>← </span>Not {picked.display_name}
-      </button>
-
-      <p className="mt-6 font-serif text-[clamp(32px,4vw,52px)] leading-[1.05] tracking-[-0.02em]">
+    <section aria-label={`PIN for ${picked.display_name}`} className={shell}>
+      <p className={eyebrow}>{ROLE_LABELS[picked.role]}</p>
+      <p className="mt-3 font-serif text-[40px] leading-[1.05] tracking-[-0.02em]">
         {picked.display_name}
       </p>
 
-      <p aria-hidden className="mt-7 flex gap-3">
+      <p aria-hidden className="mt-8 flex gap-4">
         {Array.from({ length: PIN_LENGTH }, (_, i) => (
           <span
             key={i}
             className={cn(
-              "size-3.5 rounded-full border transition-colors duration-150",
+              "size-3 rounded-full border transition-colors duration-150",
               i < pin.length
                 ? "border-accent-primary bg-accent-primary"
                 : "border-kds-border bg-transparent",
@@ -159,27 +152,26 @@ export function PinPad({ roster }: { roster: RosterEntry[] }) {
         </AnimatePresence>
       </p>
 
-      <div className="mt-8 grid max-w-[340px] grid-cols-3 border-t border-l border-kds-border">
+      <div className="mt-8 grid grid-cols-3 gap-x-5 gap-y-4">
         {KEYS.map((key, i) =>
           key === "" ? (
-            <div
-              key={i}
-              aria-hidden
-              className="aspect-4/3 border-r border-b border-kds-border"
-            />
+            <div key={i} aria-hidden className="size-[72px]" />
           ) : (
             <motion.button
               key={i}
               type="button"
               disabled={pending}
               onClick={() => press(key)}
-              whileTap={{ scale: 0.97 }}
+              whileTap={{ scale: 0.94 }}
               transition={pressSpring}
               aria-label={key === "del" ? "Delete last digit" : key}
               className={cn(
-                "flex aspect-4/3 items-center justify-center border-r border-b border-kds-border",
+                "flex size-[72px] items-center justify-center rounded-full",
                 "font-mono text-[24px] tabular-nums transition-colors",
-                "hover:bg-kds-surface focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-kds-text-primary",
+                key === "del"
+                  ? "text-kds-text-secondary hover:text-kds-text-primary"
+                  : "border border-kds-border hover:bg-kds-surface",
+                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary",
                 "disabled:text-kds-text-secondary",
               )}
             >
@@ -188,6 +180,17 @@ export function PinPad({ roster }: { roster: RosterEntry[] }) {
           ),
         )}
       </div>
+
+      <button
+        type="button"
+        onClick={back}
+        className={cn(
+          eyebrow,
+          "mt-10 transition-colors hover:text-kds-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-kds-text-primary",
+        )}
+      >
+        Not {picked.display_name}
+      </button>
     </section>
   );
 }

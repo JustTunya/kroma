@@ -206,7 +206,7 @@ export function CheckoutForm({
               placeholder="Optional"
               className={FIELD}
             />
-            <span className="mt-3 block font-mono text-[11px] font-medium tracking-[0.14em] text-text-tertiary uppercase">
+            <span className="mt-3 block font-mono text-[11px] font-medium tracking-[0.14em] text-text-secondary uppercase">
               Optional — for the receipt and a ping when it&rsquo;s ready.
             </span>
           </label>
@@ -254,7 +254,7 @@ export function CheckoutForm({
               );
             })}
           </div>
-          <p className="mt-4 font-mono text-[11px] font-medium tracking-[0.14em] text-text-tertiary uppercase">
+          <p className="mt-4 font-mono text-[11px] font-medium tracking-[0.14em] text-text-secondary uppercase">
             {METHODS.find((option) => option.value === method)?.note}
           </p>
         </fieldset>

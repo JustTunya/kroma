@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { motion } from "framer-motion";
-import { Fish, Leaf, Sprout, WheatOff } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { Eye, Fish, Leaf, Sprout, WheatOff } from "lucide-react";
 
 import type { Transition } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
@@ -14,8 +14,8 @@ import type { MenuItem } from "@/types/menu";
 type MenuRowProps = {
   item: MenuItem;
   onAdd: (item: MenuItem) => void;
-
   onPreview: (item: MenuItem) => void;
+  onOpenSpecimen: (item: MenuItem) => void;
 };
 
 const rowExit: Transition = { duration: 0.12, ease: "easeOut" };
@@ -33,18 +33,19 @@ const dietaryIcons: Record<string, LucideIcon> = {
   "Gluten-Free": WheatOff,
 };
 
-export function MenuRow({ item, onAdd, onPreview }: MenuRowProps) {
+export function MenuRow({ item, onAdd, onPreview, onOpenSpecimen }: MenuRowProps) {
+  const reduced = useReducedMotion();
   const soldOut = item.daily_stock === 0;
   const lowStock =
     item.daily_stock !== null && item.daily_stock > 0 && item.daily_stock <= 5;
 
   return (
     <motion.li
-      layout="position"
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0, transition: spring }}
-      exit={{ opacity: 0, transition: rowExit }}
-      transition={{ layout: spring }}
+      layout={reduced ? false : "position"}
+      initial={reduced ? false : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0, transition: reduced ? { duration: 0 } : spring }}
+      exit={reduced ? { opacity: 0, transition: { duration: 0 } } : { opacity: 0, transition: rowExit }}
+      transition={reduced ? { duration: 0 } : { layout: spring }}
     >
       <motion.button
         type="button"
@@ -52,9 +53,9 @@ export function MenuRow({ item, onAdd, onPreview }: MenuRowProps) {
         onClick={() => onAdd(item)}
         onPointerEnter={() => onPreview(item)}
         onFocus={() => onPreview(item)}
-        whileHover={soldOut ? undefined : "hover"}
-        whileFocus={soldOut ? undefined : "hover"}
-        whileTap={soldOut ? undefined : { scale: 0.995 }}
+        whileHover={soldOut || reduced ? undefined : "hover"}
+        whileFocus={soldOut || reduced ? undefined : "hover"}
+        whileTap={soldOut || reduced ? undefined : { scale: 0.995 }}
         transition={pressSpring}
         aria-label={
           soldOut
@@ -71,10 +72,10 @@ export function MenuRow({ item, onAdd, onPreview }: MenuRowProps) {
         >
           <Image
             src={item.image_url}
-            alt=""
+            alt={item.name}
+            loading="eager"
             fill
             sizes="(min-width: 1024px) 0px, 100vw"
-            loading="eager"
             className="object-cover"
           />
         </div>
@@ -112,10 +113,32 @@ export function MenuRow({ item, onAdd, onPreview }: MenuRowProps) {
             </motion.p>
           )}
 
+          {item.tasting_notes && item.tasting_notes.length > 0 && (
+            <motion.p
+              variants={{ hover: { x: 10 } }}
+              transition={spring}
+              className={cn(
+                "mt-2.5 flex flex-wrap items-center gap-x-1 gap-y-1 font-mono text-[10px] font-medium tracking-[0.14em] uppercase",
+                soldOut ? "text-text-tertiary" : "text-accent-primary",
+              )}
+            >
+              {item.tasting_notes.map((note, index) => (
+                <span key={note} className="flex items-center gap-1">
+                  {index > 0 && (
+                    <span aria-hidden className="text-hairline">
+                      /
+                    </span>
+                  )}
+                  {note}
+                </span>
+              ))}
+            </motion.p>
+          )}
+
           <motion.div
             variants={{ hover: { x: 10 } }}
             transition={spring}
-            className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[11px] font-medium tracking-[0.14em] text-text-tertiary uppercase"
+            className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[11px] font-medium tracking-[0.14em] text-text-secondary uppercase"
           >
             {spec(item).map((part, index) => (
               <span key={part} className="flex items-center gap-3">
@@ -162,6 +185,16 @@ export function MenuRow({ item, onAdd, onPreview }: MenuRowProps) {
           </motion.div>
         </div>
       </motion.button>
+
+      <button
+        type="button"
+        onClick={() => onOpenSpecimen(item)}
+        className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-full px-1 font-mono text-[10px] font-medium tracking-[0.16em] text-text-tertiary uppercase transition-colors duration-300 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
+        aria-label={`View specimen details for ${item.name}`}
+      >
+        <Eye aria-hidden size={13} strokeWidth={2} />
+        View Specimen
+      </button>
     </motion.li>
   );
 }

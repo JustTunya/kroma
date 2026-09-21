@@ -115,7 +115,7 @@ export default async function OrdersPage({
           {months.map((group) => (
             <section key={group.month} aria-label={group.month}>
               {}
-              <h2 className="sticky top-[120px] z-30 border-y border-hairline bg-surface-canvas/85 py-4 font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase backdrop-blur-xl">
+              <h2 className="sticky top-30 z-30 border-y border-hairline bg-surface-canvas/85 py-4 font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase backdrop-blur-xl">
                 {group.month}
               </h2>
               <ul className="divide-y divide-hairline">

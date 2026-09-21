@@ -11,10 +11,10 @@ import type { CartLine } from "@/lib/cart";
 
 const VARIANTS = {
 
-  pill: "flex h-10 items-center rounded-full bg-accent-primary px-5 text-surface-card transition-colors hover:bg-accent-hover disabled:bg-surface-muted disabled:text-text-tertiary",
+  pill: "flex h-11 items-center rounded-full bg-accent-primary px-5 text-surface-card transition-colors hover:bg-accent-hover disabled:bg-surface-muted disabled:text-text-tertiary",
 
   inline:
-    "text-accent-primary transition-colors hover:text-accent-hover disabled:text-text-tertiary",
+    "inline-flex min-h-11 items-center text-accent-hover transition-colors hover:text-accent-primary disabled:text-text-tertiary",
 } as const;
 
 export function ReorderButton({

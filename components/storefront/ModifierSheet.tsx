@@ -88,7 +88,7 @@ export function ModifierSheet({ item, onClose, onAdd }: ModifierSheetProps) {
             <div className="flex items-start justify-between gap-4 border-b border-hairline p-6">
               <div className="flex items-center gap-4">
                 <div className="relative size-16 shrink-0 overflow-hidden bg-surface-muted">
-                  <Image src={item.image_url} alt="" fill sizes="64px" className="object-cover" />
+                  <Image src={item.image_url} alt={item.name} loading="eager" fill sizes="64px" className="object-cover" />
                 </div>
                 <div>
                   <h2 className="font-serif text-[28px] leading-[1.05] tracking-[-0.02em] text-text-primary">

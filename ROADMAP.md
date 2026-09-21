@@ -16,9 +16,9 @@ enough for a day or two.
 
 ## M1 — Land the in-flight work
 
-- [ ] Finish and commit the uncommitted `components/dashboard/PinPad.tsx` change.
-- [ ] Finish the storefront luxury redesign (`docs/superpowers/plans/2026-09-21-storefront-luxury-redesign.md`); tick off every task or cut the ones not worth it.
-- [ ] `pnpm lint` and `npx tsc --noEmit` clean; `pnpm build` passes.
+- [x] Finish and commit the uncommitted `components/dashboard/PinPad.tsx` change.
+- [x] Finish the storefront luxury redesign (`docs/superpowers/plans/2026-09-21-storefront-luxury-redesign.md`); tick off every task or cut the ones not worth it.
+- [x] `pnpm lint` and `npx tsc --noEmit` clean; `pnpm build` passes.
 - [ ] Merge `feat/redesign` → `master`. Delete dead branches.
 
 **Exit:** `master` builds clean and is what's deployed.

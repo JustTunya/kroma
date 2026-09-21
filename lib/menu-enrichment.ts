@@ -1,4 +1,4 @@
-import type { BrewSpec, MenuItem } from "@/types/menu";
+import type { BrewSpec } from "@/types/menu";
 
 export type SensoryData = {
   tasting_notes: string[];

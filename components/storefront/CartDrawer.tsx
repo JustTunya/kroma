@@ -85,7 +85,8 @@ export function CartDrawer({ open, lines, onClose, onQuantityChange, onRemove, s
                       <div className="relative size-16 shrink-0 overflow-hidden bg-surface-muted">
                         <Image
                           src={line.imageUrl}
-                          alt=""
+                          alt={line.name}
+                          loading="eager"
                           fill
                           sizes="64px"
                           className="object-cover"

@@ -58,9 +58,9 @@ export function MenuList({ items, onAdd, onOpenSpecimen }: MenuListProps) {
                 <Image
                   src={preview.image_url}
                   alt={preview.name}
+                  loading="eager"
                   fill
                   sizes="360px"
-                  loading="eager"
                   className="object-cover"
                 />
               </motion.div>

@@ -73,7 +73,6 @@ export function ItemSpecimenDrawer({
                 fill
                 sizes="(min-width: 640px) 576px, 100vw"
                 className={cn("object-cover", soldOut && "grayscale")}
-                priority
               />
               <div className="absolute inset-0 bg-linear-to-t from-text-primary/85 via-text-primary/30 to-transparent" />
 

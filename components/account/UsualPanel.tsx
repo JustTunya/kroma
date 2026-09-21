@@ -49,7 +49,7 @@ export function UsualPanel({
             soldOut ? "grayscale" : ""
           }`}
         >
-          <Image src={imageUrl} alt="" fill sizes="80px" className="object-cover" />
+          <Image src={imageUrl} alt={name} loading="eager" fill sizes="80px" className="object-cover" />
         </div>
 
         <div className="min-w-0 flex-1">

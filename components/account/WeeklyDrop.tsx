@@ -42,7 +42,7 @@ export function WeeklyDrop({
         className="mt-8 flex flex-wrap items-center gap-5 border-y border-hairline py-7 sm:flex-nowrap sm:gap-6 sm:py-9"
       >
         <div className="relative size-20 shrink-0 overflow-hidden border border-border-subtle bg-surface-muted">
-          <Image src={imageUrl} alt="" fill sizes="80px" className="object-cover" />
+          <Image src={imageUrl} alt={name} loading="eager" fill sizes="80px" className="object-cover" />
         </div>
 
         <div className="min-w-0 flex-1">

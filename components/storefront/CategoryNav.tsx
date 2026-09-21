@@ -6,25 +6,20 @@ import { pressSpring, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { type MenuViewMode, ViewToggle } from "@/components/storefront/ViewToggle";
 
-// ponytail: viewMode/onViewModeChange are optional with a no-op default because
-// Storefront.tsx doesn't wire real state through until Task 9. Make them required
-// once that task lands.
 type CategoryNavProps = {
   categories: string[];
   active: string;
   onSelect: (category: string) => void;
-  viewMode?: MenuViewMode;
-  onViewModeChange?: (mode: MenuViewMode) => void;
+  viewMode: MenuViewMode;
+  onViewModeChange: (mode: MenuViewMode) => void;
 };
-
-const noop = () => {};
 
 export function CategoryNav({
   categories,
   active,
   onSelect,
-  viewMode = "list",
-  onViewModeChange = noop,
+  viewMode,
+  onViewModeChange,
 }: CategoryNavProps) {
   return (
     <nav
@@ -33,7 +28,7 @@ export function CategoryNav({
     >
       <div className="flex flex-wrap items-center gap-2 px-5 py-3 sm:px-10 lg:px-14">
         <div className="min-w-0 flex-1 overflow-x-auto scrollbar-hide">
-          <div className="flex w-max gap-1.5">
+          <div className="flex w-max gap-1.5 pr-2">
             {categories.map((category) => {
               const isActive = category === active;
 
@@ -64,6 +59,7 @@ export function CategoryNav({
             })}
           </div>
         </div>
+
         <ViewToggle mode={viewMode} onChange={onViewModeChange} />
       </div>
     </nav>

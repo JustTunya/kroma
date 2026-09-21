@@ -11,18 +11,12 @@ import { pressSpring, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import type { MenuItem } from "@/types/menu";
 
-// ponytail: onOpenSpecimen is optional with a no-op default because
-// Storefront.tsx doesn't wire the specimen drawer handler through until
-// Task 9. Make it required once that task lands.
 type MenuRowProps = {
   item: MenuItem;
   onAdd: (item: MenuItem) => void;
-
   onPreview: (item: MenuItem) => void;
-  onOpenSpecimen?: (item: MenuItem) => void;
+  onOpenSpecimen: (item: MenuItem) => void;
 };
-
-const noop = () => {};
 
 const rowExit: Transition = { duration: 0.12, ease: "easeOut" };
 
@@ -39,7 +33,7 @@ const dietaryIcons: Record<string, LucideIcon> = {
   "Gluten-Free": WheatOff,
 };
 
-export function MenuRow({ item, onAdd, onPreview, onOpenSpecimen = noop }: MenuRowProps) {
+export function MenuRow({ item, onAdd, onPreview, onOpenSpecimen }: MenuRowProps) {
   const reduced = useReducedMotion();
   const soldOut = item.daily_stock === 0;
   const lowStock =

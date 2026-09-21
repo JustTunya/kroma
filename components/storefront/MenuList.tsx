@@ -8,18 +8,13 @@ import { MenuRow } from "@/components/storefront/MenuRow";
 import { glide } from "@/lib/reveal";
 import type { MenuItem } from "@/types/menu";
 
-// ponytail: onOpenSpecimen is optional with a no-op default because
-// Storefront.tsx doesn't wire the specimen drawer handler through until
-// Task 9. Make it required once that task lands.
 type MenuListProps = {
   items: MenuItem[];
   onAdd: (item: MenuItem) => void;
-  onOpenSpecimen?: (item: MenuItem) => void;
+  onOpenSpecimen: (item: MenuItem) => void;
 };
 
-const noop = () => {};
-
-export function MenuList({ items, onAdd, onOpenSpecimen = noop }: MenuListProps) {
+export function MenuList({ items, onAdd, onOpenSpecimen }: MenuListProps) {
   const [previewId, setPreviewId] = useState<string | null>(null);
 
   if (items.length === 0) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AnimatePresence,
   motion,
@@ -21,6 +21,30 @@ import { Wordmark } from "@/components/Logo";
 
 const MotionLink = motion.create(Link);
 
+/** Live "CLUJ 08:42 EET" clock, ticking once a minute. Null until mounted (avoids SSR/client mismatch). */
+function useClujClock() {
+  const [label, setLabel] = useState<string | null>(null);
+
+  useEffect(() => {
+    const update = () => {
+      const parts = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Europe/Bucharest",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZoneName: "short",
+      }).formatToParts(new Date());
+      const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+      setLabel(`CLUJ ${get("hour")}:${get("minute")} ${get("timeZoneName")}`);
+    };
+    update();
+    const id = setInterval(update, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  return label;
+}
+
 type StorefrontHeaderProps = {
   cartCount: number;
   signedIn: boolean;
@@ -37,6 +61,7 @@ export function StorefrontHeader({
   const { scrollY } = useScroll();
   const [onCanvas, setOnCanvas] = useState(false);
   const active = useActiveOrder(signedIn);
+  const clujTime = useClujClock();
 
   const statusText = active ? ORDER_STATUS_LABELS[active.status].text : null;
   const countdown = active
@@ -130,7 +155,18 @@ export function StorefrontHeader({
           )}
         </AnimatePresence>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {clujTime && (
+            <span
+              aria-label={`Local time in Cluj-Napoca: ${clujTime}`}
+              className={cn(
+                "hidden font-mono text-[10px] font-medium tracking-[0.18em] uppercase transition-colors duration-300 lg:inline",
+                onCanvas ? "text-text-tertiary" : "text-surface-canvas/60",
+              )}
+            >
+              {clujTime}
+            </span>
+          )}
           <MotionLink
             href={signedIn ? "/account" : "/auth/login"}
             aria-label={signedIn ? "Your account" : "Sign in to your account"}

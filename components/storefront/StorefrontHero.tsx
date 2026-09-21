@@ -49,6 +49,14 @@ export function StorefrontHero() {
           Cluj-Napoca — Specialty roastery &amp; micro-bakehouse
         </motion.p>
 
+        <motion.p
+          variants={{ hidden: { opacity: 0 }, visible: { opacity: 1 } }}
+          transition={{ ...glide, delay: 0.16 }}
+          className="mt-3 font-mono text-[10px] font-medium tracking-[0.16em] text-accent-primary/90 uppercase"
+        >
+          Cluj-Napoca • 12kg drum light roast • Morning proof 4°C
+        </motion.p>
+
         <h1 className="mt-5 max-w-[16ch] font-serif text-[clamp(56px,10vw,148px)] leading-[0.92] tracking-[-0.03em] text-surface-canvas">
           <Line delay={0.2}>Light roasts,</Line>
           <Line delay={0.32}>long ferments.</Line>

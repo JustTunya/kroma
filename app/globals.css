@@ -137,6 +137,12 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 @media print {
   @page {
     margin: 12mm;

@@ -43,3 +43,9 @@ next-env.d.ts
 
 # Supabase CLI scratch space
 supabase/.temp/
+
+# graphify
+/graphify-out
+
+# impeccable
+/.impeccable

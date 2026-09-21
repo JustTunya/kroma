@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { X } from "lucide-react";
 
 import { QtyStepper } from "@/components/storefront/QtyStepper";
@@ -21,6 +21,7 @@ type CartDrawerProps = {
 };
 
 export function CartDrawer({ open, lines, onClose, onQuantityChange, onRemove, serviceOpen }: CartDrawerProps) {
+  const reduced = useReducedMotion();
   const total = cartTotal(lines);
 
   useEscapeClose(open, onClose);
@@ -33,7 +34,7 @@ export function CartDrawer({ open, lines, onClose, onQuantityChange, onRemove, s
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: reduced ? 0 : 0.2 }}
             onClick={onClose}
             aria-hidden
             className="absolute inset-0 bg-text-primary/25 backdrop-blur-sm"
@@ -43,10 +44,10 @@ export function CartDrawer({ open, lines, onClose, onQuantityChange, onRemove, s
             role="dialog"
             aria-modal="true"
             aria-label="Your order"
-            initial={{ x: "100%" }}
+            initial={reduced ? false : { x: "100%" }}
             animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={spring}
+            exit={reduced ? { opacity: 0 } : { x: "100%" }}
+            transition={reduced ? { duration: 0 } : spring}
             className="relative flex h-full w-full max-w-full flex-col overflow-hidden bg-surface-card sm:w-105"
           >
             <div className="flex items-center justify-between gap-4 border-b border-hairline p-6">

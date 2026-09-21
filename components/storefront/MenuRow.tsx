@@ -118,12 +118,12 @@ export function MenuRow({ item, onAdd, onPreview, onOpenSpecimen }: MenuRowProps
               variants={{ hover: { x: 10 } }}
               transition={spring}
               className={cn(
-                "mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] font-medium tracking-[0.14em] uppercase",
+                "mt-2.5 flex flex-wrap items-center gap-x-1 gap-y-1 font-mono text-[10px] font-medium tracking-[0.14em] uppercase",
                 soldOut ? "text-text-tertiary" : "text-accent-primary",
               )}
             >
               {item.tasting_notes.map((note, index) => (
-                <span key={note} className="flex items-center gap-3">
+                <span key={note} className="flex items-center gap-1">
                   {index > 0 && (
                     <span aria-hidden className="text-hairline">
                       /

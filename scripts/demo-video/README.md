@@ -2,8 +2,10 @@
 
 1. `pnpm add -D playwright && npx playwright install chromium`
 2. `pnpm dev` (localhost:3000 must be serving with seeded menu data)
-3. `node scripts/demo-video/record.mjs`
+3. `DURATION_S=10 node scripts/demo-video/record.mjs` (env: `URL`, `W`, `H`, `DURATION_S`)
    Raw webm lands in `scripts/demo-video/out/` (Playwright names it by GUID).
+
+Also set `devIndicators: false` in `next.config.ts` temporarily (restart dev server) and revert it too.
 
 Before recording, temporarily force the hero static (no entrance fade/scale,
 no WebGL warm-up) so the clip opens already settled instead of waiting out an
@@ -69,3 +71,6 @@ At ~24s / 1280x720 this lands around 1-1.5MB per format. Adjust `-ss` after revi
 the raw clip for dead frames at the very start. Raise `scale` back to 1920 (drop the
 `fps=24`) for a full-bleed hero placement where the extra weight is worth it; drop
 `-crf` a few points if banding shows on the terracotta/canvas gradients.
+
+Thumbnail: `ffmpeg -i out/kroma-demo.mp4 -frames:v 1 -c:v libwebp -quality 85 out/kroma-demo-thumb.webp`
+`-ss 2.24` above was pixel-verified for the last recording (last static frame); re-verify per take.

@@ -11,14 +11,13 @@ import { chromium } from "playwright";
 import { mkdir } from "node:fs/promises";
 
 const CONFIG = {
-  url: "http://localhost:3000",
-  viewport: { width: 1920, height: 1080 },
+  url: process.env.URL ?? "http://localhost:3000",
+  viewport: { width: +(process.env.W ?? 1920), height: +(process.env.H ?? 1080) },
   outDir: "scripts/demo-video/out",
   // px/second of document scroll — slow and cinematic. Total duration is
   // derived from page height so pace stays constant regardless of content.
-  scrollPxPerSecond: 235,
-  minDurationMs: 10000,
-  maxDurationMs: 25000,
+  // Target scroll duration (seconds); px/sec is derived from page height.
+  targetDurationS: +(process.env.DURATION_S ?? 10),
   // Where the cursor sits in the viewport (fraction of width/height). Chosen
   // to stay inside the menu list column, left of the 360px sticky preview
   // panel that occupies the right edge on desktop widths.
@@ -124,12 +123,9 @@ async function main() {
   const maxScrollY = await page.evaluate(
     () => document.documentElement.scrollHeight - window.innerHeight,
   );
-  const durationMs = Math.min(
-    CONFIG.maxDurationMs,
-    Math.max(CONFIG.minDurationMs, (maxScrollY / CONFIG.scrollPxPerSecond) * 1000),
-  );
+  const durationMs = CONFIG.targetDurationS * 1000;
   console.log(
-    `scrolling 0 -> ${maxScrollY}px over ${(durationMs / 1000).toFixed(1)}s, constant speed`,
+    `scrolling 0 -> ${maxScrollY}px over ${(durationMs / 1000).toFixed(1)}s (${Math.round(maxScrollY / (durationMs / 1000))}px/s), constant speed`,
   );
 
   const scrollStartS = (Date.now() - recordStart) / 1000;

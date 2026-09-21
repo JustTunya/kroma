@@ -34,7 +34,7 @@ export function UsualPanel({
       <motion.p
         variants={rise}
         transition={glide}
-        className="font-mono text-[10px] font-medium tracking-[0.18em] text-text-tertiary uppercase"
+        className="font-mono text-[10px] font-medium tracking-[0.18em] text-text-secondary uppercase"
       >
         Your usual
       </motion.p>
@@ -49,7 +49,7 @@ export function UsualPanel({
             soldOut ? "grayscale" : ""
           }`}
         >
-          <Image src={imageUrl} alt={name} loading="eager" fill sizes="80px" className="object-cover" />
+          <Image src={imageUrl} alt={name} fill sizes="80px" className="object-cover" />
         </div>
 
         <div className="min-w-0 flex-1">
@@ -61,7 +61,7 @@ export function UsualPanel({
             {name}
           </h2>
 
-          <p className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[11px] font-medium tracking-[0.14em] text-text-tertiary uppercase">
+          <p className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[11px] font-medium tracking-[0.14em] text-text-secondary uppercase">
             {spec.map((part, index) => (
               <span key={part} className="flex items-center gap-3">
                 {index > 0 && (

@@ -10,6 +10,7 @@ export type ActiveOrder = {
   order_number: number;
   status: OrderStatus;
   pickup_at: string | null;
+  access_token?: string;
 };
 
 const OPEN: OrderStatus[] = ["pending", "paid", "preparing", "ready"];
@@ -28,7 +29,7 @@ export function useActiveOrder(signedIn: boolean): ActiveOrder | null {
 
         const { data } = await supabase
           .from("orders")
-          .select("order_number, status, pickup_at, placed_at")
+          .select("order_number, status, pickup_at, placed_at, access_token")
           .in("status", OPEN)
           .order("placed_at", { ascending: false })
           .limit(1)

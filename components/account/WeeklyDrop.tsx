@@ -31,7 +31,7 @@ export function WeeklyDrop({
       <motion.p
         variants={rise}
         transition={glide}
-        className="font-mono text-[10px] font-medium tracking-[0.18em] text-accent-primary uppercase"
+        className="font-mono text-[10px] font-medium tracking-[0.18em] text-accent-hover uppercase"
       >
         This week
       </motion.p>
@@ -42,7 +42,7 @@ export function WeeklyDrop({
         className="mt-8 flex flex-wrap items-center gap-5 border-y border-hairline py-7 sm:flex-nowrap sm:gap-6 sm:py-9"
       >
         <div className="relative size-20 shrink-0 overflow-hidden border border-border-subtle bg-surface-muted">
-          <Image src={imageUrl} alt={name} loading="eager" fill sizes="80px" className="object-cover" />
+          <Image src={imageUrl} alt={name} fill sizes="80px" className="object-cover" />
         </div>
 
         <div className="min-w-0 flex-1">
@@ -57,7 +57,7 @@ export function WeeklyDrop({
           )}
 
           {spec.length > 0 && (
-            <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[11px] font-medium tracking-[0.14em] text-text-tertiary uppercase">
+            <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[11px] font-medium tracking-[0.14em] text-text-secondary uppercase">
               {spec.map((part, index) => (
                 <span key={part} className="flex items-center gap-3">
                   {index > 0 && (
@@ -78,7 +78,7 @@ export function WeeklyDrop({
           </span>
           <Link
             href="/"
-            className="flex h-10 items-center rounded-full bg-accent-primary px-5 font-mono text-[11px] font-medium tracking-[0.14em] uppercase text-surface-card transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
+            className="flex h-11 items-center rounded-full bg-accent-primary px-5 font-mono text-[11px] font-medium tracking-[0.14em] uppercase text-surface-card transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
           >
             See it on the menu
           </Link>

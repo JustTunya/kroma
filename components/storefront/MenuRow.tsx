@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
-import { Fish, Leaf, Sprout, WheatOff } from "lucide-react";
+import { Eye, Fish, Leaf, Sprout, WheatOff } from "lucide-react";
 
 import type { Transition } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
@@ -11,12 +11,18 @@ import { pressSpring, spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import type { MenuItem } from "@/types/menu";
 
+// ponytail: onOpenSpecimen is optional with a no-op default because
+// Storefront.tsx doesn't wire the specimen drawer handler through until
+// Task 9. Make it required once that task lands.
 type MenuRowProps = {
   item: MenuItem;
   onAdd: (item: MenuItem) => void;
 
   onPreview: (item: MenuItem) => void;
+  onOpenSpecimen?: (item: MenuItem) => void;
 };
+
+const noop = () => {};
 
 const rowExit: Transition = { duration: 0.12, ease: "easeOut" };
 
@@ -33,7 +39,7 @@ const dietaryIcons: Record<string, LucideIcon> = {
   "Gluten-Free": WheatOff,
 };
 
-export function MenuRow({ item, onAdd, onPreview }: MenuRowProps) {
+export function MenuRow({ item, onAdd, onPreview, onOpenSpecimen = noop }: MenuRowProps) {
   const reduced = useReducedMotion();
   const soldOut = item.daily_stock === 0;
   const lowStock =
@@ -113,6 +119,28 @@ export function MenuRow({ item, onAdd, onPreview }: MenuRowProps) {
             </motion.p>
           )}
 
+          {item.tasting_notes && item.tasting_notes.length > 0 && (
+            <motion.p
+              variants={{ hover: { x: 10 } }}
+              transition={spring}
+              className={cn(
+                "mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] font-medium tracking-[0.14em] uppercase",
+                soldOut ? "text-text-tertiary" : "text-accent-primary",
+              )}
+            >
+              {item.tasting_notes.map((note, index) => (
+                <span key={note} className="flex items-center gap-3">
+                  {index > 0 && (
+                    <span aria-hidden className="text-hairline">
+                      /
+                    </span>
+                  )}
+                  {note}
+                </span>
+              ))}
+            </motion.p>
+          )}
+
           <motion.div
             variants={{ hover: { x: 10 } }}
             transition={spring}
@@ -163,6 +191,16 @@ export function MenuRow({ item, onAdd, onPreview }: MenuRowProps) {
           </motion.div>
         </div>
       </motion.button>
+
+      <button
+        type="button"
+        onClick={() => onOpenSpecimen(item)}
+        className="mt-3 inline-flex h-9 items-center gap-1.5 rounded-full px-1 font-mono text-[10px] font-medium tracking-[0.16em] text-text-tertiary uppercase transition-colors duration-300 hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus"
+        aria-label={`View specimen details for ${item.name}`}
+      >
+        <Eye aria-hidden size={13} strokeWidth={2} />
+        View Specimen
+      </button>
     </motion.li>
   );
 }

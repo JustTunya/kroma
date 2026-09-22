@@ -496,6 +496,7 @@ export type Database = {
           failed_pins: number
           id: string
           is_active: boolean
+          is_demo: boolean
           kind: string
           locked_until: string | null
           pin_hash: string | null
@@ -510,6 +511,7 @@ export type Database = {
           failed_pins?: number
           id?: string
           is_active?: boolean
+          is_demo?: boolean
           kind?: string
           locked_until?: string | null
           pin_hash?: string | null
@@ -524,6 +526,7 @@ export type Database = {
           failed_pins?: number
           id?: string
           is_active?: boolean
+          is_demo?: boolean
           kind?: string
           locked_until?: string | null
           pin_hash?: string | null
@@ -659,6 +662,7 @@ export type Database = {
           failed_pins: number
           id: string
           is_active: boolean
+          is_demo: boolean
           kind: string
           locked_until: string | null
           pin_hash: string | null
@@ -829,6 +833,25 @@ export type Database = {
         Returns: Json
       }
       release_expired_orders: { Args: never; Returns: number }
+      reset_demo_day: { Args: never; Returns: undefined }
+      admin_upsert_demo_staff: {
+        Args: { p_user_id: string; p_pin: string }
+        Returns: {
+          created_at: string
+          display_name: string
+          failed_pins: number
+          id: string
+          is_active: boolean
+          is_demo: boolean
+          kind: string
+          locked_until: string | null
+          pin_hash: string | null
+          role: Database["public"]["Enums"]["staff_role"]
+          station: string
+          updated_at: string
+          user_id: string | null
+        }
+      }
       release_order: { Args: { p_order_id: string }; Returns: boolean }
       service_report: {
         Args: { p_actor: string; p_day: string }

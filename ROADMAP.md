@@ -31,9 +31,9 @@ anyone who doesn't clone and run it locally. Nobody will.
 
 Pick one (recommended: **A**, with **B** as backup):
 
-- [ ] **A. Public demo staff mode.** A "Try the staff side" link on the login page that signs into a sandbox staff account with a published PIN, against a demo shop that is safe to trash. Add a nightly reset (extend the existing cron) so vandalism heals itself.
+- [x] **A. Public demo staff mode.** A "Try the staff side" link on the login page that signs into a sandbox staff account with a published PIN, against a demo shop that is safe to trash. Add a nightly reset (extend the existing cron) so vandalism heals itself.
 - [ ] **B. Recorded walkthrough.** 60–90 s screen capture: place an order on phone → it appears on the board → barista calls it → push notification / status page flips → close of day. Embed in README and portfolio page.
-- [ ] Cap abuse on the demo: rate-limit or disable destructive actions (menu delete, refunds) for the demo account.
+- [x] Cap abuse on the demo: rate-limit or disable destructive actions (menu delete, refunds) for the demo account.
 
 **Exit:** someone who never touches a terminal can see the staff dashboard working.
 

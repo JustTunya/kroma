@@ -168,10 +168,12 @@ the seed can't get you all the way in by itself — one-time setup:
    ```
 3. Sign in, open `/dashboard`, PIN `1234`.
 
-Or skip steps 1-3 entirely: `pnpm seed:demo` provisions the same staff
-account non-interactively (reading `NEXT_PUBLIC_DEMO_STAFF_EMAIL`/`_PASSWORD`/
-`_PIN` from `.env.local`) and backfills 30 days of realistic orders so the
-dashboard isn't empty. Safe to re-run.
+Or skip steps 1-3 entirely: `pnpm seed:demo` provisions a separate sandboxed
+staff account non-interactively (reading `NEXT_PUBLIC_DEMO_STAFF_EMAIL`/
+`_PASSWORD`/`_PIN` from `.env.local`) and backfills 30 days of realistic
+orders so the dashboard isn't empty. Safe to re-run. This is the same
+"Demo Owner (Sandbox)" account behind the "Try the staff side" link below,
+not the row linked manually in step 2.
 
 The shop still has to be opened once per session — `/dashboard` walks you
 through it (par-stock counts, then Open) the same way a real morning would.

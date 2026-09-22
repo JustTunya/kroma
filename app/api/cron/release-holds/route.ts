@@ -5,12 +5,6 @@ export async function GET(request: Request) {
     return new Response("unauthorized", { status: 401 });
   }
 
-  // Runs before the shop opens: clears today's orders and any PIN lockout on
-  // the demo staff account, so vandalism from the day before never survives
-  // into today's open. History from pnpm seed:demo is untouched.
-  const { error: resetError } = await admin().rpc("reset_demo_day");
-  if (resetError) console.error("reset_demo_day failed:", resetError.message);
-
   const { data, error } = await admin().rpc("release_expired_orders");
 
   if (error) {

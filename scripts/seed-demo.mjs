@@ -58,11 +58,11 @@ export async function ensureDemoStaff(client) {
       // If createUser failed with a duplicate-email error, a previous run may have
       // created the Auth user but crashed before linking it to a staff row. Recover
       // by finding the existing user and continuing to the RPC link step.
-      const { data: users, error: listErr } = await client.auth.admin.listUsers({
-        limit: 1000,
+      const { data, error: listErr } = await client.auth.admin.listUsers({
+        perPage: 1000,
       });
       if (listErr) throw createErr; // If listing fails, rethrow the original error.
-      const existingUser = users?.find((u) => u.email === DEMO_EMAIL);
+      const existingUser = data?.users?.find((u) => u.email === DEMO_EMAIL);
       if (existingUser) {
         userId = existingUser.id;
         console.log(`Recovered from partial run: found existing Auth user ${DEMO_EMAIL}`);
@@ -121,10 +121,34 @@ function weightedPick(items, weightOf) {
 // which outweighs the small kitchen menu.
 const CATEGORY_WEIGHT = {
   "espresso-bar": 5,
+  "filter-cold": 2,
   "tea-alternatives": 2,
   bakehouse: 2.5,
   kitchen: 1,
 };
+
+// Bucharest is UTC+2 (EET) in winter, UTC+3 (EEST) in summer. Seed timestamps
+// are built from shop-local wall-clock hours, so they need this to land on
+// the right UTC instant — a naive setUTCHours/`Z`-suffix would be off by
+// 2-3h, shifting the whole morning-rush/lunch-bump curve this backfill
+// exists to produce.
+function bucharestOffsetMinutes(date) {
+  const formatted = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Bucharest",
+    hour: "numeric",
+    hour12: false,
+    timeZoneName: "shortOffset",
+  }).formatToParts(date);
+  const offsetPart = formatted.find((p) => p.type === "timeZoneName")?.value ?? "GMT+2";
+  const match = offsetPart.match(/GMT([+-]\d+)/);
+  return match ? Number(match[1]) * 60 : 120;
+}
+
+function bucharestWallClockToUTC(year, month, day, hour, minute) {
+  const naiveUTC = new Date(Date.UTC(year, month, day, hour, minute));
+  const offsetMin = bucharestOffsetMinutes(naiveUTC);
+  return new Date(naiveUTC.getTime() - offsetMin * 60000);
+}
 
 function isWeekend(date) {
   const day = date.getUTCDay();
@@ -215,19 +239,23 @@ async function seedHistory(client, demoStaffId) {
     });
     if (error) throw new Error(`createUser (${email}) failed: ${error.message}`);
 
-    await client.from("profiles").insert({
+    const { error: profileError } = await client.from("profiles").insert({
       id: data.user.id,
       display_name: `${firstName} ${lastName}`,
       bar_name: firstName,
       marketing_opt_in: Math.random() < 0.5,
     });
+    if (profileError) throw new Error(`profiles insert (${email}) failed: ${profileError.message}`);
 
     const favourites = weightedItems
       .slice()
       .sort(() => Math.random() - 0.5)
       .slice(0, randomInt(1, 3));
     for (const { item } of favourites) {
-      await client.from("favourites").insert({ user_id: data.user.id, menu_item_id: item.id });
+      const { error: favError } = await client
+        .from("favourites")
+        .insert({ user_id: data.user.id, menu_item_id: item.id });
+      if (favError) throw new Error(`favourites insert (${email}) failed: ${favError.message}`);
     }
 
     customers.push({
@@ -246,10 +274,14 @@ async function seedHistory(client, demoStaffId) {
     const weekend = isWeekend(day);
     const orderCount = weekend ? randomInt(45, 70) : randomInt(35, 55);
 
+    const openedAt = weekend
+      ? bucharestWallClockToUTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), 8, 30)
+      : bucharestWallClockToUTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), 7, 30);
+
     const { error: openError } = await client.from("service_days").insert({
       day: dayStr,
       opened_by: demoStaffId,
-      opened_at: `${dayStr}T${weekend ? "08:30" : "07:30"}:00Z`,
+      opened_at: openedAt.toISOString(),
       next_number: orderCount + 1,
       float_cash: 200,
     });
@@ -257,8 +289,13 @@ async function seedHistory(client, demoStaffId) {
 
     for (let n = 1; n <= orderCount; n++) {
       const hour = randomHour(day);
-      const placedAt = new Date(day);
-      placedAt.setUTCHours(Math.floor(hour), Math.round((hour % 1) * 60), 0, 0);
+      const placedAt = bucharestWallClockToUTC(
+        day.getUTCFullYear(),
+        day.getUTCMonth(),
+        day.getUTCDate(),
+        Math.floor(hour),
+        Math.round((hour % 1) * 60),
+      );
 
       const isGuest = Math.random() < 0.55;
       const regularBias = customers.filter((c) => c.regular);
@@ -366,10 +403,17 @@ async function seedHistory(client, demoStaffId) {
     if (reportError) throw new Error(`service_report (${dayStr}) failed: ${reportError.message}`);
 
     const expectedCash = Number(report.expected_cash ?? 0);
+    const closedAt = bucharestWallClockToUTC(
+      day.getUTCFullYear(),
+      day.getUTCMonth(),
+      day.getUTCDate(),
+      18,
+      30,
+    );
     const { error: closeError } = await client
       .from("service_days")
       .update({
-        closed_at: `${dayStr}T18:30:00Z`,
+        closed_at: closedAt.toISOString(),
         closed_by: demoStaffId,
         counted_cash: Math.round((expectedCash + (Math.random() - 0.5) * 4) * 100) / 100,
         count_detail: {},

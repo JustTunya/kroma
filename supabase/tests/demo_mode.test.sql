@@ -7,6 +7,7 @@ declare
   v_cat           uuid;
   v_order         orders;
   v_auth_user_id  uuid;
+  v_today         date := (now() at time zone shop_tz())::date;
 begin
   insert into staff (display_name, role, is_demo) values ('Test Demo Owner', 'owner', true)
   returning id into v_demo;
@@ -41,25 +42,25 @@ begin
   end;
 
   -- reset_demo_day clears today's orders but not an older one
-  insert into service_days (day, opened_by) values (current_date, v_demo);
+  insert into service_days (day, opened_by) values (v_today, v_demo);
   insert into orders (status, payment_method, subtotal, total, service_day, day_number)
-  values ('collected', 'counter', 5, 5, current_date, 1)
+  values ('collected', 'counter', 5, 5, v_today, 1)
   returning * into v_order;
 
   insert into service_days (day, opened_by, closed_at)
-  values (current_date - 1, v_demo, now() - interval '1 day');
+  values (v_today - 1, v_demo, now() - interval '1 day');
   insert into orders (status, payment_method, subtotal, total, service_day, day_number, placed_at)
-  values ('collected', 'counter', 5, 5, current_date - 1, 1, now() - interval '1 day');
+  values ('collected', 'counter', 5, 5, v_today - 1, 1, now() - interval '1 day');
 
   perform reset_demo_day();
 
   assert not exists (select 1 from orders where id = v_order.id),
          'today''s order is gone after reset';
-  assert not exists (select 1 from service_days where day = current_date),
+  assert not exists (select 1 from service_days where day = v_today),
          'today''s service day is gone after reset';
-  assert exists (select 1 from orders where service_day = current_date - 1),
+  assert exists (select 1 from orders where service_day = v_today - 1),
          'yesterday''s order survives the reset';
-  assert exists (select 1 from service_days where day = current_date - 1),
+  assert exists (select 1 from service_days where day = v_today - 1),
          'yesterday''s service day survives the reset';
 
   -- reset_demo_day clears a PIN lockout on the demo staff row
@@ -69,7 +70,13 @@ begin
   assert (select locked_until from staff where id = v_demo) is null,
          'the demo staff row''s lockout clears on reset';
 
-  -- admin_upsert_demo_staff is idempotent and hashes the PIN
+  -- admin_upsert_demo_staff is idempotent and hashes the PIN. Clear is_demo
+  -- off the fixture row first — staff_one_demo (a new partial unique index,
+  -- this same migration) allows only one is_demo row at a time, and
+  -- admin_upsert_demo_staff is about to insert a second one for a different
+  -- user_id.
+  update staff set is_demo = false where id = v_demo;
+
   insert into auth.users (id, instance_id, aud, role, email)
   values ('dddddddd-1111-1111-1111-111111111111',
           '00000000-0000-0000-0000-000000000000',

@@ -11,6 +11,10 @@
 
 alter table staff add column is_demo boolean not null default false;
 
+-- Only one shared sandbox row should ever exist; enforce it in the DB
+-- instead of trusting the one admin_upsert_demo_staff call to stay unique.
+create unique index staff_one_demo on staff (is_demo) where is_demo;
+
 -- ---------------------------------------------------------- abuse capping
 -- Copied verbatim from 20260901092000_tender_and_close.sql:30-144, with one
 -- guard inserted after the existing staff_can check.
@@ -74,13 +78,20 @@ begin
   end if;
 
   -- Demo cap: the shared sandbox account can advance/void/undo orders, but
-  -- never refund one.
-  if v_actor.is_demo and v_action = 'order.refund' then
+  -- never refund one — including a void that would trigger a real Stripe
+  -- refund on a paid online order.
+  if v_actor.is_demo
+     and (v_action = 'order.refund'
+          or (p_to in ('cancelled', 'refunded')
+              and v_order.payment_method = 'online'
+              and v_order.stripe_payment_intent_id is not null)) then
     raise exception 'Shared sandbox — refunds and menu edits are disabled here.'
       using errcode = 'P0001';
   end if;
 
   if v_order.payment_method = 'counter' and v_order.status = 'pending' and p_to = 'paid' then
+    -- `p_tender not in (...)` is NULL, not TRUE, when p_tender is null — the
+    -- `is null or` is load-bearing, not decorative.
     if p_tender is null or p_tender not in ('cash', 'card') then
       raise exception 'Cash or card?' using errcode = 'P0001';
     end if;
@@ -393,6 +404,95 @@ begin
 end;
 $$;
 
+-- Copied verbatim from 20260901095000_discounts.sql:7-88, with the demo
+-- guard inserted after the existing staff_can check.
+create or replace function discount_order(
+  p_order_id uuid,
+  p_actor    uuid,
+  p_kind     text,
+  p_value    numeric,
+  p_reason   text,
+  p_station  uuid default null
+) returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_actor  staff;
+  v_order  orders;
+  v_amount numeric(8,2);
+  v_reason text;
+begin
+  select * into v_actor from staff where id = p_actor;
+  if v_actor.id is null or not v_actor.is_active or v_actor.kind <> 'person' then
+    raise exception 'Not on shift.' using errcode = 'P0001';
+  end if;
+  if not staff_can(v_actor.role, 'order.discount') then
+    raise exception 'Not yours to do.' using errcode = 'P0001';
+  end if;
+  if v_actor.is_demo then
+    raise exception 'Shared sandbox — refunds and menu edits are disabled here.'
+      using errcode = 'P0001';
+  end if;
+
+  select * into v_order from orders where id = p_order_id for update;
+  if v_order.id is null then
+    raise exception 'No such order.' using errcode = 'P0001';
+  end if;
+  if v_order.status in ('cancelled', 'refunded') then
+    raise exception 'That order is already settled.' using errcode = 'P0001';
+  end if;
+
+  v_reason := btrim(coalesce(p_reason, ''));
+  if length(v_reason) < 3 then
+    raise exception 'A reason, so the ledger means something.' using errcode = 'P0001';
+  end if;
+
+  v_amount := round(case p_kind
+    when 'percent' then v_order.subtotal * least(greatest(p_value, 0), 100) / 100
+    when 'amount'  then least(greatest(p_value, 0), v_order.subtotal)
+    when 'comp'    then v_order.subtotal
+    else null end, 2);
+
+  if v_amount is null then
+    raise exception 'Unknown discount.' using errcode = 'P0001';
+  end if;
+
+  update orders
+     set discount_total = v_amount,
+         discount_reason = v_reason,
+         total = v_order.subtotal - v_amount,
+         -- The tax follows the money down. Prorating the order's total rather
+         -- than re-deriving per line is deliberate: a discount is not
+         -- attributable to a line, and splitting it across mixed rates would
+         -- be inventing a fact.
+         -- ponytail: exact per-line apportionment if the shop ever sells at
+         -- two rates in one order.
+         tax_total = round(v_order.tax_total
+                           * case when v_order.subtotal = 0 then 0
+                                  else (v_order.subtotal - v_amount) / v_order.subtotal end, 2)
+   where id = p_order_id;
+
+  insert into staff_events (staff_id, station_id, action, subject_id, detail)
+  values (p_actor, p_station, 'order.discount', p_order_id,
+          jsonb_build_object('kind', p_kind, 'value', p_value, 'amount', v_amount,
+                             'reason', v_reason, 'previous_discount', v_order.discount_total));
+
+  return jsonb_build_object(
+    'total', v_order.subtotal - v_amount,
+    'discount_total', v_amount,
+    -- Money already taken has to go back. The same shape advance_order()
+    -- returns for a void, so the same caller handles it the same way.
+    'refund_owed', case
+      when v_order.status <> 'pending'
+       and v_order.payment_method = 'online'
+       and v_order.stripe_payment_intent_id is not null
+      then v_amount - coalesce(v_order.discount_total, 0)
+      else 0 end);
+end;
+$$;
+
 -- --------------------------------------------------------------- nightly reset
 -- Service-role only: called from the cron route, never from the client. Only
 -- today's orders go — history from pnpm seed:demo (or a genuinely prior day)
@@ -441,7 +541,7 @@ declare
   v_row staff;
 begin
   insert into staff (user_id, display_name, role, kind, pin_hash, is_active, is_demo)
-  values (p_user_id, 'Demo Owner', 'owner', 'person',
+  values (p_user_id, 'Demo Owner (Sandbox)', 'owner', 'person',
           extensions.crypt(p_pin, extensions.gen_salt('bf')), true, true)
   on conflict (user_id) do update
      set pin_hash     = excluded.pin_hash,
@@ -457,3 +557,13 @@ $$;
 
 revoke all on function admin_upsert_demo_staff(uuid, text) from public, anon, authenticated;
 grant execute on function admin_upsert_demo_staff(uuid, text) to service_role;
+
+-- ------------------------------------------------------------ pin_hash lockdown
+-- "staff read roster" (20260822090000_staff_identity.sql) is row-level only —
+-- any authenticated session, including the now-published demo account, could
+-- otherwise `select pin_hash` from every staff row via PostgREST and
+-- offline-crack any 4-digit PIN. No client code selects it (roster()/day
+-- page/cron route all use explicit column lists); staff_unlock() and friends
+-- are security definer and read the table directly in SQL, unaffected by a
+-- column-level revoke on anon/authenticated.
+revoke select (pin_hash) on staff from anon, authenticated;

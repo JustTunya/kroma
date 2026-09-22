@@ -2,10 +2,11 @@ begin;
 
 do $$
 declare
-  v_demo    uuid;
-  v_manager uuid;
-  v_cat     uuid;
-  v_order   orders;
+  v_demo          uuid;
+  v_manager       uuid;
+  v_cat           uuid;
+  v_order         orders;
+  v_auth_user_id  uuid;
 begin
   insert into staff (display_name, role, is_demo) values ('Test Demo Owner', 'owner', true)
   returning id into v_demo;
@@ -69,7 +70,13 @@ begin
          'the demo staff row''s lockout clears on reset';
 
   -- admin_upsert_demo_staff is idempotent and hashes the PIN
-  perform admin_upsert_demo_staff(gen_random_uuid(), '1234');
+  insert into auth.users (id, instance_id, aud, role, email)
+  values ('dddddddd-1111-1111-1111-111111111111',
+          '00000000-0000-0000-0000-000000000000',
+          'authenticated', 'authenticated', 'demo@example.test')
+  returning id into v_auth_user_id;
+
+  perform admin_upsert_demo_staff(v_auth_user_id, '1234');
   raise notice 'demo_mode: all assertions passed';
 end $$;
 

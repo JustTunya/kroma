@@ -564,6 +564,14 @@ grant execute on function admin_upsert_demo_staff(uuid, text) to service_role;
 -- otherwise `select pin_hash` from every staff row via PostgREST and
 -- offline-crack any 4-digit PIN. No client code selects it (roster()/day
 -- page/cron route all use explicit column lists); staff_unlock() and friends
--- are security definer and read the table directly in SQL, unaffected by a
--- column-level revoke on anon/authenticated.
-revoke select (pin_hash) on staff from anon, authenticated;
+-- are security definer and read the table directly in SQL, unaffected by this
+-- revoke. A column-level `revoke select (pin_hash)` alone does NOT work here:
+-- Supabase's schema-wide default privilege grant already gave anon/
+-- authenticated table-level SELECT on every table (see the same trap
+-- documented for functions in 20260819121500_card_grants.sql), and
+-- column-level REVOKE has no effect while table-level SELECT still holds. So
+-- revoke the whole table and re-grant every column except pin_hash instead.
+revoke select on staff from anon, authenticated;
+grant select (id, user_id, kind, display_name, role, station, failed_pins,
+              locked_until, is_active, is_demo, created_at, updated_at)
+  on staff to anon, authenticated;

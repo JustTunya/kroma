@@ -46,13 +46,31 @@ export async function ensureDemoStaff(client) {
     });
     if (error) throw new Error(`updateUserById failed: ${error.message}`);
   } else {
-    const { data, error } = await client.auth.admin.createUser({
-      email: DEMO_EMAIL,
-      password: DEMO_PASSWORD,
-      email_confirm: true,
-    });
-    if (error) throw new Error(`createUser failed: ${error.message}`);
-    userId = data.user.id;
+    try {
+      const { data, error } = await client.auth.admin.createUser({
+        email: DEMO_EMAIL,
+        password: DEMO_PASSWORD,
+        email_confirm: true,
+      });
+      if (error) throw new Error(`createUser failed: ${error.message}`);
+      userId = data.user.id;
+    } catch (createErr) {
+      // If createUser failed with a duplicate-email error, a previous run may have
+      // created the Auth user but crashed before linking it to a staff row. Recover
+      // by finding the existing user and continuing to the RPC link step.
+      const { data: users, error: listErr } = await client.auth.admin.listUsers({
+        limit: 1000,
+      });
+      if (listErr) throw createErr; // If listing fails, rethrow the original error.
+      const existingUser = users?.find((u) => u.email === DEMO_EMAIL);
+      if (existingUser) {
+        userId = existingUser.id;
+        console.log(`Recovered from partial run: found existing Auth user ${DEMO_EMAIL}`);
+      } else {
+        // User not found in Auth — createUser failed for a different reason, not duplicate email.
+        throw createErr;
+      }
+    }
   }
 
   const { data: staffRow, error: staffError } = await client.rpc(

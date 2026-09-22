@@ -16,22 +16,13 @@ export function PunchCard({ punches }: { punches: number }) {
 
   return (
     <div>
-      <p
-        className={cn(
-          "font-serif text-[clamp(32px,4vw,56px)] leading-[1.05] tracking-[-0.02em]",
-          cardFull ? "text-accent-primary" : "text-surface-canvas",
-        )}
-      >
-        {cardFull ? "Card full." : `${left} to go.`}
-      </p>
-
       <motion.ol
         role="img"
         aria-label={`${filled} of ${CARD_LENGTH} punches`}
         initial={reduced ? false : "hidden"}
         animate="visible"
         variants={{ visible: { transition: { staggerChildren: 0.06, delayChildren: 0.5 } } }}
-        className="mt-7 grid max-w-md grid-cols-5 gap-2.5 sm:gap-3.5"
+        className="grid max-w-md grid-cols-5 gap-2.5 sm:gap-3.5"
       >
         {Array.from({ length: CARD_LENGTH }, (_, i) => {
           const isFilled = i < filled;

@@ -128,10 +128,11 @@ order from. Card payments run through Stripe **test mode** — use
 expiry, any CVC.
 
 `/dashboard` is the staff side (order board, kitchen display, stock, close of
-day) and is gated behind a real account plus a 4-digit PIN. That PIN isn't
-published — it's a real write-access credential against live demo data, not
-a toy. To see the dashboard, run the project locally instead (below); the
-local seed ships with its own throwaway PIN.
+day). It's gated behind a real account and a 4-digit PIN like any real
+deployment would be — but this one is a demo, so the login page has a
+published "Try the staff side" link that signs into a shared sandbox
+account. Every visitor shares it; that account cannot refund an order or
+edit the menu, and anything else it touches resets every night.
 
 ## Running locally
 

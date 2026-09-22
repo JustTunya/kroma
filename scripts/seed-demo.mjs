@@ -289,6 +289,7 @@ async function seedHistory(client, demoStaffId) {
           earns_punch: priced.earnsPunch,
           vat_rate: priced.vatRate,
           _punches: priced.earnsPunch ? quantity : 0,
+          _unitPrice: priced.unitPrice,
         });
       }
 
@@ -300,12 +301,23 @@ async function seedHistory(client, demoStaffId) {
       let redeemedLine = null;
       if (customer) {
         customer.punches += lines.reduce((sum, l) => sum + l._punches, 0);
-        if (customer.punches >= 10 && lines.length > 0) {
-          redeemedLine = lines[0];
-          subtotal -= redeemedLine.line_total;
-          tax -= Math.round(redeemedLine.line_total * redeemedLine.vat_rate * 100) / 100;
-          redeemedLine.line_total = 0;
-          customer.punches -= 10;
+        if (customer.punches >= 10) {
+          // Only a line that actually earns punches can be redeemed against —
+          // the real app can never produce a "free bagel". If this order has
+          // no such line, skip redemption; it naturally rolls to whichever
+          // future order does have an earning line (punches are not spent).
+          const earningLine = lines.find((l) => l.earns_punch);
+          if (earningLine) {
+            redeemedLine = earningLine;
+            const unitDiscount = redeemedLine._unitPrice;
+            subtotal -= unitDiscount;
+            tax -= Math.round(unitDiscount * redeemedLine.vat_rate * 100) / 100;
+            redeemedLine.line_total = Math.max(
+              0,
+              Math.round((redeemedLine.line_total - unitDiscount) * 100) / 100,
+            );
+            customer.punches -= 10;
+          }
         }
       }
 
@@ -333,7 +345,7 @@ async function seedHistory(client, demoStaffId) {
       if (orderError) throw new Error(`order insert failed: ${orderError.message}`);
 
       const { error: lineError } = await client.from("order_items").insert(
-        lines.map(({ _punches, ...line }) => ({ ...line, order_id: order.id })),
+        lines.map(({ _punches, _unitPrice, ...line }) => ({ ...line, order_id: order.id })),
       );
       if (lineError) throw new Error(`order_items insert failed: ${lineError.message}`);
 

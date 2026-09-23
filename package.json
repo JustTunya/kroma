@@ -37,8 +37,10 @@
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
     "@vercel/config": "^0.6.1",
+    "dotenv": "^18.0.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.1",
+    "playwright": "^1.63.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   },

@@ -1,4 +1,5 @@
 import { Storefront } from "@/components/storefront/Storefront";
+import { enrichMenuItem } from "@/lib/menu-enrichment";
 import { menuImage } from "@/lib/menu-images";
 import { createClient } from "@/lib/server";
 import type { MenuItem, ModifierGroup } from "@/types/menu";
@@ -21,21 +22,23 @@ async function fetchMenu(): Promise<RawMenuItem[]> {
   if (error) console.error("menu_items fetch failed:", error.message);
 
   if (error || !data?.length) {
-    return seedMenu.map((item, index) => ({
-      id: `seed-${index}`,
-      name: item.name,
-      description: item.description,
-      base_price: item.basePrice,
-      daily_stock: item.dailyStock,
-      dietary_tags: item.dietaryTags,
-      image_url: null,
-      category: item.category,
-      vat_rate: 0.11,
-      origin: item.origin,
-      process: item.process,
-      roast: item.roast,
-      modifiers: (item.modifiers ?? []) as ModifierGroup[],
-    }));
+    return seedMenu.map((item, index) =>
+      enrichMenuItem({
+        id: `seed-${index}`,
+        name: item.name,
+        description: item.description,
+        base_price: item.basePrice,
+        daily_stock: item.dailyStock,
+        dietary_tags: item.dietaryTags,
+        image_url: null,
+        category: item.category,
+        vat_rate: 0.11,
+        origin: item.origin,
+        process: item.process,
+        roast: item.roast,
+        modifiers: (item.modifiers ?? []) as ModifierGroup[],
+      }),
+    );
   }
 
   return data
@@ -44,21 +47,23 @@ async function fetchMenu(): Promise<RawMenuItem[]> {
         a.menu_categories.sort_order - b.menu_categories.sort_order ||
         a.sort_order - b.sort_order,
     )
-    .map((item) => ({
-      id: item.id,
-      name: item.name,
-      description: item.description,
-      base_price: item.base_price,
-      daily_stock: item.daily_stock,
-      dietary_tags: item.dietary_tags,
-      image_url: item.image_url,
-      category: item.menu_categories.name,
-      vat_rate: item.menu_categories.vat_rate,
-      origin: null,
-      process: null,
-      roast: null,
-      modifiers: (item.modifiers ?? []) as ModifierGroup[],
-    }));
+    .map((item) =>
+      enrichMenuItem({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        base_price: item.base_price,
+        daily_stock: item.daily_stock,
+        dietary_tags: item.dietary_tags,
+        image_url: item.image_url,
+        category: item.menu_categories.name,
+        vat_rate: item.menu_categories.vat_rate,
+        origin: null,
+        process: null,
+        roast: null,
+        modifiers: (item.modifiers ?? []) as ModifierGroup[],
+      }),
+    );
 }
 
 export default async function Home() {

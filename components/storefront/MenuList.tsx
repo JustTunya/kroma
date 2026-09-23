@@ -11,9 +11,10 @@ import type { MenuItem } from "@/types/menu";
 type MenuListProps = {
   items: MenuItem[];
   onAdd: (item: MenuItem) => void;
+  onOpenSpecimen: (item: MenuItem) => void;
 };
 
-export function MenuList({ items, onAdd }: MenuListProps) {
+export function MenuList({ items, onAdd, onOpenSpecimen }: MenuListProps) {
   const [previewId, setPreviewId] = useState<string | null>(null);
 
   if (items.length === 0) {
@@ -36,6 +37,7 @@ export function MenuList({ items, onAdd }: MenuListProps) {
               item={item}
               onAdd={onAdd}
               onPreview={(next) => setPreviewId(next.id)}
+              onOpenSpecimen={onOpenSpecimen}
             />
           ))}
         </AnimatePresence>
@@ -56,19 +58,36 @@ export function MenuList({ items, onAdd }: MenuListProps) {
                 <Image
                   src={preview.image_url}
                   alt={preview.name}
+                  loading="eager"
                   fill
                   sizes="360px"
-                  loading="eager"
                   className="object-cover"
                 />
               </motion.div>
             </AnimatePresence>
           </div>
 
-          <p className="mt-4 font-mono text-[11px] font-medium tracking-[0.14em] text-text-tertiary uppercase">
+
+          <p className="mt-4 font-mono text-[12px] font-medium tracking-[0.14em] text-text-tertiary uppercase">
             {preview.name}
             {preview.origin && ` / ${preview.origin}`}
+            {preview.elevation && ` / ${preview.elevation}`}
           </p>
+
+          {preview.tasting_notes && preview.tasting_notes.length > 0 && (
+            <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] font-medium tracking-[0.14em] text-accent-primary uppercase">
+              {preview.tasting_notes.map((note, index) => (
+                <span key={note} className="flex items-center gap-3">
+                  {index > 0 && (
+                    <span aria-hidden className="text-hairline">
+                      /
+                    </span>
+                  )}
+                  {note}
+                </span>
+              ))}
+            </p>
+          )}
         </div>
       </div>
     </div>

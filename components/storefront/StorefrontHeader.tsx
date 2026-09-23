@@ -130,7 +130,7 @@ export function StorefrontHeader({
           )}
         </AnimatePresence>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <MotionLink
             href={signedIn ? "/account" : "/auth/login"}
             aria-label={signedIn ? "Your account" : "Sign in to your account"}

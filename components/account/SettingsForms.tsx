@@ -16,7 +16,7 @@ const LABEL =
 const FIELD =
   "mt-2 h-11 w-full max-w-sm border-b border-hairline bg-transparent font-mono text-[15px] tracking-[0.02em] text-text-primary placeholder:text-text-tertiary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus";
 
-const HINT = "mt-2 block max-w-sm text-[13px] leading-[1.55] text-text-tertiary";
+const HINT = "mt-2 block max-w-sm text-[13px] leading-[1.55] text-text-secondary";
 
 function useAction(action: Action) {
   return useActionState(

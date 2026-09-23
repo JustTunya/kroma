@@ -37,6 +37,20 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${instrumentSerif.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-surface-canvas text-text-primary" suppressHydrationWarning>
+        <div aria-hidden className="pointer-events-none fixed inset-0 z-[9999] opacity-[0.032] mix-blend-multiply">
+          <svg className="h-full w-full">
+            <filter id="grain-filter">
+              <feTurbulence
+                type="fractalNoise"
+                baseFrequency="0.8"
+                numOctaves="3"
+                stitchTiles="stitch"
+              />
+              <feColorMatrix type="saturate" values="0" />
+            </filter>
+            <rect width="100%" height="100%" filter="url(#grain-filter)" />
+          </svg>
+        </div>
         <PWARegister />
         {children}
       </body>

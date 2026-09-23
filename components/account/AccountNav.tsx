@@ -32,7 +32,7 @@ export function AccountNav({ items }: { items: AccountNavItem[] }) {
             href={item.href}
             aria-current={isActive(item.href) ? "page" : undefined}
             className={cn(
-              "relative flex h-9 items-center gap-2 rounded-full px-4 font-mono text-[10px]",
+              "relative flex h-11 items-center sm:h-9 gap-2 rounded-full px-4 font-mono text-[10px]",
               "font-medium tracking-[0.16em] uppercase transition-colors",
               "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus",
               isActive(item.href)

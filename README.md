@@ -128,10 +128,11 @@ order from. Card payments run through Stripe **test mode** — use
 expiry, any CVC.
 
 `/dashboard` is the staff side (order board, kitchen display, stock, close of
-day) and is gated behind a real account plus a 4-digit PIN. That PIN isn't
-published — it's a real write-access credential against live demo data, not
-a toy. To see the dashboard, run the project locally instead (below); the
-local seed ships with its own throwaway PIN.
+day). It's gated behind a real account and a 4-digit PIN like any real
+deployment would be — but this one is a demo, so the login page has a
+published "Try the staff side" link that signs into a shared sandbox
+account. Every visitor shares it; that account cannot refund an order or
+edit the menu, and anything else it touches resets every night.
 
 ## Running locally
 
@@ -166,6 +167,13 @@ the seed can't get you all the way in by itself — one-time setup:
     where display_name = 'Demo Owner';
    ```
 3. Sign in, open `/dashboard`, PIN `1234`.
+
+Or skip steps 1-3 entirely: `pnpm seed:demo` provisions a separate sandboxed
+staff account non-interactively (reading `NEXT_PUBLIC_DEMO_STAFF_EMAIL`/
+`_PASSWORD`/`_PIN` from `.env.local`) and backfills 30 days of realistic
+orders so the dashboard isn't empty. Safe to re-run. This is the same
+"Demo Owner (Sandbox)" account behind the "Try the staff side" link below,
+not the row linked manually in step 2.
 
 The shop still has to be opened once per session — `/dashboard` walks you
 through it (par-stock counts, then Open) the same way a real morning would.

@@ -41,8 +41,8 @@ export function AccountBand({
       aria-label="Your card"
       className="bg-text-primary px-5 pt-16 pb-14 text-surface-canvas sm:px-10 lg:px-14 lg:pt-24 lg:pb-20"
     >
-      <div className="grid gap-12 lg:grid-cols-2 lg:items-end lg:gap-20">
-        <h1 className="max-w-[14ch] font-serif text-[clamp(32px,4vw,52px)] leading-[1.05] tracking-[-0.02em]">
+      <div className="grid gap-12 lg:grid-cols-2 lg:items-end lg:gap-20 xl:grid-cols-[1.2fr_1fr]">
+        <h1 className="font-serif text-[clamp(44px,8vw,112px)] text-center sm:text-left leading-none tracking-[-0.03em]">
           <Line delay={0.1}>{greeting}</Line>
           <Line delay={0.22}>
             <em className="italic">{name}</em>.
@@ -54,11 +54,11 @@ export function AccountBand({
           animate={{ opacity: 1, y: 0 }}
           transition={{ ...glide, delay: 0.4 }}
         >
-          <p className="font-mono text-[10px] font-medium tracking-[0.18em] text-accent-primary uppercase">
+          <p className="font-mono text-[11px] font-medium tracking-[0.18em] text-kds-text-secondary uppercase">
             Your card
           </p>
           <div className="mt-6">
-            <PunchCard punches={punches} size="lg" tone="dark" headline />
+            <PunchCard punches={punches} />
           </div>
         </motion.div>
       </div>
@@ -67,7 +67,7 @@ export function AccountBand({
         initial={reduced ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ ...glide, delay: 0.55 }}
-        className="mt-12 flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[11px] font-medium tracking-[0.14em] text-kds-text-secondary uppercase lg:mt-16"
+        className="mt-12 flex flex-wrap items-center justify-center sm:justify-start gap-x-3 gap-y-2 font-mono text-[11px] font-medium tracking-[0.14em] text-kds-text-secondary uppercase lg:mt-16"
       >
         {details.map((detail, index) => (
           <span key={detail} className="flex items-center gap-3">

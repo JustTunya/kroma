@@ -7,70 +7,29 @@ import { cn } from "@/lib/utils";
 
 const CARD_LENGTH = 10;
 
-const TONES = {
-  canvas: {
-    filledBg: "bg-text-primary",
-    emptyRing: "border-hairline",
-    status: "text-text-secondary",
-    rule: "text-hairline",
-    headline: "text-text-primary",
-  },
-  dark: {
-    filledBg: "bg-surface-canvas",
-    emptyRing: "border-kds-border",
-    status: "text-kds-text-secondary",
-    rule: "text-kds-border",
-    headline: "text-surface-canvas",
-  },
-} as const;
-
-export function PunchCard({
-  punches,
-  size = "sm",
-  tone = "canvas",
-  headline = false,
-}: {
-  punches: number;
-  size?: "sm" | "lg";
-  tone?: keyof typeof TONES;
-
-  headline?: boolean;
-}) {
+// Small text on the dark band uses the light tokens: terracotta is graphics-only there (3.5:1).
+export function PunchCard({ punches }: { punches: number }) {
   const reduced = useReducedMotion();
-  const colors = TONES[tone];
   const filled = Math.max(0, Math.min(punches, CARD_LENGTH));
   const left = CARD_LENGTH - filled;
   const cardFull = left === 0;
 
-  const dot = size === "lg" ? "size-3.5" : "size-2.5";
-  const gap = size === "lg" ? "gap-3" : "gap-2";
-
   return (
     <div>
-      {headline && (
-        <p
-          className={cn(
-            "font-serif text-[clamp(28px,3.2vw,44px)] leading-[1.05] tracking-[-0.02em]",
-            cardFull ? "text-accent-primary" : colors.headline,
-          )}
-        >
-          {cardFull ? "Card full." : `${left} to go.`}
-        </p>
-      )}
-
-      <motion.div
-        aria-hidden
+      <motion.ol
+        role="img"
+        aria-label={`${filled} of ${CARD_LENGTH} punches`}
         initial={reduced ? false : "hidden"}
         animate="visible"
-        variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
-        className={cn("flex items-center", gap, headline && "mt-7")}
+        variants={{ visible: { transition: { staggerChildren: 0.06, delayChildren: 0.5 } } }}
+        className="grid max-w-md grid-cols-5 gap-2.5 sm:gap-3.5"
       >
         {Array.from({ length: CARD_LENGTH }, (_, i) => {
           const isFilled = i < filled;
           const isLatest = i === filled - 1;
 
           return (
-            <motion.span
+            <motion.li
               key={i}
               variants={{
                 hidden: { opacity: 0, scale: 0.4 },
@@ -78,45 +37,27 @@ export function PunchCard({
               }}
               transition={glide}
               className={cn(
-                "shrink-0 rounded-full",
-                dot,
+                "flex aspect-square items-center justify-center rounded-full border font-mono text-[11px] font-medium tabular-nums",
                 isFilled
                   ? isLatest
-                    ? "bg-accent-primary"
-                    : colors.filledBg
-                  : cn("border", colors.emptyRing),
+                    ? "border-accent-primary bg-accent-primary text-text-primary"
+                    : "border-surface-canvas bg-surface-canvas text-text-primary"
+                  : "border-kds-border text-kds-text-secondary",
               )}
-            />
+            >
+              {i + 1}
+            </motion.li>
           );
         })}
-      </motion.div>
+      </motion.ol>
 
       <p
         role="status"
-        className={cn(
-          "mt-4 font-mono text-[11px] font-medium tracking-[0.14em] uppercase",
-          colors.status,
-        )}
+        className="mt-5 font-mono text-[11px] font-medium tracking-[0.14em] text-kds-text-secondary uppercase"
       >
-        {cardFull && !headline ? (
-          <span className="text-accent-primary">
-            Card full — one drink on us, pick it at checkout
-          </span>
-        ) : cardFull ? (
-          <span className="text-accent-primary">One drink on us, pick it at checkout</span>
-        ) : (
-          <>
-            {filled} {filled === 1 ? "cup" : "cups"} in
-            {!headline && (
-              <>
-                <span aria-hidden className={cn("mx-3", colors.rule)}>
-                  /
-                </span>
-                {left} to go
-              </>
-            )}
-          </>
-        )}
+        {cardFull
+          ? "One drink on us — pick it at checkout"
+          : `${filled} ${filled === 1 ? "cup" : "cups"} in / one on us at ten`}
       </p>
     </div>
   );

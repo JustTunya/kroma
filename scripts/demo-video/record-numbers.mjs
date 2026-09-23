@@ -4,11 +4,11 @@ import { readdir, unlink } from "node:fs/promises";
 import path from "node:path";
 
 const CONFIG = {
-  loginUrl: "http://localhost:3000/auth/login",
-  numbersUrl: "http://localhost:3000/dashboard/numbers",
+  loginUrl: "http://localhost:3001/auth/login",
+  numbersUrl: "http://localhost:3001/dashboard/numbers",
   viewport: { width: 1920, height: 1080 },
   outDir: "scripts/demo-video/out",
-  targetDurationS: 5.0,
+  targetDurationS: 10.0,
 };
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -17,7 +17,7 @@ async function main() {
   console.log("=== Cleaning previous video files ===");
   const existingFiles = await readdir(CONFIG.outDir).catch(() => []);
   for (const f of existingFiles) {
-    if (f.endsWith(".webm") || f.endsWith(".mp4")) {
+    if (f.endsWith(".webm")) {
       await unlink(path.join(CONFIG.outDir, f)).catch(() => {});
     }
   }
@@ -115,7 +115,7 @@ async function main() {
   const tStartS = (Date.now() - videoStartTime) / 1000;
   console.log(`Scroll start timestamp: ${tStartS.toFixed(3)}s`);
 
-  // Pure linear scroll over 5 seconds
+  // Pure linear scroll over 10 seconds
   const durationMs = CONFIG.targetDurationS * 1000;
   await page.evaluate(
     ([targetY, duration]) => {
@@ -153,9 +153,9 @@ async function main() {
 
   console.log("Finalizing raw video...");
   const video = page.video();
-  await page.close();
-  await context.close();
-  await browser.close();
+  await Promise.race([page.close(), sleep(20000)]);
+  await Promise.race([context.close(), sleep(20000)]);
+  await Promise.race([browser.close(), sleep(20000)]);
 
   const rawPath = await video.path();
   console.log("Raw video captured at:", rawPath);

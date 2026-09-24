@@ -43,7 +43,7 @@ export function SiteFooter() {
 
       <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-kds-border px-5 py-6 font-mono text-[10px] font-medium tracking-[0.16em] text-kds-text-secondary uppercase sm:px-10 lg:px-14">
         <span>Specialty roastery &amp; micro-bakehouse</span>
-        <span>Roasted and baked in Cluj</span>
+        <span>Portfolio project / fictional café</span>
       </div>
     </footer>
   );

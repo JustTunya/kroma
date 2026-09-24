@@ -57,7 +57,7 @@ export function StorefrontHeader({
       )}
     >
       <div className="relative flex h-16 w-full items-center justify-between gap-4 px-5 sm:px-10 lg:px-14">
-        <div className="flex items-baseline gap-2.5">
+        <div className="flex items-center gap-2.5">
           <Wordmark
             className={cn(
               "font-serif text-[26px] leading-none tracking-[-0.02em] transition-colors duration-300",
@@ -66,11 +66,11 @@ export function StorefrontHeader({
           />
           <span
             className={cn(
-              "hidden font-mono text-[10px] font-medium tracking-[0.18em] uppercase transition-colors duration-300 sm:inline",
+              "hidden font-mono text-[10px] font-medium tracking-[0.18em] leading-tight uppercase transition-colors duration-300 sm:inline",
               onCanvas ? "text-text-tertiary" : "text-surface-canvas/60",
             )}
           >
-            Coffee &amp; Bakehouse
+            Coffee &amp;<br/>Bakehouse
           </span>
         </div>
 
@@ -137,13 +137,13 @@ export function StorefrontHeader({
             whileTap={{ scale: 0.98 }}
             transition={pressSpring}
             className={cn(
-              "flex h-10 min-w-10 items-center justify-center gap-2 rounded-full px-3.5 transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus",
+              "flex h-10 min-w-10 items-center justify-center gap-2 rounded-full px-3.5 border border-surface-muted/50 transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus",
               onCanvas
                 ? "bg-surface-muted text-text-primary"
                 : "bg-surface-canvas/15 text-surface-canvas backdrop-blur-sm",
             )}
           >
-            <UserRound className="size-4.5" strokeWidth={1.5} aria-hidden />
+            <UserRound className="size-4" strokeWidth={2} aria-hidden />
             {!signedIn && (
               <span className="hidden font-mono text-[10px] font-medium tracking-[0.18em] uppercase sm:inline">
                 Sign in
@@ -158,7 +158,7 @@ export function StorefrontHeader({
             transition={pressSpring}
             aria-label={`Open order${hasItems ? ` — ${cartCount} items` : ""}`}
             className={cn(
-              "flex h-10 min-w-10 items-center justify-center gap-2 rounded-full px-3.5 transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus",
+              "flex h-10 min-w-10 items-center justify-center gap-2 rounded-full px-3.5 border border-surface-muted/50 transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-border-focus",
               hasItems
                 ? "bg-accent-primary text-surface-card hover:bg-accent-hover"
                 : onCanvas
@@ -166,7 +166,7 @@ export function StorefrontHeader({
                   : "bg-surface-canvas/15 text-surface-canvas backdrop-blur-sm",
             )}
           >
-            <ShoppingBag className="size-4.5" strokeWidth={1.5} aria-hidden />
+            <ShoppingBag className="size-4" strokeWidth={2} aria-hidden />
             <AnimatePresence mode="popLayout" initial={false}>
               {hasItems && (
                 <motion.span

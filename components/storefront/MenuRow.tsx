@@ -73,7 +73,7 @@ export function MenuRow({ item, onAdd, onPreview, onOpenSpecimen }: MenuRowProps
           <Image
             src={item.image_url}
             alt={item.name}
-            loading="eager"
+            loading="lazy"
             fill
             sizes="(min-width: 1024px) 0px, 100vw"
             className="object-cover"

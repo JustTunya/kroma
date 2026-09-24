@@ -23,7 +23,10 @@ export const metadata: Metadata = {
   title: { default: "KROMA Coffee & Bakehouse — Cluj-Napoca", template: "%s | KROMA" },
   description: SITE_DESCRIPTION,
   alternates: { canonical: "/" },
-  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large" } },
+  robots:
+    process.env.VERCEL_ENV === "production" || !process.env.VERCEL_ENV
+      ? { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large" } }
+      : { index: false, follow: false },
   openGraph: {
     type: "website",
     siteName: SITE_NAME,

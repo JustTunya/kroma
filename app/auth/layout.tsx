@@ -8,6 +8,7 @@ import { Wordmark } from "@/components/Logo";
 
 export const metadata: Metadata = {
   title: "Account — KROMA Coffee & Bakehouse",
+  robots: { index: false, follow: false },
 };
 
 export default function AuthLayout({ children }: LayoutProps<"/auth">) {

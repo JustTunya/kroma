@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowUpRight } from "lucide-react";
@@ -8,6 +9,8 @@ import { SiteFooter } from "@/components/storefront/SiteFooter";
 import { Wordmark } from "@/components/Logo";
 import { createClient } from "@/lib/server";
 import { currentStaff } from "@/lib/staff";
+
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function AccountLayout({
   children,

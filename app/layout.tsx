@@ -3,6 +3,7 @@ import { Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 import { PWARegister } from "@/components/PWARegister";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 
 const instrumentSerif = Instrument_Serif({
   variable: "--font-instrument-serif",
@@ -17,8 +18,20 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "KROMA Coffee & Bakehouse",
-  description: "Specialty Roastery & Micro-Bakehouse",
+  metadataBase: new URL(SITE_URL),
+  title: { default: "KROMA Coffee & Bakehouse — Cluj-Napoca", template: "%s | KROMA" },
+  description: SITE_DESCRIPTION,
+  alternates: { canonical: "/" },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large" } },
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    title: "KROMA Coffee & Bakehouse — Cluj-Napoca",
+    description: SITE_DESCRIPTION,
+    url: "/",
+    locale: "en_GB",
+  },
+  twitter: { card: "summary_large_image", title: "KROMA Coffee & Bakehouse", description: SITE_DESCRIPTION },
   appleWebApp: {
     capable: true,
     title: "KROMA",

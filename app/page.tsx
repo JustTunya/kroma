@@ -3,9 +3,44 @@ import { enrichMenuItem } from "@/lib/menu-enrichment";
 import { menuImage } from "@/lib/menu-images";
 import { createClient } from "@/lib/server";
 import type { MenuItem, ModifierGroup } from "@/types/menu";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import seedMenu from "@/menu.json";
 
 export const revalidate = 30;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: SITE_NAME,
+      publisher: { "@id": `${SITE_URL}/#business` },
+    },
+    {
+      "@type": ["CafeOrCoffeeShop", "Bakery"],
+      "@id": `${SITE_URL}/#business`,
+      name: SITE_NAME,
+      description: SITE_DESCRIPTION,
+      url: SITE_URL,
+      image: `${SITE_URL}/opengraph-image`,
+      logo: `${SITE_URL}/icon.png`,
+      servesCuisine: ["Coffee", "Bakery"],
+      priceRange: "€€",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "Str. Universității 12",
+        addressLocality: "Cluj-Napoca",
+        addressCountry: "RO",
+      },
+      openingHoursSpecification: [
+        { "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], opens: "07:30", closes: "18:00" },
+        { "@type": "OpeningHoursSpecification", dayOfWeek: ["Saturday", "Sunday"], opens: "08:30", closes: "17:00" },
+      ],
+    },
+  ],
+};
 
 type RawMenuItem = Omit<MenuItem, "image_url"> & { image_url: string | null };
 
@@ -81,10 +116,16 @@ export default async function Home() {
   }));
 
   return (
-    <Storefront
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
+      <Storefront
       items={items}
       signedIn={Boolean(claims?.claims)}
       serviceOpen={Boolean(openDay)}
     />
+    </>
   );
 }

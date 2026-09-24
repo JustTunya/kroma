@@ -1,10 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { SiteFooter } from "@/components/storefront/SiteFooter";
 import { Wordmark } from "@/components/Logo";
 
-export const metadata = {
-  title: "Privacy — KROMA Coffee & Bakehouse",
+export const metadata: Metadata = {
+  title: "Privacy",
+  description: "What KROMA keeps when you order: your name, your pickup, your receipt. Nothing sold, nothing shared beyond payment and email.",
+  alternates: { canonical: "/privacy" },
+  openGraph: { url: "/privacy", title: "Privacy | KROMA" },
 };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

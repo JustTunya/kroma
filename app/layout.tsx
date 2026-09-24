@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Instrument_Serif, JetBrains_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next"
 import "./globals.css";
 
 import { PWARegister } from "@/components/PWARegister";
@@ -50,7 +51,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${instrumentSerif.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-surface-canvas text-text-primary" suppressHydrationWarning>
-        <div aria-hidden className="pointer-events-none fixed inset-0 z-[9999] opacity-[0.032] mix-blend-multiply">
+        <div aria-hidden className="pointer-events-none fixed inset-0 z-9999 opacity-[0.032] mix-blend-multiply">
           <svg className="h-full w-full">
             <filter id="grain-filter">
               <feTurbulence
@@ -65,6 +66,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </svg>
         </div>
         <PWARegister />
+        <Analytics />
         {children}
       </body>
     </html>
